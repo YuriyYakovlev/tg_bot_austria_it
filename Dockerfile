@@ -10,7 +10,7 @@ COPY . /app
 RUN rm -rf node_modules
 
 # Install app dependencies
-RUN npm install --production
+RUN npm install
 
-# Run the app when the container launches
-CMD ["node", "bot.js"]
+EXPOSE 8080
+CMD [ "node", "index.js" ]

@@ -1,8 +1,15 @@
 const mysql = require('mysql2/promise');
 require("dotenv").config();
 const moment = require('moment-timezone');
-
 const TelegramBot = require('node-telegram-bot-api');
+
+const express = require('express');
+const app = express()
+const port = 8080;
+
+app.listen(port, () => {
+  console.log(`Server started on port ${port}`);
+})
 
 const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
 
