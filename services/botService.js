@@ -30,6 +30,7 @@ bot.on('message', async (msg) => {
             }
         }
 
+        console.log(`${username} sent a message in chat type: ` + msg.chat.type);
         if (msg.chat.type === 'private') {
             if (!verified) {
                 if (!allowed) {
