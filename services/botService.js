@@ -5,7 +5,7 @@ const db = require('../db/connectors/dbConnector');
 
 const bot = new TelegramBot(process.env.TG_TOKEN, {
     polling: {
-        interval: 300,
+        interval: 2000,
         autoStart: true,
         params: {
             timeout: 30
