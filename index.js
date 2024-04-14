@@ -23,7 +23,7 @@ app.listen(port, () => {
 // production configuration to use webhook
 const url = 'https://tg-bot-austria-it-sz7ec4inbq-ez.a.run.app/webhook';
 const bot = new TelegramBot(process.env.TG_TOKEN);
-bot.setWebHook(`${url}/${token}`);
+bot.setWebHook(`${url}/${process.env.TG_TOKEN}`);
 
 // test configuration to test locally
 //const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
