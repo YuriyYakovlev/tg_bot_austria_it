@@ -1,32 +1,32 @@
 const mysql = require('mysql2/promise');
-require("dotenv").config();
+require("dotenv").config({ override: true });
 const moment = require('moment-timezone');
 const TelegramBot = require('node-telegram-bot-api');
 
 const express = require('express');
-const bodyParser = require('body-parser');
+// const bodyParser = require('body-parser');
 
 const app = express()
 const port = 8080;
 
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 
-app.post('/webhook', (req, res) => {
-    bot.processUpdate(req.body);
-    res.sendStatus(200);
-});
+// app.post('/webhook', (req, res) => {
+//     bot.processUpdate(req.body);
+//     res.sendStatus(200);
+// });
 
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
 })
 
 // production configuration to use webhook
-const url = 'https://tg-bot-austria-it-sz7ec4inbq-ez.a.run.app/webhook';
-const bot = new TelegramBot(process.env.TG_TOKEN);
-bot.setWebHook(`${url}/${process.env.TG_TOKEN}`);
+// const url = 'https://tg-bot-austria-it-sz7ec4inbq-ez.a.run.app/webhook';
+// const bot = new TelegramBot(process.env.TG_TOKEN);
+// bot.setWebHook(`${url}/${process.env.TG_TOKEN}`);
 
 // test configuration to test locally
-//const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
+const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -62,6 +62,8 @@ const CAPTCHAS = [
 
 const USERS_TABLE_NAME = process.env.NODE_ENV === 'production' ? 'users' : 'users_test';
 
+const verifiedUsersCache = {};
+
 
 function getRandomCaptcha() {
     const randomIndex = Math.floor(Math.random() * CAPTCHAS.length);
@@ -70,6 +72,11 @@ function getRandomCaptcha() {
 
 
 async function verifyUser(userId, username) {
+    // Check if the user is cached and verified
+    if (verifiedUsersCache[userId]) {
+        return verifiedUsersCache[userId];
+    }
+
     try {
         const [rows] = await pool.query(`SELECT verified, attempts, last_attempt, current_captcha_id, current_captcha_answer FROM ${USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
         if (rows.length === 0) {
@@ -79,7 +86,13 @@ async function verifyUser(userId, username) {
         }
         let user = rows[0];
         if (user.verified) {
-            return { verified: true, allowed: true, attempts: user.attempts, captcha: null };
+            verifiedUsersCache[userId] = {
+                verified: true,
+                allowed: true,
+                attempts: user.attempts,
+                captcha: null
+            };
+            return verifiedUsersCache[userId];
         } else {
             const lastAttemptTime = moment(user.last_attempt).tz('UTC').toDate(); // Converts database time to UTC
             const now = moment().utc().toDate(); // Current time in UTC
@@ -112,6 +125,12 @@ async function verifyUser(userId, username) {
 async function setUserVerified(userId) {
     try {
         await pool.query(`UPDATE ${USERS_TABLE_NAME} SET verified = TRUE WHERE userId = ?`, [userId]);
+        verifiedUsersCache[userId] = {
+            verified: true,
+            allowed: true,
+            attempts: 0,
+            captcha: null
+        };
     } catch (error) {
         console.error('Error in setUserVerified:', error);
         throw error;
