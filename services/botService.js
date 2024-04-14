@@ -11,6 +11,15 @@ bot.on('message', async (msg) => {
     const messageText = msg.text;
     const username = msg.from.username || null;
 
+    console.log(`${username} sent a message: ` + messageText);
+
+    // Check if there are new members in this message
+    if (msg.new_chat_members && msg.new_chat_members.length > 0) {
+        msg.new_chat_members.forEach(member => {
+            console.log(`New member added: ${member.username} (ID: ${member.id})`);
+        });
+    }
+
     try {
         const { verified, allowed, attempts, captcha, answer } = await verificationService.verifyUser(userId, username);
 
@@ -24,6 +33,7 @@ bot.on('message', async (msg) => {
                 if (allowed) {
                     bot.sendMessage(userId, config.messages.verifyPrompt);
                 } else {
+                    console.log(`Max attempts reached for ${username}`);
                     bot.sendMessage(userId, config.messages.maxAttemptReached);
                 }
                 return;
@@ -47,14 +57,23 @@ bot.on('message', async (msg) => {
                 if (messageText.match(/^\d+$/)) {
                     if (messageText === answer) {
                         console.log(`${username} answers CAPTCHA correctly`);
-                        await verificationService.setUserVerified(userId);
-                        bot.sendMessage(chatId, config.messages.verificationComplete);
+                        try {
+                            await verificationService.setUserVerified(userId);
+                            bot.sendMessage(chatId, config.messages.verificationComplete);
+                        } catch (error) {
+                            console.error('Failed to set user as verified:', error);
+                            bot.sendMessage(chatId, config.messages.verificationError);
+                        }
                     } else {
                         console.log(`Prompting CAPTCHA for ${username} again due to incorrect response`);
-                        let newCaptcha = verificationService.getRandomCaptcha(); // show a new CAPTCHA in case of wrong answer
-                        await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET current_captcha_id = ?, current_captcha_answer = ? WHERE userId = ?`, [newCaptcha.id, newCaptcha.answer, userId]);
-                        
-                        bot.sendMessage(chatId, config.messages.incorrectResponse(attempts, config.MAX_ATTEMPTS) + newCaptcha.question);
+                        try {
+                            let newCaptcha = verificationService.getRandomCaptcha(); // show a new CAPTCHA in case of wrong answer
+                            await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET current_captcha_id = ?, current_captcha_answer = ? WHERE userId = ?`, [newCaptcha.id, newCaptcha.answer, userId]);
+                            bot.sendMessage(chatId, config.messages.incorrectResponse(attempts, config.MAX_ATTEMPTS) + newCaptcha.question);
+                        } catch (error) {
+                            console.error('Failed to update CAPTCHA info:', error);
+                            bot.sendMessage(chatId, config.messages.verificationError);
+                        }
                     }
                 } else {
                     bot.sendMessage(chatId, config.messages.startVerification);
