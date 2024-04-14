@@ -3,7 +3,15 @@ const verificationService = require('./verificationService');
 const config = require('../config/config');
 const db = require('../db/connectors/dbConnector');
 
-const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
+const bot = new TelegramBot(process.env.TG_TOKEN, {
+    polling: {
+        interval: 300,
+        autoStart: true,
+        params: {
+            timeout: 30
+        }
+    }
+});
 
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
@@ -88,5 +96,8 @@ bot.on('message', async (msg) => {
     }
 });
 
+process.on('unhandledRejection', (reason, p) => {
+    console.log('Unhandled Rejection at:', p, 'reason:', reason);
+});
 
 module.exports = bot;
