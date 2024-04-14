@@ -4,14 +4,29 @@ const moment = require('moment-timezone');
 const TelegramBot = require('node-telegram-bot-api');
 
 const express = require('express');
+const bodyParser = require('body-parser');
+
 const app = express()
 const port = 8080;
+
+app.use(bodyParser.json());
+
+app.post('/webhook', (req, res) => {
+    bot.processUpdate(req.body);
+    res.sendStatus(200);
+});
 
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
 })
 
-const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
+// production configuration to use webhook
+const url = 'https://tg-bot-austria-it-sz7ec4inbq-ez.a.run.app/webhook';
+const bot = new TelegramBot(process.env.TG_TOKEN);
+bot.setWebHook(`${url}/${token}`);
+
+// test configuration to test locally
+//const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
