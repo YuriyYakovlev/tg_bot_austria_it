@@ -28,6 +28,12 @@ bot.on('message', async (msg) => {
         });
     }
 
+    // Check if a member has left or been removed
+    if (msg.left_chat_member) {
+        const leftUser = msg.left_chat_member;
+        console.log(`Member left or was removed: ${leftUser.username} (ID: ${leftUser.id})`);
+    }
+
     try {
         const { verified, allowed, attempts, captcha, answer } = await verificationService.verifyUser(userId, username);
 
@@ -39,7 +45,11 @@ bot.on('message', async (msg) => {
                 });
 
                 if (allowed) {
-                    bot.sendMessage(userId, config.messages.verifyPrompt);
+                    try {
+                        bot.sendMessage(userId, config.messages.verifyPrompt);
+                    } catch (error) {
+                        console.error('Failed to send user a message.', error);
+                    }
                 } else {
                     console.log(`Max attempts reached for ${username}`);
                     bot.sendMessage(userId, config.messages.maxAttemptReached);
@@ -62,7 +72,7 @@ bot.on('message', async (msg) => {
                     return;
                 }
                 // Handle CAPTCHA response
-                if (messageText.match(/^\d+$/)) {
+                if (messageText.match(/^[a-zA-Z0-9]*\.?\d*$/)) {
                     if (messageText === answer) {
                         console.log(`${username} answers CAPTCHA correctly`);
                         try {
@@ -77,7 +87,7 @@ bot.on('message', async (msg) => {
                         try {
                             let newCaptcha = verificationService.getRandomCaptcha(); // show a new CAPTCHA in case of wrong answer
                             await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET current_captcha_id = ?, current_captcha_answer = ? WHERE userId = ?`, [newCaptcha.id, newCaptcha.answer, userId]);
-                            bot.sendMessage(chatId, config.messages.incorrectResponse(attempts, config.MAX_ATTEMPTS) + newCaptcha.question);
+                            bot.sendMessage(chatId, config.messages.incorrectResponse(attempts) + newCaptcha.question);
                         } catch (error) {
                             console.error('Failed to update CAPTCHA info:', error);
                             bot.sendMessage(chatId, config.messages.verificationError);
