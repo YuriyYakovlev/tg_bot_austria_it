@@ -45,6 +45,9 @@ const CAPTCHAS = [
     { id: "5", question: "Чому дорівнює сума чисел 14 і 29?", answer: "43" }
 ];
 
+const USERS_TABLE_NAME = process.env.NODE_ENV === 'production' ? 'users' : 'users_test';
+
+
 function getRandomCaptcha() {
     const randomIndex = Math.floor(Math.random() * CAPTCHAS.length);
     return CAPTCHAS[randomIndex];
@@ -53,10 +56,10 @@ function getRandomCaptcha() {
 
 async function verifyUser(userId, username) {
     try {
-        const [rows] = await pool.query('SELECT verified, attempts, last_attempt, current_captcha_id, current_captcha_answer FROM users WHERE userId = ?', [userId]);
+        const [rows] = await pool.query(`SELECT verified, attempts, last_attempt, current_captcha_id, current_captcha_answer FROM ${USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
         if (rows.length === 0) {
             const captcha = getRandomCaptcha();
-            await pool.query('INSERT INTO users (userId, verified, username, attempts, last_attempt, current_captcha_id, current_captcha_answer) VALUES (?, FALSE, ?, 0, NULL, ?, ?)', [userId, username, captcha.id, captcha.answer]);
+            await pool.query(`INSERT INTO ${USERS_TABLE_NAME} (userId, verified, username, attempts, last_attempt, current_captcha_id, current_captcha_answer) VALUES (?, FALSE, ?, 0, NULL, ?, ?)`, [userId, username, captcha.id, captcha.answer]);
             return { verified: false, allowed: true, attempts: 0, captcha: captcha.question, answer: captcha.answer };
         }
         let user = rows[0];
@@ -68,7 +71,7 @@ async function verifyUser(userId, username) {
             const timeDiff = (now.getTime() - lastAttemptTime.getTime()) / 1000 / 60;
 
             if (timeDiff && timeDiff > (60 + 180)) { // 3h difference with the database
-                await pool.query('UPDATE users SET attempts = 0 WHERE userId = ?', [userId]);
+                await pool.query(`UPDATE ${USERS_TABLE_NAME} SET attempts = 0 WHERE userId = ?`, [userId]);
                 user.attempts = 0;  // Reset attempts after the timeout period
             }
 
@@ -77,7 +80,7 @@ async function verifyUser(userId, username) {
             }
 
             const captcha = user.current_captcha_id ? CAPTCHAS.find(c => c.id === user.current_captcha_id) : getRandomCaptcha();
-            const updateResult = await pool.query('UPDATE users SET attempts = ?, last_attempt = NOW(), current_captcha_id = ?, current_captcha_answer = ?  WHERE userId = ?', [++user.attempts, captcha.id, captcha.answer, userId]);
+            const updateResult = await pool.query(`UPDATE ${USERS_TABLE_NAME} SET attempts = ?, last_attempt = NOW(), current_captcha_id = ?, current_captcha_answer = ?  WHERE userId = ?`, [++user.attempts, captcha.id, captcha.answer, userId]);
             if (updateResult && updateResult[0].affectedRows > 0) {
                 // Return the incremented attempts only if the update was successful
                 return { verified: false, allowed: true, attempts: user.attempts, captcha: captcha.question, answer: captcha.answer };
@@ -93,7 +96,7 @@ async function verifyUser(userId, username) {
 
 async function setUserVerified(userId) {
     try {
-        await pool.query('UPDATE users SET verified = TRUE WHERE userId = ?', [userId]);
+        await pool.query(`UPDATE ${USERS_TABLE_NAME} SET verified = TRUE WHERE userId = ?`, [userId]);
     } catch (error) {
         console.error('Error in setUserVerified:', error);
         throw error;
@@ -146,7 +149,7 @@ bot.on('message', async (msg) => {
                     } else {
                         console.log(`Prompting CAPTCHA for ${username} again due to incorrect response`);
                         let newCaptcha = getRandomCaptcha(); // show a new CAPTCHA in case of wrong answer
-                        await pool.query('UPDATE users SET current_captcha_id = ?, current_captcha_answer = ? WHERE userId = ?', [newCaptcha.id, newCaptcha.answer, userId]);
+                        await pool.query(`UPDATE ${USERS_TABLE_NAME} SET current_captcha_id = ?, current_captcha_answer = ? WHERE userId = ?`, [newCaptcha.id, newCaptcha.answer, userId]);
                         
                         bot.sendMessage(chatId, MESSAGES.incorrectResponse(attempts, MAX_ATTEMPTS) + newCaptcha.question);
                     }
