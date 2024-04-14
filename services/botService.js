@@ -100,4 +100,7 @@ process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at:', p, 'reason:', reason);
 });
 
+process.on('SIGINT', () => bot.stopPolling().then(() => process.exit()));
+process.on('SIGTERM', () => bot.stopPolling().then(() => process.exit()));
+
 module.exports = bot;
