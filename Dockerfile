@@ -1,5 +1,5 @@
 # Use the official Node.js runtime as a parent image
-FROM node:18
+FROM node:18-slim
 
 RUN mkdir -p /app
 # Set the working directory to /app
@@ -12,5 +12,8 @@ RUN rm -rf node_modules
 # Install app dependencies
 RUN npm install
 
-EXPOSE 8080
-CMD [ "node", "index.js" ]
+# Make port 8080 available to the world outside this container
+# EXPOSE 8080
+
+# Run the app when the container launches
+CMD ["npm", "start"]
