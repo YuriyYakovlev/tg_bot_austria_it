@@ -22,6 +22,6 @@ module.exports = {
         { id: "5", question: "Чому дорівнює сума чисел 14 і 29?", answer: "43" },
         { id: "6", question: "Яка ставка єдиного податку для ФОП на третій групі в Україні?", answer: "5" }
     ],
-    MAX_ATTEMPTS: 3,
+    MAX_ATTEMPTS: 10,
     USERS_TABLE_NAME: process.env.NODE_ENV === 'production' ? 'users' : 'users_test'
 };
