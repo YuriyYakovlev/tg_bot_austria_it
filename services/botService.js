@@ -39,7 +39,7 @@ async function handleMessage(msg) {
   const userStatus = await verificationService.verifyUser(userId, username);
 
   if (chat.type === "group" || chat.type === "supergroup") {
-    await handleGroupMessage(userStatus, chatId, msg.message_id, username);
+    await handleGroupMessage(userStatus, chatId, msg.message_id, username, text);
   } else if (chat.type === "private") {
     await handlePrivateMessage(userStatus, chatId, text, userId, username);
   }
@@ -48,10 +48,11 @@ async function handleMessage(msg) {
 // Use an object to track the last prompt times for each user in each chat
 const lastUserPromptTime = {};
 
-async function handleGroupMessage(userStatus, chatId, messageId, username) {
+async function handleGroupMessage(userStatus, chatId, messageId, username, text) {
   if (!userStatus.verified) {
     // Delete the message from the group
     await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
+    console.log(`message from ${username} was deleted`);
 
     // Generate a unique key for the chat-user combination
     const userKey = `${chatId}-${username}`;
@@ -59,9 +60,10 @@ async function handleGroupMessage(userStatus, chatId, messageId, username) {
     // Check if a verification message has recently been sent to this user
     const lastPromptTime = lastUserPromptTime[userKey] || 0;
     const currentTime = Date.now();
-    if (currentTime - lastPromptTime > 600000) {
+    if (text && (currentTime - lastPromptTime > 600000)) {
         sendTemporaryMessage(bot, chatId, `@${username} ${config.messages.verifyPromptGroup}`, 20000);
         lastUserPromptTime[userKey] = currentTime;
+        console.log(`sent temporary verify message to ${username} `);
     }
 
     return;
@@ -72,6 +74,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
   if (!userStatus.verified) {
     if (!userStatus.allowed) {
         await bot.sendMessage(chatId, config.messages.maxAttemptReached).catch(console.error);
+        console.log(`sent max attepmt reached for ${username}`);
         return;
     }
 
@@ -107,9 +110,11 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
       }
     } else {
       await bot.sendMessage(chatId, config.messages.startVerification).catch(console.error);
+      console.log(`sent start verificaiton message to ${username} `);
     }
   } else {
     await bot.sendMessage(userId, config.messages.verificationComplete).catch(console.error);
+    console.log(`sent verificaiton complete message to ${username} `);
   }
 }
 
@@ -150,13 +155,13 @@ async function resetUserVerification(userId) {
 
 async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
     try {
-        // Send the message
         const sentMessage = await bot.sendMessage(chatId, message);
         const messageId = sentMessage.message_id;
-        // Schedule deletion of the message after timeoutMs milliseconds
+
         setTimeout(async () => {
             try {
                 await bot.deleteMessage(chatId, messageId);
+                console.log(`removed temporary message`);
             } catch (error) {
                 console.error(`Failed to delete message: ${messageId}`, error);
             }
