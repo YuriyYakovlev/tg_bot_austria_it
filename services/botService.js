@@ -62,9 +62,9 @@ async function handleGroupMessage(userStatus, chatId, messageId, username, text)
     const lastPromptTime = lastUserPromptTime[userKey] || 0;
     const currentTime = Date.now();
     if (text && (currentTime - lastPromptTime > 600000)) {
-        sendTemporaryMessage(bot, chatId, `@${username} ${config.messages.verifyPromptGroup}`, 20000);
+        sendTemporaryMessage(bot, chatId, `@${username} ${config.messages.verifyPromptGroup}`, 40000);
         lastUserPromptTime[userKey] = currentTime;
-        console.log(`sent temporary verify message to ${username} `);
+        console.log(`sent temporary verify message to ${username} to chat ${chatId}`);
     }
 
     return;
