@@ -1,5 +1,5 @@
 ## Introduction
-This chatbot was created in attenpt to protect the Telegram chat from spam. This project is open and everyone can contribute to its development and improvement.
+This chatbot was created in attempt to protect the Telegram chat from spam. This project is open and everyone can contribute to its development and improvement.
 
 ## Description
 The chatbot is designed to identify and block spam messages in group chats. The bot uses a number of technologies to filter content, which helps to ensure the cleanliness and security of the communication space. The bot's functionality includes user verification via CAPTCHA, monitoring messages for unwanted content, and dynamic access control to the chat.
@@ -23,4 +23,4 @@ The project is open source, and we welcome any contributions to the code, docume
  - Pull Request: Submit a pull request to the main repository for review and discussion.
 
 ## License
-The project is distributed under a free license that allows you to use, modify, and redistribute the
+The project is distributed under a free license, which allows the code to be used, modified, and distributed freely for any purpose.
