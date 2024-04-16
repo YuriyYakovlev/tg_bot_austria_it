@@ -2,7 +2,7 @@
 const TelegramBot = require("node-telegram-bot-api");
 const verificationService = require("./verificationService");
 const config = require("../config/config");
-const db = require("../db/connectors/dbConnector");
+
 
 const bot = new TelegramBot(process.env.TG_TOKEN, {
   polling: {
@@ -97,10 +97,8 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
       } else {
         try {
           let newCaptcha = verificationService.getRandomCaptcha(userId); // show a new CAPTCHA in case of wrong answer
-          await db.query(
-            `UPDATE ${config.USERS_TABLE_NAME} SET current_captcha_id = ?, current_captcha_answer = ? WHERE userId = ?`,
-            [newCaptcha.id, newCaptcha.answer, userId]
-          );
+          await verificationService.updateUserCaptcha(userId, newCaptcha);
+
           bot.sendMessage(chatId, config.messages.incorrectResponse + newCaptcha.question);
           console.log(`Prompting CAPTCHA for ${username} again: ${newCaptcha.question}`);
         } catch (error) {
@@ -127,30 +125,7 @@ function handleNewMembers(msg) {
 function handleLeftMember(msg) {
     const leftUser = msg.left_chat_member;
     console.log(`Member left or was removed: ${leftUser.username} (ID: ${leftUser.id})`);
-
-    // Reset verification status when a user leaves the chat
-    resetUserVerification(leftUser.id).catch(console.error);
-}
-
-async function resetUserVerification(userId) {
-    try {
-        const result = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET verified = FALSE, attempts = 0 WHERE userId = ?`, [userId]);
-        if (result.affectedRows > 0) {
-            console.log(`Verification status reset for user ID: ${userId}`);
-            // Optionally clear any cached verification status if applicable
-            if (verifiedUsersCache[userId]) {
-                verifiedUsersCache[userId] = {
-                    verified: false,
-                    allowed: true,
-                    attempts: 0,
-                    captcha: null
-                };
-            }
-        }
-    } catch (error) {
-        console.error(`Failed to reset verification for user ID ${userId}:`, error);
-        throw error;
-    }
+    verificationService.resetUserVerification(leftUser.id).catch(console.error);
 }
 
 async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {

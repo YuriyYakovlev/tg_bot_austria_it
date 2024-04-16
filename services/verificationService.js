@@ -70,6 +70,39 @@ async function setUserVerified(userId) {
     }
 }
 
+async function updateUserCaptcha(userId, newCaptcha) {
+    try {
+        await db.query(
+            `UPDATE ${config.USERS_TABLE_NAME} SET current_captcha_id = ?, current_captcha_answer = ? WHERE userId = ?`,
+            [newCaptcha.id, newCaptcha.answer, userId]
+        );
+    } catch (error) {
+        console.error('Error in setUserVerified:', error);
+        throw error;
+    }
+}
+
+async function resetUserVerification(userId) {
+    try {
+        const result = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET verified = FALSE, attempts = 0 WHERE userId = ?`, [userId]);
+        if (result.affectedRows > 0) {
+            console.log(`Verification status reset for user ID: ${userId}`);
+            // Optionally clear any cached verification status if applicable
+            if (verifiedUsersCache[userId]) {
+                verifiedUsersCache[userId] = {
+                    verified: false,
+                    allowed: true,
+                    attempts: 0,
+                    captcha: null
+                };
+            }
+        }
+    } catch (error) {
+        console.error(`Failed to reset verification for user ID ${userId}:`, error);
+        throw error;
+    }
+}
+
 function getRandomCaptcha(userId) {
     const recentCaptchas = recentUserCaptchas[userId] || [];
     const availableCaptchas = config.captchas.filter(captcha => !recentCaptchas.includes(captcha.id));
@@ -92,5 +125,7 @@ function updateRecentCaptchasForUser(userId, newCaptchaId) {
 module.exports = {
     verifyUser,
     setUserVerified,
-    getRandomCaptcha
+    getRandomCaptcha,
+    updateUserCaptcha,
+    resetUserVerification
 };
