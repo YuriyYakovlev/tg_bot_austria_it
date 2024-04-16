@@ -39,24 +39,18 @@ async function handleMessage(msg) {
   const userStatus = await verificationService.verifyUser(userId, username);
 
   if (chat.type === "group" || chat.type === "supergroup") {
-    await handleGroupMessage(userStatus, chatId, msg.message_id, userId, username);
+    await handleGroupMessage(userStatus, chatId, msg.message_id, username);
   } else if (chat.type === "private") {
     await handlePrivateMessage(userStatus, chatId, text, userId, username);
   }
 }
 
-async function handleGroupMessage(userStatus, chatId, messageId, userId, username) {
+async function handleGroupMessage(userStatus, chatId, messageId, username) {
   if (!userStatus.verified) {
     // Delete the message from the group
     await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
     sendTemporaryMessage(bot, chatId, `@${username} ${config.messages.verifyPromptGroup}`, 20000)
 
-    if (userStatus.allowed) {
-        await bot.sendMessage(userId, config.messages.verifyPromptPrivate).catch(console.error);
-    } else {
-        await bot.sendMessage(userId, config.messages.maxAttemptReached).catch(console.error);
-        console.log(`Max attempts reached for ${username}`);
-    }
     return;
   }
 }
