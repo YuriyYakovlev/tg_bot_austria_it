@@ -1,4 +1,5 @@
 //botService.js
+const db = require('../db/connectors/dbConnector');
 const TelegramBot = require("node-telegram-bot-api");
 const verificationService = require("./verificationService");
 const config = require("../config/config");
@@ -30,10 +31,11 @@ async function handleMessage(msg) {
   const chatId = chat.id;
   const userId = from.id;
   const username = from.username || "unknown";
-
+ 
+  console.log(`processing message in chat: ${chatId} / ${chat.type}`);
   const userStatus = await verificationService.verifyUser(userId, username);
   if (!userStatus.verified) {
-    console.log(`${userId} / ${username} sent a message to chat ${chat.type}: 
+    console.log(`${userId} / ${username} sent a message to chat ${chatId} / ${chat.type}: 
       ${ text ? text.length > 100 ? text.substring(0, 100) + "..."  : text : "No text provided" }`);
   }
 
@@ -142,6 +144,35 @@ async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
         }, timeoutMs);
     } catch (error) {
         console.error('Failed to send or schedule deletion for message', error);
+    }
+}
+
+
+// Schedule to check and kick spammers every hour (3600000 milliseconds)
+setInterval(() => {
+  kickSpammers();
+}, 3600000 * 8);  // 3600000 milliseconds = 1 hour
+
+async function kickSpammers() {
+  try {
+      console.log(`Kick spammers Job started`);
+      const results = await db.query(`SELECT userId, chatId FROM ${config.USERS_TABLE_NAME} WHERE is_spammer = TRUE`);
+      
+      for (const user of results) {
+        if(user.chatId && user.userId) {
+          try {
+                await bot.banChatMember(user.chatId, user.userId);
+                console.log(`Kicked spammer with userId: ${user.userId} from chat ${user.chatId}.`);
+
+                await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET kicked = TRUE WHERE userId = ?`, [user.userId]);
+            } catch (error) {
+                console.error(`Failed to kick and update spammer with userId: ${user.userId}:`, error);
+            }
+        }
+      }
+      console.log(`Kick spammers Job finished`);
+    } catch (error) {
+      console.error('Failed to retrieve spammers from database:', error);
     }
 }
 

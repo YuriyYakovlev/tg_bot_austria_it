@@ -7,12 +7,12 @@ module.exports = {
     },
     messages: {
         verifyPromptGroup: `верифицирен зи битте ${process.env.BOT_URL}`,
-        maxAttemptReached: 'Ви досягли максимальної кількості ферзухів. Будь ласка, спробуйте пізніше.',
-        welcome: 'Ласкаво просимо! Будь ласка, надайте правильну відповідь, щоб продовжити: ',
+        maxAttemptReached: 'Ви досягли максимальної кількості Ферзухів. Bitte versuchen пізніше.',
+        welcome: 'Ласкаво просимо! Bitte geben Sie die richtige Antwort, щоб продовжити: ',
         incorrectResponse: 'Falsche Antwort. Спробуйте ще раз: ',
-        verificationComplete: 'Ви пройшли верифікацію. Вітаємо у чаті! Viel Glück!',
-        startVerification: 'Будь ласка, введіть /verify, щоб почати перевірку.',
-        verificationError: 'Виникла помилка. Будь ласка, спробуйте ще раз.'
+        verificationComplete: 'Ви пройшли верифікацію. Herzlich willkommen!',
+        startVerification: 'Будь ласка, geben Sie /verify, щоб почати перевірку.',
+        verificationError: 'От халепа, etwas ist schief gelaufen. Спробуймо ще раз...'
     },
     captchas: [
         { id: "1", question: "What is the index number of the first element of an array in most programming languages?", answer: "0" },
