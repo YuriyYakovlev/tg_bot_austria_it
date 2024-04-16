@@ -1,26 +1,26 @@
-## Вступ
-Цей чат-бот створений для захисту української IT спільноти в Австрії від спаму в Telegram чаті. Цей проект є відкритим, і кожен може долучитися до його розвитку та покращення.
+## Introduction
+This chatbot was created in attenpt to protect the Telegram chat from spam. This project is open and everyone can contribute to its development and improvement.
 
-## Опис
-Чат-бот розроблений з метою ідентифікації та блокування спам-повідомлень у груповому чаті. Бот використовує ряд технологій для фільтрації контенту, що дозволяє забезпечити чистоту та безпеку комунікаційного простору. Функціонал бота включає верифікацію користувачів через CAPTCHA, моніторинг повідомлень на предмет небажаного контенту та динамічне управління доступом до чату.
+## Description
+The chatbot is designed to identify and block spam messages in group chats. The bot uses a number of technologies to filter content, which helps to ensure the cleanliness and security of the communication space. The bot's functionality includes user verification via CAPTCHA, monitoring messages for unwanted content, and dynamic access control to the chat.
 
-## Технології
-Бот побудований на таких технологіях:
+## Technologies
+The bot is built on the following technologies:
 
-Node.js: Основа серверної частини.
-Telegram API: Інтерфейс для взаємодії з Telegram.
-Pooling: Метод опитування для отримання оновлень від Telegram.
-MySQL: Система управління базами даних для зберігання даних користувачів та їхніх взаємодій.
-Docker: Контейнеризація для легкого розгортання та портативності сервісу.
+ - Node.js: The basis of the server side.
+ - Telegram API: Interface for interacting with Telegram.
+ - Pooling: A polling method for receiving updates from Telegram.
+ - MySQL: A database management system for storing user data and interactions.
+ - Docker: Containerization for easy deployment and portability of the service.
 
-## Як долучитися
-Проект є відкритим, і ми вітаємо будь-які внески в код, документацію чи ідеї щодо функціональності:
+## How to join
+The project is open source, and we welcome any contributions to the code, documentation, or feature ideas:
 
-Fork: Зробіть форк репозиторію.
-Clone: Клонуйте репозиторій на свій локальний комп'ютер.
-Branch: Створіть нову гілку для кожної окремої функції або виправлення.
-Develop: Розробіть новий функціонал або внесіть зміни.
-Pull Request: Відправте pull request у основний репозиторій для рецензування та обговорення.
+ - Fork: Make a fork of the repository.
+ - Clone: Clone the repository to your local computer.
+ - Branch: Create a new branch for each individual feature or fix.
+ - Develop: Develop new functionality or make changes.
+ - Pull Request: Submit a pull request to the main repository for review and discussion.
 
-## Ліцензія
-Проект розповсюджується під вільною ліцензією, яка дозволяє використання, зміну та розповсюдження коду вільно для будь-яких цілей.
+## License
+The project is distributed under a free license that allows you to use, modify, and redistribute the

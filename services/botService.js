@@ -101,7 +101,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
             `UPDATE ${config.USERS_TABLE_NAME} SET current_captcha_id = ?, current_captcha_answer = ? WHERE userId = ?`,
             [newCaptcha.id, newCaptcha.answer, userId]
           );
-          bot.sendMessage(chatId, config.messages.incorrectResponse(userStatus.attempts) + newCaptcha.question);
+          bot.sendMessage(chatId, config.messages.incorrectResponse + newCaptcha.question);
           console.log(`Prompting CAPTCHA for ${username} again: ${newCaptcha.question}`);
         } catch (error) {
           console.error("Failed to update CAPTCHA info:", error);
