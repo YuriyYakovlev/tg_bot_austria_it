@@ -45,11 +45,24 @@ async function handleMessage(msg) {
   }
 }
 
+// Use an object to track the last prompt times for each user in each chat
+const lastUserPromptTime = {};
+
 async function handleGroupMessage(userStatus, chatId, messageId, username) {
   if (!userStatus.verified) {
     // Delete the message from the group
     await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
-    sendTemporaryMessage(bot, chatId, `@${username} ${config.messages.verifyPromptGroup}`, 20000)
+
+    // Generate a unique key for the chat-user combination
+    const userKey = `${chatId}-${username}`;
+
+    // Check if a verification message has recently been sent to this user
+    const lastPromptTime = lastUserPromptTime[userKey] || 0;
+    const currentTime = Date.now();
+    if (currentTime - lastPromptTime > 600000) {
+        sendTemporaryMessage(bot, chatId, `@${username} ${config.messages.verifyPromptGroup}`, 20000);
+        lastUserPromptTime[userKey] = currentTime;
+    }
 
     return;
   }
