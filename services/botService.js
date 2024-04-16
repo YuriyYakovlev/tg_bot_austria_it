@@ -30,13 +30,12 @@ async function handleMessage(msg) {
   const chatId = chat.id;
   const userId = from.id;
   const username = from.username || "unknown";
-  console.log(
-    `${username} sent a message to chat ${chat.type}: ${
-      text ? text.length > 50 ? text.substring(0, 50) + "..."  : text : "No text provided"
-    }`
-  );
 
   const userStatus = await verificationService.verifyUser(userId, username);
+  if (!userStatus.verified) {
+    console.log(`${userId} / ${username} sent a message to chat ${chat.type}: 
+      ${ text ? text.length > 100 ? text.substring(0, 100) + "..."  : text : "No text provided" }`);
+  }
 
   if (chat.type === "group" || chat.type === "supergroup") {
     await handleGroupMessage(userStatus, chatId, msg.message_id, username, text);
