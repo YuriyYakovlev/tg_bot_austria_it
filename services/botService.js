@@ -79,7 +79,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
     }
 
     if (text === "/verify" || text === "/start") {
-      console.log(`Prompting CAPTCHA for ${username}`);
+      console.log(`Prompting CAPTCHA for ${username}: ${userStatus.captcha}`);
       await bot.sendMessage(chatId, config.messages.welcome + userStatus.captcha).catch(console.error);
       return;
     }
@@ -95,14 +95,14 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
           await bot.sendMessage(chatId, config.messages.verificationError).catch(console.error);
         }
       } else {
-        console.log(`Prompting CAPTCHA for ${username} again due to incorrect response`);
         try {
-          let newCaptcha = verificationService.getRandomCaptcha(); // show a new CAPTCHA in case of wrong answer
+          let newCaptcha = verificationService.getRandomCaptcha(userId); // show a new CAPTCHA in case of wrong answer
           await db.query(
             `UPDATE ${config.USERS_TABLE_NAME} SET current_captcha_id = ?, current_captcha_answer = ? WHERE userId = ?`,
             [newCaptcha.id, newCaptcha.answer, userId]
           );
           bot.sendMessage(chatId, config.messages.incorrectResponse(userStatus.attempts) + newCaptcha.question);
+          console.log(`Prompting CAPTCHA for ${username} again: ${newCaptcha.question}`);
         } catch (error) {
           console.error("Failed to update CAPTCHA info:", error);
           bot.sendMessage(chatId, config.messages.verificationError);

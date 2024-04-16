@@ -4,6 +4,7 @@ const config = require('../config/config');
 const moment = require('moment-timezone');
 
 const verifiedUsersCache = {};
+const recentUserCaptchas = {};
 
 async function verifyUser(userId, username) {
     // Check if the user is cached and verified
@@ -14,7 +15,7 @@ async function verifyUser(userId, username) {
     try {
         const [rows] = await db.query(`SELECT verified, attempts, last_attempt, current_captcha_id, current_captcha_answer FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
         if (rows.length === 0) {
-            const captcha = getRandomCaptcha();
+            const captcha = getRandomCaptcha(userId);
             await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (userId, verified, username, attempts, last_attempt, current_captcha_id, current_captcha_answer) VALUES (?, FALSE, ?, 0, NULL, ?, ?)`, [userId, username, captcha.id, captcha.answer]);
             return { verified: false, allowed: true, attempts: 0, captcha: captcha.question, answer: captcha.answer };
         }
@@ -41,7 +42,7 @@ async function verifyUser(userId, username) {
                 return { verified: false, allowed: false, attempts: user.attempts, captcha: null };
             }
 
-            const captcha = user.current_captcha_id ? config.captchas.find(c => c.id === user.current_captcha_id) : getRandomCaptcha();
+            const captcha = user.current_captcha_id ? config.captchas.find(c => c.id === user.current_captcha_id) : getRandomCaptcha(userId);
             const updateResult = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET attempts = ?, last_attempt = NOW(), current_captcha_id = ?, current_captcha_answer = ?  WHERE userId = ?`, [++user.attempts, captcha.id, captcha.answer, userId]);
             if (updateResult && updateResult[0].affectedRows > 0) {
                 // Return the incremented attempts only if the update was successful
@@ -69,9 +70,23 @@ async function setUserVerified(userId) {
     }
 }
 
-function getRandomCaptcha() {
-    const randomIndex = Math.floor(Math.random() * config.captchas.length);
-    return config.captchas[randomIndex];
+function getRandomCaptcha(userId) {
+    const recentCaptchas = recentUserCaptchas[userId] || [];
+    const availableCaptchas = config.captchas.filter(captcha => !recentCaptchas.includes(captcha.id));
+    const randomCaptcha = availableCaptchas[Math.floor(Math.random() * availableCaptchas.length)];
+    updateRecentCaptchasForUser(userId, randomCaptcha.id);
+    return randomCaptcha;
+}
+
+function updateRecentCaptchasForUser(userId, newCaptchaId) {
+    if (!recentUserCaptchas[userId]) {
+        recentUserCaptchas[userId] = [];
+    }
+
+    recentUserCaptchas[userId].push(newCaptchaId);
+    if (recentUserCaptchas[userId].length > config.captchas.length) {
+        recentUserCaptchas[userId].shift();  // Remove the oldest CAPTCHA to maintain the limit
+    }
 }
 
 module.exports = {
