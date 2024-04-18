@@ -1,7 +1,8 @@
 //botService.js
-const db = require('../db/connectors/dbConnector');
 const TelegramBot = require("node-telegram-bot-api");
 const verificationService = require("./verificationService");
+const spammersService = require("./spammersService");
+const messagesCache = require("./messagesCache");
 const config = require("../config/config");
 
 
@@ -40,7 +41,7 @@ async function handleMessage(msg) {
   }
 
   if (chat.type === "group" || chat.type === "supergroup") {
-    await handleGroupMessage(userStatus, chatId, msg.message_id, username, text);
+    await handleGroupMessage(userId, userStatus, chatId, msg.message_id, username, text);
   } else if (chat.type === "private") {
     await handlePrivateMessage(userStatus, chatId, text, userId, username);
   }
@@ -49,14 +50,17 @@ async function handleMessage(msg) {
 // Use an object to track the last prompt times for each user in each chat
 const lastUserPromptTime = {};
 
-async function handleGroupMessage(userStatus, chatId, messageId, username, text) {
+async function handleGroupMessage(userId, userStatus, chatId, messageId, username, text) {
   if (!userStatus.verified) {
     // Delete the message from the group
     await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
     console.log(`message from ${username} was deleted`);
 
+    // Cache the message
+    messagesCache.cacheUserMessage(userId, chatId, messageId, text);
+
     // Generate a unique key for the chat-user combination
-    const userKey = `${chatId}-${username}`;
+    const userKey = `${chatId}-${userId}`;
 
     // Check if a verification message has recently been sent to this user
     const lastPromptTime = lastUserPromptTime[userKey] || 0;
@@ -87,10 +91,26 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
     // Handle CAPTCHA response
     if (text.match(/^[a-zA-Z0-9]*\.?\d*$/)) {
       if (text === userStatus.answer) {
-        console.log(`${username} answers CAPTCHA correctly`);
+        console.log(`${username} answers CAPTCHA correctly in chat ${chatId}`);
         try {
           await verificationService.setUserVerified(userId);
           await bot.sendMessage(chatId, config.messages.verificationComplete);
+
+          const messages = await messagesCache.retrieveCachedMessages(userId);
+          if (messages.length > 0) {
+            await bot.sendMessage(userId, config.messages.copyPasteFromCache);
+          }
+
+          messages.forEach(async (message) => {
+            try {
+              await bot.sendMessage(userId, message.messageText);
+              console.log(`Reminded cached message for user ${userId}`);
+              await messagesCache.deleteCachedMessage(message.messageId);
+            } catch (error) {
+              console.error(`Error sending cached message to user ${userId}:`, error);
+            }
+          });
+
         } catch (error) {
           console.error("Failed to set user as verified:", error);
           await bot.sendMessage(chatId, config.messages.verificationError).catch(console.error);
@@ -151,32 +171,12 @@ async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
     }
 }
 
-kickSpammers();
+
+spammersService.kickSpammers();
 setInterval(() => {
-  kickSpammers();
+  spammersService.kickSpammers();
 }, 3600000 * 8);  // 3600000 milliseconds = 1 hour
 
-async function kickSpammers() {
-  try {
-      console.log(`Kick spammers Job started`);
-      const [rows] = await db.query(`SELECT userId, chatId FROM ${config.USERS_TABLE_NAME} WHERE is_spammer = TRUE AND kicked = FALSE`);
-      for (const user of rows) {
-        if(user.chatId && user.userId) {
-          try {
-                await bot.banChatMember(user.chatId, user.userId);
-                console.log(`Kicked spammer with userId: ${user.userId} from chat ${user.chatId}.`);
-
-                await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET kicked = TRUE WHERE userId = ?`, [user.userId]);
-            } catch (error) {
-                console.error(`Failed to kick and update spammer with userId: ${user.userId}`);
-            }
-        }
-      }
-      console.log(`Kick spammers Job finished`);
-    } catch (error) {
-      console.error('Failed to retrieve spammers from database:', error);
-    }
-}
 
 process.on("unhandledRejection", (reason, p) => {
   console.log("Unhandled Rejection at:", p, "reason:", reason);
@@ -184,5 +184,6 @@ process.on("unhandledRejection", (reason, p) => {
 
 process.on("SIGINT", () => bot.stopPolling().then(() => process.exit()));
 process.on("SIGTERM", () => bot.stopPolling().then(() => process.exit()));
+
 
 module.exports = bot;

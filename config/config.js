@@ -12,7 +12,8 @@ module.exports = {
         incorrectResponse: 'Falsche Antwort. Спробуйте ще раз: ',
         verificationComplete: 'Ви пройшли верифікацію. Herzlich willkommen!',
         startVerification: 'Будь ласка, geben Sie /verify, щоб почати перевірку.',
-        verificationError: 'От халепа, etwas ist schief gelaufen. Спробуймо ще раз...'
+        verificationError: 'От халепа, etwas ist schief gelaufen. Спробуймо ще раз...',
+        copyPasteFromCache: 'Ось повідомлення, які ви намагалися надіслати раніше.\nМожете скопіювати їх і вставити назад у чат:'
     },
     captchas: [
         { id: "1", question: "What is the index number of the first element of an array in most programming languages?", answer: "0" },
