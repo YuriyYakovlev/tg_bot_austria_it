@@ -33,7 +33,7 @@ async function handleMessage(msg) {
   const username = from.username || "unknown";
  
   //console.log(`processing message in chat: ${chatId} / ${chat.type}`);
-  const userStatus = await verificationService.verifyUser(userId, username);
+  const userStatus = await verificationService.verifyUser(chatId, userId, username);
   if (!userStatus.verified) {
     console.log(`${userId} / ${username} sent a message to chat ${chatId} / ${chat.type}: 
       ${ text ? text.length > 100 ? text.substring(0, 100) + "..."  : text : "No text provided" }`);
