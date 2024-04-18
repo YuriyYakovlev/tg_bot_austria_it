@@ -57,7 +57,9 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
     console.log(`message from ${username} was deleted`);
 
     // Cache the message
-    messagesCache.cacheUserMessage(userId, chatId, messageId, text);
+    if(text) {
+      messagesCache.cacheUserMessage(userId, chatId, messageId, text);
+    }
 
     // Generate a unique key for the chat-user combination
     const userKey = `${chatId}-${userId}`;
@@ -140,7 +142,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
 function handleNewMembers(msg) {
   msg.new_chat_members.forEach((member) => {
     try {
-      console.log(`New member added: ${member}`);
+      console.log("New member added:", JSON.stringify(member, null, 2));
     } catch (error) {
       console.error(`Failed to get user info`);
     }
