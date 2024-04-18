@@ -35,9 +35,9 @@ async function handleMessage(msg) {
  
   //console.log(`processing message in chat: ${chatId} / ${chat.type}`);
   const userStatus = await verificationService.verifyUser(chatId, userId, username);
-  if (!userStatus.verified) {
+  if (!userStatus.verified && text) {
     console.log(`${userId} / ${username} sent a message to chat ${chatId} / ${chat.type}: 
-      ${ text ? text.length > 100 ? text.substring(0, 100) + "..."  : text : "No text provided" }`);
+      ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
   }
 
   if (chat.type === "group" || chat.type === "supergroup") {
@@ -54,23 +54,23 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
   if (!userStatus.verified) {
     // Delete the message from the group
     await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
-    console.log(`message from ${username} was deleted`);
 
     // Cache the message
     if(text) {
+      console.log(`message from ${username} was deleted`);
       messagesCache.cacheUserMessage(userId, chatId, messageId, text);
-    }
+    
+      // Generate a unique key for the chat-user combination
+      const userKey = `${chatId}-${userId}`;
 
-    // Generate a unique key for the chat-user combination
-    const userKey = `${chatId}-${userId}`;
-
-    // Check if a verification message has recently been sent to this user
-    const lastPromptTime = lastUserPromptTime[userKey] || 0;
-    const currentTime = Date.now();
-    if (text && (currentTime - lastPromptTime > 600000)) {
-        sendTemporaryMessage(bot, chatId, `@${username} ${config.messages.verifyPromptGroup}`, 40000);
-        lastUserPromptTime[userKey] = currentTime;
-        console.log(`sent temporary verify message to ${username} to chat ${chatId}`);
+      // Check if a verification message has recently been sent to this user
+      const lastPromptTime = lastUserPromptTime[userKey] || 0;
+      const currentTime = Date.now();
+      if (currentTime - lastPromptTime > 600000) {
+          sendTemporaryMessage(bot, chatId, `@${username} ${config.messages.verifyPromptGroup}`, 40000);
+          lastUserPromptTime[userKey] = currentTime;
+          console.log(`sent temporary verify message to ${username} to chat ${chatId}`);
+      }
     }
 
     return;
