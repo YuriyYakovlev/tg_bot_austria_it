@@ -13,14 +13,14 @@ async function verifyUser(userId, username) {
     }
 
     try {
-        const [rows] = await db.query(`SELECT verified, attempts, last_attempt, current_captcha_id, current_captcha_answer FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
+        const [rows] = await db.query(`SELECT verified, attempts, last_attempt, current_captcha_id, current_captcha_answer, is_spammer FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
         if (rows.length === 0) {
             const captcha = getRandomCaptcha(userId);
             await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (userId, verified, username, attempts, last_attempt, current_captcha_id, current_captcha_answer) VALUES (?, FALSE, ?, 0, NULL, ?, ?)`, [userId, username, captcha.id, captcha.answer]);
             return { verified: false, allowed: true, attempts: 0, captcha: captcha.question, answer: captcha.answer };
         }
         let user = rows[0];
-        if (user.verified) {
+        if (user.verified && !user.is_spammer) {
             verifiedUsersCache[userId] = {
                 verified: true,
                 allowed: true,
@@ -38,7 +38,7 @@ async function verifyUser(userId, username) {
                 user.attempts = 0;  // Reset attempts after the timeout period
             }
 
-            if (user.attempts > config.MAX_ATTEMPTS) {
+            if ((user.attempts > config.MAX_ATTEMPTS) || user.is_spammer) {
                 return { verified: false, allowed: false, attempts: user.attempts, captcha: null };
             }
 

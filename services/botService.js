@@ -32,7 +32,7 @@ async function handleMessage(msg) {
   const userId = from.id;
   const username = from.username || "unknown";
  
-  console.log(`processing message in chat: ${chatId} / ${chat.type}`);
+  //console.log(`processing message in chat: ${chatId} / ${chat.type}`);
   const userStatus = await verificationService.verifyUser(userId, username);
   if (!userStatus.verified) {
     console.log(`${userId} / ${username} sent a message to chat ${chatId} / ${chat.type}: 
@@ -119,7 +119,11 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
 
 function handleNewMembers(msg) {
   msg.new_chat_members.forEach((member) => {
-    console.log(`New member added: ${member.username} (ID: ${member.id})`);
+    try {
+      console.log(`New member added: ${member}`);
+    } catch (error) {
+      console.error(`Failed to get user info`);
+    }
   });
 }
 
@@ -147,8 +151,7 @@ async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
     }
 }
 
-
-// Schedule to check and kick spammers every hour (3600000 milliseconds)
+kickSpammers();
 setInterval(() => {
   kickSpammers();
 }, 3600000 * 8);  // 3600000 milliseconds = 1 hour
@@ -156,9 +159,8 @@ setInterval(() => {
 async function kickSpammers() {
   try {
       console.log(`Kick spammers Job started`);
-      const results = await db.query(`SELECT userId, chatId FROM ${config.USERS_TABLE_NAME} WHERE is_spammer = TRUE`);
-      
-      for (const user of results) {
+      const [rows] = await db.query(`SELECT userId, chatId FROM ${config.USERS_TABLE_NAME} WHERE is_spammer = TRUE AND kicked = FALSE`);
+      for (const user of rows) {
         if(user.chatId && user.userId) {
           try {
                 await bot.banChatMember(user.chatId, user.userId);
@@ -166,7 +168,7 @@ async function kickSpammers() {
 
                 await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET kicked = TRUE WHERE userId = ?`, [user.userId]);
             } catch (error) {
-                console.error(`Failed to kick and update spammer with userId: ${user.userId}:`, error);
+                console.error(`Failed to kick and update spammer with userId: ${user.userId}`);
             }
         }
       }
