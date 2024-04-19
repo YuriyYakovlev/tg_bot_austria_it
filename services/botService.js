@@ -135,8 +135,11 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
       console.log(`sent start verificaiton message to ${username} `);
     }
   } else {
-    await bot.sendMessage(userId, config.messages.verificationComplete).catch(console.error);
-    console.log(`sent verificaiton complete message to ${username} `);
+    if (text) {
+      console.log(`user ${userId} / ${username} sent this message to private chat: ${text} `);
+    }
+    await bot.sendMessage(userId, config.messages.thanksMessage).catch(console.error);
+    console.log(`sent thanks message to ${username} `);
   }
 }
 
@@ -183,14 +186,24 @@ async function kickSpammers() {
   try {
       console.log(`Kick spammers Job started`);
       const spammers = await spammersService.findSpammers();
+      let deletedCount = 0;
+      let chatId;
+      if(spammers.length > 0) {
+        chatId = spammers[0].chatId;
+      }
       for (const spammer of spammers) {
           try {
               await bot.banChatMember(spammer.chatId, spammer.userId);
               await spammersService.updateSpammersRecords(spammer.userId);
+              deletedCount++;
               console.log(`Kicked spammer with userId: ${spammer.userId} from chat ${spammer.chatId}.`);
           } catch (error) {
               console.error(`Failed to kick and update spammer with userId: ${spammer.userId}`, error.message);
           }
+      }
+      if(deletedCount > 0 && chatId) {
+        sendTemporaryMessage(bot, chatId, config.messages.banSpammersComplete(deletedCount), 40000);
+        console.log(`sent temporary status message to chat ${chatId}`);
       }
       console.log(`Kick spammers Job finished`);
   } catch (error) {
@@ -201,7 +214,7 @@ async function kickSpammers() {
 cleanup();
 setInterval(() => {
   cleanup();
-}, 3600000 * 8);  // 3600000 milliseconds = 1 hour
+}, 3600000 * 4);  // 3600000 milliseconds = 1 hour
 
 
 process.on("unhandledRejection", (reason, p) => {
