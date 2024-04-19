@@ -1,6 +1,7 @@
 //botService.js
 const TelegramBot = require("node-telegram-bot-api");
 const verificationService = require("./verificationService");
+const aiService = require("./aiService");
 const spammersService = require("./spammersService");
 const messagesCache = require("./messagesCache");
 const config = require("../config/config");
@@ -173,10 +174,33 @@ async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
     }
 }
 
+async function cleanup() {
+  await aiService.classifyMessages();
+  await kickSpammers();
+}
 
-spammersService.kickSpammers();
+async function kickSpammers() {
+  try {
+      console.log(`Kick spammers Job started`);
+      const spammers = await spammersService.findSpammers();
+      for (const spammer of spammers) {
+          try {
+              await bot.banChatMember(spammer.chatId, spammer.userId);
+              await spammersService.updateSpammersRecords(spammer.userId);
+              console.log(`Kicked spammer with userId: ${spammer.userId} from chat ${spammer.chatId}.`);
+          } catch (error) {
+              console.error(`Failed to kick and update spammer with userId: ${spammer.userId}`, error.message);
+          }
+      }
+      console.log(`Kick spammers Job finished`);
+  } catch (error) {
+      console.error("Failed to kick spammers:", error);
+  }
+}
+
+cleanup();
 setInterval(() => {
-  spammersService.kickSpammers();
+  cleanup();
 }, 3600000 * 8);  // 3600000 milliseconds = 1 hour
 
 
@@ -184,8 +208,8 @@ process.on("unhandledRejection", (reason, p) => {
   console.log("Unhandled Rejection at:", p, "reason:", reason);
 });
 
-process.on("SIGINT", () => bot.stopPolling().then(() => process.exit()));
-process.on("SIGTERM", () => bot.stopPolling().then(() => process.exit()));
+process.on("SIGINT", () => bot?.stopPolling().then(() => process.exit()));
+process.on("SIGTERM", () => bot?.stopPolling().then(() => process.exit()));
 
 
 module.exports = bot;

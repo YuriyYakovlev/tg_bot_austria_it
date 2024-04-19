@@ -9,15 +9,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Zazmic-GmbH/tg_bot_austria_it.git"
+    "url": "git+https://github.com/YuriyYakovlev/tg_bot_austria_it.git"
   },
   "author": "Yurii Yakovlev",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Zazmic-GmbH/tg_bot_austria_it/issues"
+    "url": "https://github.com/YuriyYakovlev/tg_bot_austria_it/issues"
   },
-  "homepage": "https://github.com/Zazmic-GmbH/tg_bot_austria_it#readme",
+  "homepage": "https://github.com/YuriyYakovlev/tg_bot_austria_it#readme",
   "dependencies": {
+    "@google-cloud/vertexai": "^1.1.0",
     "body-parser": "^1.20.2",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

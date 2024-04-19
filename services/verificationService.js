@@ -51,7 +51,6 @@ async function verifyUser(chatId, userId, username) {
         }
     } catch (error) {
         console.error('Error in verifyUser:', error);
-        throw error;
     }
 }
 
@@ -66,7 +65,6 @@ async function setUserVerified(userId) {
         };
     } catch (error) {
         console.error('Error in setUserVerified:', error);
-        throw error;
     }
 }
 
@@ -78,7 +76,6 @@ async function updateUserCaptcha(userId, newCaptcha) {
         );
     } catch (error) {
         console.error('Error in setUserVerified:', error);
-        throw error;
     }
 }
 
@@ -99,7 +96,6 @@ async function resetUserVerification(userId) {
         }
     } catch (error) {
         console.error(`Failed to reset verification for user ID ${userId}:`, error);
-        throw error;
     }
 }
 
