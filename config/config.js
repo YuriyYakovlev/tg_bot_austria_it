@@ -14,7 +14,7 @@ module.exports = {
         startVerification: 'Будь ласка, geben Sie /verify, щоб почати перевірку.',
         verificationError: 'От халепа, etwas ist schief gelaufen. Спробуймо ще раз...',
         copyPasteFromCache: 'Ось повідомлення, які ви намагалися надіслати раніше.\nМожете скопіювати їх і вставити назад у чат:',
-        banSpammersComplete: (spammers) => `Видалено ${spammers === 1 ? 'спам бота' : 'спам ботів'}.\nПобачили помилку? Kontaktieren Sie ${process.env.BOT_URL}`,
+        banSpammersComplete: (spammers) => `Видалено ${spammers} ${spammers === 1 ? 'спам бота' : 'спам ботів'}.\nПобачили помилку? Kontaktieren Sie ${process.env.BOT_URL}`,
         thanksMessage: 'Danke sehr! Приємного cпілкування!',
     },
     captchas: [

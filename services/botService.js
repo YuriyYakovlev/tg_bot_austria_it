@@ -202,7 +202,7 @@ async function kickSpammers() {
           }
       }
       if(deletedCount > 0 && chatId) {
-        sendTemporaryMessage(bot, chatId, config.messages.banSpammersComplete(deletedCount), 40000);
+        sendTemporaryMessage(bot, chatId, config.messages.banSpammersComplete(deletedCount), 20000);
         console.log(`sent temporary status message to chat ${chatId}`);
       }
       console.log(`Kick spammers Job finished`);
