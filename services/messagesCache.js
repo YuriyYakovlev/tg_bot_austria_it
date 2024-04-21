@@ -37,8 +37,19 @@ async function cacheUserMessage(userId, chatId, messageId, text) {
     }
   }
 
+  async function deleteOldCachedMessages() {
+    try {     
+      const deleteOldNonSpam = 'DELETE FROM cached_messages WHERE is_spam = FALSE AND messageDate <= NOW() - INTERVAL 24 HOUR';
+      await db.query(deleteOldNonSpam);
+      console.log(`Deleted old non-spam cached messages.`);
+    } catch (error) {
+      console.error("Failed to delete old cached messages:", error);
+    }
+  }
+
 module.exports = {
     cacheUserMessage,
     retrieveCachedMessages,
-    deleteCachedMessage
+    deleteCachedMessage,
+    deleteOldCachedMessages
 };

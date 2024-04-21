@@ -180,6 +180,7 @@ async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
 async function cleanup() {
   await aiService.classifyMessages();
   await kickSpammers();
+  await messagesCache.deleteOldCachedMessages();
 }
 
 async function kickSpammers() {
