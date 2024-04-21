@@ -48,11 +48,23 @@ async function handleMessage(msg) {
   }
 }
 
+async function isUserAdmin(chatId, userId) {
+  const member = await bot.getChatMember(chatId, userId);
+  return member.status === 'administrator' || member.status === 'creator';
+}
+
 // Use an object to track the last prompt times for each user in each chat
 const lastUserPromptTime = {};
 
 async function handleGroupMessage(userId, userStatus, chatId, messageId, username, text) {
   if (!userStatus.verified) {
+
+    const isAdmin = await isUserAdmin(chatId, userId);
+    if (isAdmin) {
+        verificationService.setUserVerified(userId);
+        return;
+    }
+
     // Delete the message from the group
     await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
 
