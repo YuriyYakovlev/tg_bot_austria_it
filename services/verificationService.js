@@ -16,7 +16,7 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
         const [rows] = await db.query(`SELECT verified, attempts, last_attempt, current_captcha_id, current_captcha_answer, is_spammer FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
         if (rows.length === 0) {
             const captcha = getRandomCaptcha(userId);
-            await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified, username, attempts, last_attempt, current_captcha_id, current_captcha_answer, first_name, last_name) VALUES (?, ?, FALSE, ?, 0, NULL, ?, ?)`, [chatId, userId, username, captcha.id, captcha.answer, firstName, lastName]);
+            await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified, username, attempts, last_attempt, current_captcha_id, current_captcha_answer, first_name, last_name) VALUES (?, ?, FALSE, ?, 0, NULL, ?, ?, ?, ?)`, [chatId, userId, username, captcha.id, captcha.answer, firstName, lastName]);
             return { verified: false, allowed: true, attempts: 0, captcha: captcha.question, answer: captcha.answer };
         }
         let user = rows[0];
