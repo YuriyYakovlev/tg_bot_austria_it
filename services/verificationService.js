@@ -18,14 +18,15 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
             const captcha = getRandomCaptcha(userId);
             await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified, username, attempts, last_attempt, current_captcha_id, current_captcha_answer, first_name, last_name) VALUES (?, ?, FALSE, ?, 0, NULL, ?, ?, ?, ?)`, [chatId, userId, username, captcha.id, captcha.answer, firstName, lastName]);
             return { verified: false, allowed: true, attempts: 0, captcha: captcha.question, answer: captcha.answer };
-        }
-        let user = rows[0];
-        if (user.verified && !user.is_spammer) {
+        } else {
             // temporary, to update already existing users
-            if((firstName && !user.first_name) || (lastName && !user.last_name))   {
+            if((firstName && !rows[0].first_name) || (lastName && !rows[0].last_name))   {
                 await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET first_name = ?, last_name = ? WHERE userId = ?`, [firstName, lastName, userId]);
             }
-             
+        }
+        
+        let user = rows[0];
+        if (user.verified && !user.is_spammer) {  
             verifiedUsersCache[userId] = {
                 verified: true,
                 allowed: true,
