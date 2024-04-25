@@ -32,12 +32,14 @@ async function handleMessage(msg) {
   const { chat, from, text } = msg;
   const chatId = chat.id;
   const userId = from.id;
-  const username = from.username || "unknown";
+  const username = from.username;
+  const firstName = from.first_name;
+  const lastName = from.last_name;
  
   //console.log(`processing message in chat: ${chatId} / ${chat.type}`);
-  const userStatus = await verificationService.verifyUser(chatId, userId, username);
+  const userStatus = await verificationService.verifyUser(chatId, userId, username, firstName, lastName);
   if (!userStatus.verified && text) {
-    console.log(`${userId} / ${username} sent a message to chat ${chatId} / ${chat.type}: 
+    console.log(`${userId} / ${username} / ${firstName} / ${lastName} sent a message to chat ${chatId} / ${chat.type}: 
       ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
   }
 
@@ -80,9 +82,9 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
       const lastPromptTime = lastUserPromptTime[userKey] || 0;
       const currentTime = Date.now();
       if (currentTime - lastPromptTime > 600000) {
-          sendTemporaryMessage(bot, chatId, `@${username} ${config.messages.verifyPromptGroup}`, 40000);
+          sendTemporaryMessage(bot, chatId, config.messages.verifyPromptGroup(username), 40000);
           lastUserPromptTime[userKey] = currentTime;
-          console.log(`sent temporary verify message to ${username} to chat ${chatId}`);
+          console.log(`sent temporary verify message to ${userId} / ${username} to chat ${chatId}`);
       }
     }
 
@@ -94,19 +96,19 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
   if (!userStatus.verified) {
     if (!userStatus.allowed) {
         await bot.sendMessage(chatId, config.messages.maxAttemptReached).catch(console.error);
-        console.log(`sent max attepmt reached for ${username}`);
+        console.log(`sent max attepmt reached for ${userId} / ${username}`);
         return;
     }
 
     if (text === "/verify" || text === "/start") {
-      console.log(`Prompting CAPTCHA for ${username}: ${userStatus.captcha}`);
+      console.log(`Prompting CAPTCHA for ${userId} / ${username}: ${userStatus.captcha}`);
       await bot.sendMessage(chatId, config.messages.welcome + userStatus.captcha).catch(console.error);
       return;
     }
     // Handle CAPTCHA response
     if (text.match(/^[a-zA-Z0-9]*\.?\d*$/)) {
       if (text === userStatus.answer) {
-        console.log(`${username} answers CAPTCHA correctly in chat ${chatId}`);
+        console.log(`${userId} / ${username} answers CAPTCHA correctly in chat ${chatId}`);
         try {
           await verificationService.setUserVerified(userId);
           await bot.sendMessage(chatId, config.messages.verificationComplete);
@@ -136,7 +138,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
           await verificationService.updateUserCaptcha(userId, newCaptcha);
 
           bot.sendMessage(chatId, config.messages.incorrectResponse + newCaptcha.question);
-          console.log(`Prompting CAPTCHA for ${username} again: ${newCaptcha.question}`);
+          console.log(`Prompting CAPTCHA for ${userId} / ${username} again: ${newCaptcha.question}`);
         } catch (error) {
           console.error("Failed to update CAPTCHA info:", error);
           bot.sendMessage(chatId, config.messages.verificationError);
@@ -144,14 +146,14 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
       }
     } else {
       await bot.sendMessage(chatId, config.messages.startVerification).catch(console.error);
-      console.log(`sent start verificaiton message to ${username} `);
+      console.log(`sent start verificaiton message to ${userId} / ${username} `);
     }
   } else {
     if (text) {
       console.log(`user ${userId} / ${username} sent this message to private chat: ${text} `);
     }
     await bot.sendMessage(userId, config.messages.thanksMessage).catch(console.error);
-    console.log(`sent thanks message to ${username} `);
+    console.log(`sent thanks message to ${userId} / ${username} `);
   }
 }
 

@@ -6,7 +6,7 @@ module.exports = {
         DATABASE: process.env.DB_NAME
     },
     messages: {
-        verifyPromptGroup: `Будь ласка, пройдіть верифікацію за допомогою нашого чат бота ${process.env.BOT_URL}`,
+        verifyPromptGroup: (username) => `Вітаємо тебе, ${username ? `@${username}`: 'новоприбулець'}.\nБудь ласка, пройди верифікацію за допомогою нашого чат бота ${process.env.BOT_URL}`,
         maxAttemptReached: 'Ви досягли максимальної кількості Ферзухів. Bitte versuchen пізніше.',
         welcome: 'Ласкаво просимо! Bitte geben Sie die richtige Antwort, щоб продовжити: ',
         incorrectResponse: 'Falsche Antwort. Спробуйте ще раз: ',
