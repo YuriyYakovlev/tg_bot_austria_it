@@ -6,27 +6,69 @@ const spammersService = require("./spammersService");
 const messagesCache = require("./messagesCache");
 const config = require("../config/config");
 
+let bot;
 
-const bot = new TelegramBot(process.env.TG_TOKEN, {
-  polling: {
-    interval: 2000,
-    autoStart: true,
-    params: {
-      timeout: 30,
+function startBotPolling(retryCount = 0) {
+  const MAX_RETRIES = 5;
+
+  bot = new TelegramBot(process.env.TG_TOKEN, {
+    polling: {
+      interval: 2000,
+      autoStart: true,
+      params: {
+        timeout: 30,
+      },
     },
-  },
-});
+  });
 
-bot.on("message", async (msg) => {
-  try {
-    if (msg.new_chat_members) handleNewMembers(msg);
-    if (msg.left_chat_member) handleLeftMember(msg);
+  bot.on("message", async (msg) => {
+    try {
+      if (msg.new_chat_members) handleNewMembers(msg);
+      if (msg.left_chat_member) handleLeftMember(msg);
+  
+      await handleMessage(msg);
+    } catch (error) {
+      console.error("Error handling message:", error);
+    }
+  });
 
-    await handleMessage(msg);
-  } catch (error) {
-    console.error("Error handling message:", error);
+  bot.on("polling_error", (error) => {
+    console.error("Polling error:", error);
+    if (error.code === 'EFATAL' || error.message.includes('ECONNRESET')) {
+      handleRetry(retryCount, MAX_RETRIES);
+    } else if (error.code === 'ETELEGRAM' && error.message.includes('502 Bad Gateway')) {
+      console.error("Telegram server error, will retry polling...");
+      handleRetry(retryCount, MAX_RETRIES);
+    } else {
+      console.error("Unexpected error type, may require manual intervention.");
+    }
+  });
+}
+
+function handleRetry(retryCount, maxRetries) {
+  if (retryCount < maxRetries) {
+    const delay = 5000 * Math.pow(2, retryCount);
+    console.log(`Attempting to restart polling after ${delay} ms...`);
+    bot.stopPolling() // Ensure polling is stopped before retrying
+      .then(() => {
+        console.log("Polling stopped successfully.");
+        setTimeout(() => startBotPolling(retryCount + 1), delay);
+      })
+      .catch(error => {
+        console.error("Error stopping polling:", error);
+        setTimeout(() => startBotPolling(retryCount + 1), delay); // Attempt restart even if stopPolling fails
+      });
+  } else {
+    console.error("Max retries reached, stopping the bot");
+    process.exit(1);
   }
-});
+}
+
+// to avoid conflicts between old still running cloud run instances
+setTimeout(() => {
+  startBotPolling();
+}, 10000);
+
 
 async function handleMessage(msg) {
   const { chat, from, text } = msg;
@@ -236,8 +278,15 @@ process.on("unhandledRejection", (reason, p) => {
   console.log("Unhandled Rejection at:", p, "reason:", reason);
 });
 
-process.on("SIGINT", () => bot?.stopPolling().then(() => process.exit()));
-process.on("SIGTERM", () => bot?.stopPolling().then(() => process.exit()));
+process.on("SIGINT", () => {
+  if (bot) {
+    bot.stopPolling().then(() => process.exit());
+  }
+});
 
+process.on("SIGTERM", () => {
+  if (bot) {
+    bot.stopPolling().then(() => process.exit());
+  }
+});
 
-module.exports = bot;
