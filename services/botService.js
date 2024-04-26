@@ -147,48 +147,44 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
       await bot.sendMessage(chatId, config.messages.welcome + userStatus.captcha).catch(console.error);
       return;
     }
+    
     // Handle CAPTCHA response
-    if (text.match(/^[a-zA-Z0-9]*\.?\d*$/)) {
-      if (text === userStatus.answer) {
-        console.log(`${userId} / ${username} answers CAPTCHA correctly in chat ${chatId}`);
-        try {
-          await verificationService.setUserVerified(userId);
-          await bot.sendMessage(chatId, config.messages.verificationComplete);
+    if (text === userStatus.answer) {
+      console.log(`${userId} / ${username} answers CAPTCHA correctly in chat ${chatId}`);
+      try {
+        await verificationService.setUserVerified(userId);
+        await bot.sendMessage(chatId, config.messages.verificationComplete);
 
-          const messages = await messagesCache.retrieveCachedMessages(userId);
-          if (messages.length > 0) {
-            await bot.sendMessage(userId, config.messages.copyPasteFromCache);
+        const messages = await messagesCache.retrieveCachedMessages(userId);
+        if (messages.length > 0) {
+          await bot.sendMessage(userId, config.messages.copyPasteFromCache);
+        }
+
+        messages.forEach(async (message) => {
+          try {
+            await bot.sendMessage(userId, message.messageText);
+            console.log(`Reminded cached message for user ${userId}`);
+            await messagesCache.deleteCachedMessage(message.messageId);
+          } catch (error) {
+            console.error(`Error sending cached message to user ${userId}:`, error);
           }
+        });
 
-          messages.forEach(async (message) => {
-            try {
-              await bot.sendMessage(userId, message.messageText);
-              console.log(`Reminded cached message for user ${userId}`);
-              await messagesCache.deleteCachedMessage(message.messageId);
-            } catch (error) {
-              console.error(`Error sending cached message to user ${userId}:`, error);
-            }
-          });
-
-        } catch (error) {
-          console.error("Failed to set user as verified:", error);
-          await bot.sendMessage(chatId, config.messages.verificationError).catch(console.error);
-        }
-      } else {
-        try {
-          let newCaptcha = verificationService.getRandomCaptcha(userId); // show a new CAPTCHA in case of wrong answer
-          await verificationService.updateUserCaptcha(userId, newCaptcha);
-
-          bot.sendMessage(chatId, config.messages.incorrectResponse + newCaptcha.question);
-          console.log(`Prompting CAPTCHA for ${userId} / ${username} again: ${newCaptcha.question}`);
-        } catch (error) {
-          console.error("Failed to update CAPTCHA info:", error);
-          bot.sendMessage(chatId, config.messages.verificationError);
-        }
+      } catch (error) {
+        console.error("Failed to set user as verified:", error);
+        await bot.sendMessage(chatId, config.messages.verificationError).catch(console.error);
       }
     } else {
-      await bot.sendMessage(chatId, config.messages.startVerification).catch(console.error);
-      console.log(`sent start verificaiton message to ${userId} / ${username} `);
+      try {
+        let newCaptcha = verificationService.getRandomCaptcha(userId); // show a new CAPTCHA in case of wrong answer
+        await verificationService.updateUserCaptcha(userId, newCaptcha);
+
+        bot.sendMessage(chatId, config.messages.incorrectResponse + newCaptcha.question);
+        console.log(`Prompting CAPTCHA for ${userId} / ${username} again: ${newCaptcha.question}`);
+      } catch (error) {
+        console.error("Failed to update CAPTCHA info:", error);
+        bot.sendMessage(chatId, config.messages.verificationError);
+      }
     }
   } else {
     if (text) {

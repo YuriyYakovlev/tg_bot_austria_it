@@ -7,11 +7,10 @@ module.exports = {
     },
     messages: {
         verifyPromptGroup: (username) => `Вітаємо тебе, ${username ? `@${username}`: 'новоприбулець'}.\nБудь ласка, пройди верифікацію за допомогою нашого чат бота ${process.env.BOT_URL}`,
-        maxAttemptReached: 'Ви досягли максимальної кількості Ферзухів. Bitte versuchen пізніше.',
+        maxAttemptReached: 'Ви досягли максимальної кількості спроб. Bitte versuchen пізніше.',
         welcome: 'Ласкаво просимо! Bitte geben Sie die richtige Antwort, щоб продовжити: ',
         incorrectResponse: 'Falsche Antwort. Спробуйте ще раз: ',
         verificationComplete: 'Ви пройшли верифікацію. Herzlich willkommen!',
-        startVerification: 'Будь ласка, geben Sie /verify, щоб почати перевірку.',
         verificationError: 'От халепа, etwas ist schief gelaufen. Спробуймо ще раз...',
         copyPasteFromCache: 'Ось повідомлення, які ви намагалися надіслати раніше.\nМожете скопіювати їх і вставити назад у чат:',
         banSpammersComplete: (spammers) => `Видалено ${spammers} ${spammers === 1 ? 'спам бота' : 'спам ботів'}.\nПобачили помилку? Kontaktieren Sie ${process.env.BOT_URL}`,
