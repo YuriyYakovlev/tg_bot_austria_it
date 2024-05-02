@@ -53,6 +53,7 @@ function handleRetry(retryCount, maxRetries) {
       .then(() => {
         console.log("Polling stopped successfully.");
         setTimeout(() => startBotPolling(retryCount + 1), delay);
+        console.log("Restarting polling.");
       })
       .catch(error => {
         console.error("Error stopping polling:", error);
@@ -80,7 +81,7 @@ async function handleMessage(msg) {
  
   //console.log(`processing message in chat: ${chatId} / ${chat.type}`);
   const userStatus = await verificationService.verifyUser(chatId, userId, username, firstName, lastName);
-  if (!userStatus.verified && text) {
+  if (userStatus && !userStatus.verified && text) {
     console.log(`${userId} / ${username} / ${firstName} / ${lastName} sent a message to chat ${chatId} / ${chat.type}: 
       ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
   }
@@ -101,7 +102,7 @@ async function isUserAdmin(chatId, userId) {
 const lastUserPromptTime = {};
 
 async function handleGroupMessage(userId, userStatus, chatId, messageId, username, text) {
-  if (!userStatus.verified) {
+  if (userStatus && !userStatus.verified) {
 
     const isAdmin = await isUserAdmin(chatId, userId);
     if (isAdmin) {
@@ -135,7 +136,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
 }
 
 async function handlePrivateMessage(userStatus, chatId, text, userId, username) {
-  if (!userStatus.verified) {
+  if (userStatus && !userStatus.verified) {
     if (!userStatus.allowed) {
         await bot.sendMessage(chatId, config.messages.maxAttemptReached).catch(console.error);
         console.log(`sent max attepmt reached for ${userId} / ${username}`);
