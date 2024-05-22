@@ -208,8 +208,15 @@ function handleNewMembers(msg) {
 
 function handleLeftMember(msg) {
     const leftUser = msg.left_chat_member;
-    console.log(`Member left or was removed: ${leftUser.username} (ID: ${leftUser.id})`);
-    verificationService.resetUserVerification(leftUser.id).catch(console.error);
+    try {
+      console.log("Member left or was removed:", JSON.stringify(leftUser, null, 2));
+      //console.log(`Member left or was removed: ${leftUser.username} (ID: ${leftUser.id})`);
+      if (leftUser.id) {
+        verificationService.resetUserVerification(leftUser.id).catch(console.error);
+      }
+    } catch (error) {
+      console.error(`Failed to get user info`);
+    }
 }
 
 async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
