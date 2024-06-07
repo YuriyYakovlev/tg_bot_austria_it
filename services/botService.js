@@ -33,7 +33,7 @@ function startBotPolling(retryCount = 0) {
   });
 
   bot.on("polling_error", (error) => {
-    console.error("Polling error:", error);
+    console.error("Polling error");
     if (error.code === 'EFATAL' || error.message.includes('ECONNRESET')) {
       handleRetry(retryCount, MAX_RETRIES);
     } else if (error.code === 'ETELEGRAM' && error.message.includes('502 Bad Gateway')) {
