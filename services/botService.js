@@ -1,4 +1,4 @@
-//botService.js
+// botService.js
 const TelegramBot = require("node-telegram-bot-api");
 const verificationService = require("./verificationService");
 const aiService = require("./aiService");
@@ -7,6 +7,7 @@ const messagesCache = require("./messagesCache");
 const config = require("../config/config");
 
 let bot;
+const userJoinTimes = {};
 
 function startBotPolling(retryCount = 0) {
   const MAX_RETRIES = 5;
@@ -132,6 +133,21 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
     }
 
     return;
+  } else {
+    // Check if user joined within the last 10 minutes and call AI service for spam validation
+    const joinTime = userJoinTimes[userId];
+    if (joinTime && (Date.now() - joinTime < 10 * 60 * 1000)) {
+      const isSpam = await aiService.isSpamMessage(text);
+      if (isSpam) {
+        console.log(`${userId} / ${username} sent a potential span message to chat ${chatId}: 
+          ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
+
+        await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
+        console.log(`Deleted potential spam message from ${username}.`);
+        verificationService.resetUserVerification(userId);
+        return;
+      }
+    }
   }
 }
 
@@ -200,6 +216,8 @@ function handleNewMembers(msg) {
   msg.new_chat_members.forEach((member) => {
     try {
       console.log("New member added:", JSON.stringify(member, null, 2));
+      // Record the join time of the user
+      userJoinTimes[member.id] = Date.now();
     } catch (error) {
       console.error(`Failed to get user info`);
     }
@@ -241,6 +259,7 @@ async function cleanup() {
   await aiService.classifyMessages();
   await kickSpammers();
   await messagesCache.deleteOldCachedMessages();
+  cleanupUserJoinTimes();
 }
 
 async function kickSpammers() {
@@ -269,6 +288,17 @@ async function kickSpammers() {
       console.log(`Kick spammers Job finished`);
   } catch (error) {
       console.error("Failed to kick spammers:", error);
+  }
+}
+
+function cleanupUserJoinTimes() {
+  const now = Date.now();
+  const THRESHOLD = 1 * 60 * 60 * 1000; // 1 hour
+  for (const userId in userJoinTimes) {
+    if (now - userJoinTimes[userId] > THRESHOLD) {
+      delete userJoinTimes[userId];
+      console.log(`Removed old join time entry for user ${userId}`);
+    }
   }
 }
 
