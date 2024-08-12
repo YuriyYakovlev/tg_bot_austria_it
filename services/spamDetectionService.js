@@ -1,4 +1,4 @@
-// aiService.js
+// spamDetectionService.js
 const vertexAi = require("@google-cloud/vertexai");
 const db = require("../db/connectors/dbConnector");
 

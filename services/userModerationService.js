@@ -1,9 +1,9 @@
-// processSpammersService.js
+// userModerationService.js
 const db = require("../db/connectors/dbConnector");
 const config = require("../config/config");
 
 
-async function findSpammers() {
+async function identifyAndMarkSpammers() {
     const [spam_messages] = await db.query(`SELECT userId, chatId FROM cached_messages WHERE is_spam = TRUE`);
     console.log(`Found ${spam_messages ? spam_messages.length : "0"} spam message(s)`);
     for (const message of spam_messages) {
@@ -22,12 +22,12 @@ async function findSpammers() {
     return spammers;
 }
 
-async function updateSpammersRecords(userId) {
+async function markUserAsKicked(userId) {
   await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET kicked = TRUE WHERE userId = ?`, [userId] );
   console.log(`Updated spammer records for userId: ${userId} to kicked: TRUE`);
 }
 
 module.exports = {
-  findSpammers,
-  updateSpammersRecords,
+  identifyAndMarkSpammers,
+  markUserAsKicked,
 };

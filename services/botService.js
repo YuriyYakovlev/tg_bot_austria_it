@@ -1,9 +1,11 @@
 // botService.js
 const TelegramBot = require("node-telegram-bot-api");
-const verificationService = require("./verificationService");
-const aiService = require("./aiService");
-const spammersService = require("./spammersService");
-const messagesCache = require("./messagesCache");
+const userVerificationService = require("./userVerificationService");
+const spamDetectionService = require("./spamDetectionService");
+const userModerationService = require("./userModerationService");
+const messagesCacheService = require("./messagesCacheService");
+// const newsService = require("../extras/newsService");
+// const eventsService = require("../extras/eventsService");
 const config = require("../config/config");
 
 let bot;
@@ -80,8 +82,8 @@ async function handleMessage(msg) {
   const firstName = from.first_name;
   const lastName = from.last_name;
  
-  //console.log(`processing message in chat: ${chatId} / ${chat.type}`);
-  const userStatus = await verificationService.verifyUser(chatId, userId, username, firstName, lastName);
+  // console.log(`processing message in chat: ${chatId}`);
+  const userStatus = await userVerificationService.verifyUser(chatId, userId, username, firstName, lastName);
   if (userStatus && !userStatus.verified && text) {
     console.log(`${userId} / ${username} / ${firstName} / ${lastName} sent a message to chat ${chatId} / ${chat.type}: 
       ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
@@ -107,7 +109,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
 
     const isAdmin = await isUserAdmin(chatId, userId);
     if (isAdmin) {
-        verificationService.setUserVerified(userId);
+        userVerificationService.setUserVerified(userId);
         return;
     }
 
@@ -117,7 +119,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
     // Cache the message
     if(text) {
       console.log(`message from ${username} was deleted`);
-      messagesCache.cacheUserMessage(userId, chatId, messageId, text);
+      messagesCacheService.cacheUserMessage(userId, chatId, messageId, text);
     
       // Generate a unique key for the chat-user combination
       const userKey = `${chatId}-${userId}`;
@@ -136,15 +138,15 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
   } else {
     // Check if user joined within the last 10 minutes and call AI service for spam validation
     const joinTime = userJoinTimes[userId];
-    if (joinTime && (Date.now() - joinTime < 10 * 60 * 1000)) {
-      const isSpam = await aiService.isSpamMessage(text);
+    if (joinTime && (Date.now() - joinTime < 30 * 60 * 1000)) {
+      const isSpam = await spamDetectionService.isSpamMessage(text);
       if (isSpam) {
-        console.log(`${userId} / ${username} sent a potential span message to chat ${chatId}: 
+        console.log(`${userId} / ${username} sent a potential spam message to chat ${chatId}: 
           ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
 
         await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
         console.log(`Deleted potential spam message from ${username}.`);
-        verificationService.resetUserVerification(userId);
+        userVerificationService.resetUserVerification(userId);
         return;
       }
     }
@@ -169,10 +171,10 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
     if (text === userStatus.answer) {
       console.log(`${userId} / ${username} answers CAPTCHA correctly in chat ${chatId}`);
       try {
-        await verificationService.setUserVerified(userId);
+        await userVerificationService.setUserVerified(userId);
         await bot.sendMessage(chatId, config.messages.verificationComplete);
 
-        const messages = await messagesCache.retrieveCachedMessages(userId);
+        const messages = await messagesCacheService.retrieveCachedMessages(userId);
         if (messages.length > 0) {
           await bot.sendMessage(userId, config.messages.copyPasteFromCache);
         }
@@ -181,7 +183,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
           try {
             await bot.sendMessage(userId, message.messageText);
             console.log(`Reminded cached message for user ${userId}`);
-            await messagesCache.deleteCachedMessage(message.messageId);
+            await messagesCacheService.deleteCachedMessage(message.messageId);
           } catch (error) {
             console.error(`Error sending cached message to user ${userId}:`, error);
           }
@@ -193,8 +195,8 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
       }
     } else {
       try {
-        let newCaptcha = verificationService.getRandomCaptcha(userId); // show a new CAPTCHA in case of wrong answer
-        await verificationService.updateUserCaptcha(userId, newCaptcha);
+        let newCaptcha = userVerificationService.getRandomCaptcha(userId); // show a new CAPTCHA in case of wrong answer
+        await userVerificationService.updateUserCaptcha(userId, newCaptcha);
 
         bot.sendMessage(chatId, config.messages.incorrectResponse + newCaptcha.question);
         console.log(`Prompting CAPTCHA for ${userId} / ${username} again: ${newCaptcha.question}`);
@@ -230,7 +232,7 @@ function handleLeftMember(msg) {
       console.log("Member left or was removed:", JSON.stringify(leftUser, null, 2));
       //console.log(`Member left or was removed: ${leftUser.username} (ID: ${leftUser.id})`);
       if (leftUser.id) {
-        verificationService.resetUserVerification(leftUser.id).catch(console.error);
+        userVerificationService.resetUserVerification(leftUser.id).catch(console.error);
       }
     } catch (error) {
       console.error(`Failed to get user info`);
@@ -256,16 +258,16 @@ async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
 }
 
 async function cleanup() {
-  await aiService.classifyMessages();
+  await spamDetectionService.classifyMessages();
   await kickSpammers();
-  await messagesCache.deleteOldCachedMessages();
+  await messagesCacheService.deleteOldCachedMessages();
   cleanupUserJoinTimes();
 }
 
 async function kickSpammers() {
   try {
       console.log(`Kick spammers Job started`);
-      const spammers = await spammersService.findSpammers();
+      const spammers = await userModerationService.identifyAndMarkSpammers();
       let deletedCount = 0;
       let chatId;
       if(spammers.length > 0) {
@@ -274,7 +276,7 @@ async function kickSpammers() {
       for (const spammer of spammers) {
           try {
               await bot.banChatMember(spammer.chatId, spammer.userId);
-              await spammersService.updateSpammersRecords(spammer.userId);
+              await userModerationService.markUserAsKicked(spammer.userId);
               deletedCount++;
               console.log(`Kicked spammer with userId: ${spammer.userId} from chat ${spammer.chatId}.`);
           } catch (error) {
@@ -302,7 +304,23 @@ function cleanupUserJoinTimes() {
   }
 }
 
+// async function summarizeNews() {
+//   let news = await newsService.summarizeNews();
+//   await new Promise(resolve => setTimeout(resolve, 11000)); 
+//   await bot.sendMessage(353740703, news).catch(console.error);
+//   console.log('summarised news: ' + news);
+// }
+
+// async function summarizeEvents() {
+//   let events = await eventsService.summarizeEvents();
+//   await new Promise(resolve => setTimeout(resolve, 1000)); //11000)); 
+//   //await bot.sendMessage(353740703, events).catch(console.error);
+//   console.log('summarised events: ' + events);
+// }
+
 cleanup();
+//summarizeNews();
+// summarizeEvents();
 setInterval(() => {
   cleanup();
 }, 3600000 * 4);  // 3600000 milliseconds = 1 hour
