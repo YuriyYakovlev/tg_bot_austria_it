@@ -132,13 +132,22 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
           lastUserPromptTime[userKey] = currentTime;
           console.log(`sent temporary verify message to ${userId} / ${username} to chat ${chatId}`);
       }
+
+      const isSpam = await spamDetectionService.isSpamMessage(text);
+      if (isSpam) {
+        console.log(`${userId} / ${username} sent a potential spam message to chat ${chatId}: 
+          ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }. no need to verify.`);
+      } else {
+        console.log(`message from ${userId} doesn't contain spam. could be saved.`);
+      }
     }
 
     return;
   } else {
-    // Check if user joined within the last 10 minutes and call AI service for spam validation
+    // Check if user joined within the last 30 minutes and call AI service for spam validation
     const joinTime = userJoinTimes[userId];
     if (joinTime && (Date.now() - joinTime < 30 * 60 * 1000)) {
+      console.log(`check new user ${userId} for spam`);
       const isSpam = await spamDetectionService.isSpamMessage(text);
       if (isSpam) {
         console.log(`${userId} / ${username} sent a potential spam message to chat ${chatId}: 
