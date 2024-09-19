@@ -137,19 +137,21 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
   }
 
   // Check if user joined within the last 30 minutes and call AI service for spam validation
-  const joinTime = userJoinTimes[userId];
-  if (joinTime && ((Date.now() - joinTime) < 30 * 60 * 1000)) {
-    console.log(`check new user ${userId} for spam`);
-    const isSpam = await spamDetectionService.isSpamMessage(text);
-    if (isSpam) {
-      console.log(`${userId} / ${username} sent a potential spam message to chat ${chatId}: 
-        ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
+  if(text) {
+    const joinTime = userJoinTimes[userId];
+    if (joinTime && ((Date.now() - joinTime) < 30 * 60 * 1000)) {
+      console.log(`check new user ${userId} for spam`);
+      const isSpam = await spamDetectionService.isSpamMessage(text);
+      if (isSpam) {
+        console.log(`${userId} / ${username} sent a potential spam message to chat ${chatId}: 
+          ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
 
-      await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
-      console.log(`Deleted potential spam message from ${username}.`);
-      userVerificationService.resetUserVerification(userId);
-    } else {
-      console.log('no spam in new user message');
+        await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
+        console.log(`Deleted potential spam message from ${username}.`);
+        userVerificationService.resetUserVerification(userId);
+      } else {
+        console.log('no spam in new user message');
+      }
     }
   }
 }
