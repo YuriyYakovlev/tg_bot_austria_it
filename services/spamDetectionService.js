@@ -34,14 +34,14 @@ async function classifyMessages() {
     const jsonMatch = textResponse.match(regex);
     let parsedResult = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
     parsedResult = parsedResult instanceof Array ? parsedResult : [parsedResult];
-    let count = 0;
+    //let count = 0;
     for (const result of parsedResult) {
       if (result && result.is_spam === 'true') {
         await db.query('UPDATE cached_messages SET is_spam = ? WHERE messageId = ?', [true, result.message_id]);
-        count++;
+        //count++;
       }
     }
-    console.log(`Classification Job finished. ${count} new spam message(s) detected.`);
+    //console.log(`Classification Job finished. ${count} new spam message(s) detected.`);
   } catch (error) {
     console.error('Error in classifyMessages:', error);
   }
