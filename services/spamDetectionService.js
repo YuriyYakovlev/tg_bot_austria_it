@@ -86,6 +86,26 @@ function prepareClassificationRequest(messages) {
               Spam messages usually contain Excessive Praise, Vague Reference, Call to Action, Generic Signature.
               In most cases these are links to earn money, to invest, to do illegal work, to buy illegal products, etc.
 
+              ### Examples of spam ###
+              1. Пропоную спробувати нове в цікавій сфері, за подробицями до мене
+              2. Привет, coтpyднuчecтвo oнлaйн. Дoxoд oт 1000$ в неделю.Дocтaтoчнo бyдeт тeлeфoнa.
+              3. Допоможу поліпшити фінансовий стан
+              4. Виїзд за кордон для чоловіків
+              5. Цікавить легкий заробіток - пиши?
+              6. Пропозиція саме для тебе з гарним доходом
+              7. ВАКАНСИЯ —Предлагаем вам легальную занятость
+              8. Ищем девушку для фотосессии
+              9. Click on the link to provide your answers. Grab this opportunity now
+              10. Зарабатывай от десяти тысяч руб.  в сутки. УДАЛЕННАЯ ЗАНЯТОСТЬ . От 18 лет.
+              11. Срочно требуются 2 человека. Оплата от 16 тыс. рублей в день.
+              12. Кoмy интepеcнo coтpyдничecтвo в перспективной команде. От 500$ в неделю,2-3 часа в день. Пиши в ЛC.
+              13. Відкрита вакансія чат менеджер в сфері криптовалюти
+              14. РАБОТА В США по H1B!!! Работа на Аляске, З\П от 6000$
+              15. Wow, ich bin wirklich begeistert von dieser großartigen Gelegenheit, in Forex und Kryptowährungen zu investieren
+              16. Допоможемо виїхати за кордон. Якщо є бажаючі, пишіть в особисті, місця обмежені. 
+              17. Ищу людей для сотрудничества.Приятный заработок от 200 $ в день.
+              18. Безкоштовні вступні заняття з німецької мови!
+
               ### Task ###
               Analyse the messages below and return a response exactly in this format:
               { "message_id": "id", "is_spam": "true/false"}

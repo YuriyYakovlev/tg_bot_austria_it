@@ -71,6 +71,7 @@ function handleRetry(retryCount, maxRetries) {
 // to avoid conflicts between old still running cloud run instances
 setTimeout(() => {
   startBotPolling();
+  cleanup();
 }, 10000);
 
 
@@ -318,7 +319,6 @@ function cleanupUserJoinTimes() {
 //   console.log('summarised events: ' + events);
 // }
 
-cleanup();
 //summarizeNews();
 // summarizeEvents();
 setInterval(() => {
