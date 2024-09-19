@@ -131,7 +131,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
       if (currentTime - lastPromptTime > 600000) {
           sendTemporaryMessage(bot, chatId, config.messages.verifyPromptGroup(username), 40000);
           lastUserPromptTime[userKey] = currentTime;
-          console.log(`sent temporary verify message to ${userId} / ${username} to chat ${chatId}`);
+          //console.log(`sent temporary verify message to ${userId} / ${username} to chat ${chatId}`);
       }
     }
   }
@@ -185,7 +185,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
         messages.forEach(async (message) => {
           try {
             await bot.sendMessage(userId, message.messageText);
-            console.log(`Reminded cached message for user ${userId}`);
+            //console.log(`Reminded cached message for user ${userId}`);
             await messagesCacheService.deleteCachedMessage(message.messageId);
           } catch (error) {
             console.error(`Error sending cached message to user ${userId}:`, error);
@@ -250,7 +250,7 @@ async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
         setTimeout(async () => {
             try {
                 await bot.deleteMessage(chatId, messageId);
-                console.log(`removed temporary message`);
+                //console.log(`removed temporary message`);
             } catch (error) {
                 console.error(`Failed to delete message: ${messageId}`, error);
             }
@@ -269,7 +269,7 @@ async function cleanup() {
 
 async function kickSpammers() {
   try {
-      console.log(`Kick spammers Job started`);
+      //console.log(`Kick spammers Job started`);
       const spammers = await userModerationService.identifyAndMarkSpammers();
       let deletedCount = 0;
       let chatId;
@@ -283,14 +283,14 @@ async function kickSpammers() {
               deletedCount++;
               console.log(`Kicked spammer with userId: ${spammer.userId} from chat ${spammer.chatId}.`);
           } catch (error) {
-              console.error(`Failed to kick and update spammer with userId: ${spammer.userId}`, error.message);
+              //console.error(`Failed to kick and update spammer with userId: ${spammer.userId}`, error.message);
           }
       }
       if(deletedCount > 0 && chatId) {
         sendTemporaryMessage(bot, chatId, config.messages.banSpammersComplete(deletedCount), 20000);
-        console.log(`sent temporary status message to chat ${chatId}`);
+        //console.log(`sent temporary status message to chat ${chatId}`);
       }
-      console.log(`Kick spammers Job finished`);
+      //console.log(`Kick spammers Job finished`);
   } catch (error) {
       console.error("Failed to kick spammers:", error);
   }
@@ -302,7 +302,7 @@ function cleanupUserJoinTimes() {
   for (const userId in userJoinTimes) {
     if (now - userJoinTimes[userId] > THRESHOLD) {
       delete userJoinTimes[userId];
-      console.log(`Removed old join time entry for user ${userId}`);
+      //console.log(`Removed old join time entry for user ${userId}`);
     }
   }
 }

@@ -5,7 +5,7 @@ const config = require("../config/config");
 
 async function identifyAndMarkSpammers() {
     const [spam_messages] = await db.query(`SELECT userId, chatId FROM cached_messages WHERE is_spam = TRUE`);
-    console.log(`Found ${spam_messages ? spam_messages.length : "0"} spam message(s)`);
+    //console.log(`Found ${spam_messages ? spam_messages.length : "0"} spam message(s)`);
     for (const message of spam_messages) {
       if (message.userId && message.chatId) {
         try {
@@ -18,13 +18,13 @@ async function identifyAndMarkSpammers() {
     }
 
     const [spammers] = await db.query(`SELECT userId, chatId FROM ${config.USERS_TABLE_NAME} WHERE is_spammer = TRUE AND kicked = FALSE`);
-    console.log(`Found ${spammers ? spammers.length : "0"} spammer(s)`);
+    console.log(`Found and will be kicked ${spammers ? spammers.length : "0"} spammer(s)`);
     return spammers;
 }
 
 async function markUserAsKicked(userId) {
   await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET kicked = TRUE WHERE userId = ?`, [userId] );
-  console.log(`Updated spammer records for userId: ${userId} to kicked: TRUE`);
+  //console.log(`Updated spammer records for userId: ${userId} to kicked: TRUE`);
 }
 
 module.exports = {
