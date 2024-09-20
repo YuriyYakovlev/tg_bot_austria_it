@@ -36,15 +36,16 @@ function startBotPolling(retryCount = 0) {
   });
 
   bot.on("polling_error", (error) => {
-    console.error("Polling error");
+    //console.error("Polling error");
     if (error.code === 'EFATAL' || error.message.includes('ECONNRESET')) {
       handleRetry(retryCount, MAX_RETRIES);
     } else if (error.code === 'ETELEGRAM' && error.message.includes('502 Bad Gateway')) {
       console.error("Telegram server error, will retry polling...");
       handleRetry(retryCount, MAX_RETRIES);
-    } else {
-      console.error("Unexpected error type, may require manual intervention.");
     }
+    // else {
+    //   console.error("Unexpected error type, may require manual intervention.");
+    // }
   });
 }
 
@@ -136,10 +137,10 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
     }
   }
 
-  // Check if user joined within the last 30 minutes and call AI service for spam validation
+  // Check if user joined within the last 15 minutes and call AI service for spam validation
   if(text) {
     const joinTime = userJoinTimes[userId];
-    if (joinTime && ((Date.now() - joinTime) < 30 * 60 * 1000)) {
+    if (joinTime && ((Date.now() - joinTime) < 15 * 60 * 1000)) {
       console.log(`check new user ${userId} for spam`);
       const isSpam = await spamDetectionService.isSpamMessage(text);
       if (isSpam) {
@@ -220,8 +221,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
 function handleNewMembers(msg) {
   msg.new_chat_members.forEach((member) => {
     try {
-      console.log("New member added:", JSON.stringify(member, null, 2));
-      // Record the join time of the user
+      console.log(`New chat member: ${member.id} / ${member.username} / ${member.first_name} / ${member.last_name}`);
       userJoinTimes[member.id] = Date.now();
     } catch (error) {
       console.error(`Failed to get user info`);
