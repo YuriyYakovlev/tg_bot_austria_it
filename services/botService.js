@@ -116,7 +116,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
     }
 
     // Delete the message from the group
-    await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
+    await bot.deleteMessage(chatId, messageId.toString()).catch(() => { });
 
     // Cache the message
     if(text) {
@@ -147,7 +147,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
         console.log(`${userId} / ${username} sent a potential spam message to chat ${chatId}: 
           ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
 
-        await bot.deleteMessage(chatId, messageId.toString()).catch(console.error);
+        await bot.deleteMessage(chatId, messageId.toString()).catch(() => { });
         console.log(`Deleted potential spam message from ${username}.`);
         userVerificationService.resetUserVerification(userId);
       } else {
@@ -248,12 +248,7 @@ async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
         const messageId = sentMessage.message_id;
 
         setTimeout(async () => {
-            try {
-                await bot.deleteMessage(chatId, messageId);
-                //console.log(`removed temporary message`);
-            } catch (error) {
-                console.error(`Failed to delete message: ${messageId}`, error);
-            }
+          await bot.deleteMessage(chatId, messageId).catch(() => { });
         }, timeoutMs);
     } catch (error) {
         console.error('Failed to send or schedule deletion for message', error);
