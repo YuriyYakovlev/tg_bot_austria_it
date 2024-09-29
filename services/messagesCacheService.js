@@ -9,7 +9,7 @@ async function cacheUserMessage(userId, chatId, messageId, text) {
       `INSERT INTO cached_messages (userId, chatId, messageId, messageText) VALUES (?, ?, ?, ?)`,
       [userId, chatId, messageId, text]
     );
-    console.log(`Cached message for user ${userId}`);
+    //console.log(`Cached message for user ${userId}`);
   } catch (error) {
     console.error(`Error caching message for user ${userId}:`, error);
   }

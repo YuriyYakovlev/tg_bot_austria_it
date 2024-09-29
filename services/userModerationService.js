@@ -18,9 +18,9 @@ async function identifyAndMarkSpammers() {
     }
 
     const [spammers] = await db.query(`SELECT userId, chatId FROM ${config.USERS_TABLE_NAME} WHERE is_spammer = TRUE AND kicked = FALSE`);
-    if (spammers && spammers.length > 0) {
-      console.log(`Found and will be kicked ${spammers.length} spammer(s)`);
-    }
+    // if (spammers && spammers.length > 0) {
+    //   console.log(`Found and will be kicked ${spammers.length} spammer(s)`);
+    // }
     return spammers;
 }
 

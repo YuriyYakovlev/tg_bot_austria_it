@@ -9,7 +9,7 @@ let vertexAiClient = new vertexAi.VertexAI({
 
 async function classifyMessages() {
   try {
-    console.log(`Classification Job started`);
+    //console.log(`Classification Job started`);
     const [messages] = await db.query('SELECT messageId, messageText FROM cached_messages WHERE is_spam IS FALSE');
     if (messages.length === 0) {
       console.log('No messages to classify.');

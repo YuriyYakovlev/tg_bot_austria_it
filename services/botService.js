@@ -214,7 +214,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
       console.log(`user ${userId} / ${username} sent this message to private chat: ${text} `);
     }
     await bot.sendMessage(userId, config.messages.thanksMessage).catch(console.error);
-    console.log(`sent thanks message to ${userId} / ${username} `);
+    //console.log(`sent thanks message to ${userId} / ${username} `);
   }
 }
 
