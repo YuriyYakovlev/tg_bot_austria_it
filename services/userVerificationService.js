@@ -5,8 +5,18 @@ const moment = require('moment-timezone');
 
 const verifiedUsersCache = {};
 const recentUserCaptchas = {};
+const exceptionalUsernames = process.env.EXCEPTIONAL_USERNAMES ? process.env.EXCEPTIONAL_USERNAMES.split(',').map(name => name.trim()) : [];
+const exceptionalFullNames = process.env.EXCEPTIONAL_FULL_NAMES ? process.env.EXCEPTIONAL_FULL_NAMES.split(',').map(name => name.trim()) : [];
+
 
 async function verifyUser(chatId, userId, username, firstName, lastName) {
+    // exceptional cases
+    const fullName = `${firstName} ${lastName}`.trim();
+    if (exceptionalUsernames.includes(username) || exceptionalFullNames.includes(fullName)) {
+        console.log(`Verification false for exceptional user: ${userId}`);
+        return { verified: false, allowed: false, attempts: 0, captcha: null };
+    }
+
     // Check if the user is cached and verified
     if (verifiedUsersCache[userId]) {
         return verifiedUsersCache[userId];
