@@ -166,7 +166,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
     }
 
     if (text === "/verify" || text === "/start") {
-      console.log(`Prompting CAPTCHA for ${userId} / ${username}: ${userStatus.captcha}`);
+      console.log(`CAPTCHA for ${userId} / ${username}: ${userStatus.captcha.substring(0, 30)}`);
       await bot.sendMessage(chatId, config.messages.welcome + userStatus.captcha).catch(console.error);
       return;
     }
@@ -203,7 +203,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
         await userVerificationService.updateUserCaptcha(userId, newCaptcha);
 
         bot.sendMessage(chatId, config.messages.incorrectResponse + newCaptcha.question);
-        console.log(`Prompting CAPTCHA for ${userId} / ${username} again: ${newCaptcha.question}`);
+        console.log(`CAPTCHA for ${userId} / ${username} again: ${newCaptcha.question.substring(0, 30)}`);
       } catch (error) {
         console.error("Failed to update CAPTCHA info:", error);
         bot.sendMessage(chatId, config.messages.verificationError);
@@ -320,7 +320,7 @@ function cleanupUserJoinTimes() {
 // summarizeEvents();
 setInterval(() => {
   cleanup();
-}, 3600000 * 4);  // 3600000 milliseconds = 1 hour
+}, 3600000 * 1);  // 3600000 milliseconds = 1 hour
 
 
 process.on("unhandledRejection", (reason, p) => {
