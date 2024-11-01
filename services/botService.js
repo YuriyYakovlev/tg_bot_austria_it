@@ -87,8 +87,8 @@ async function handleMessage(msg) {
   // console.log(`processing message in chat: ${chatId}`);
   const userStatus = await userVerificationService.verifyUser(chatId, userId, username, firstName, lastName);
   if (userStatus && !userStatus.verified && text) {
-    console.log(`Suspicious message from ${userId} / ${username} / ${firstName} / ${lastName} to chat ${chatId} / ${chat.type}: 
-      ${ text.length > 30 ? text.substring(0, 30) + "..."  : text }`);
+    console.log(`Suspicious message from ${userId} / ${username} / ${firstName} / ${lastName} to chat ${chatId} (${chat.type}): 
+      ${text.replace(/\n/g, ' ').substring(0, 30)} ...`);
   }
 
   if (chat.type === "group" || chat.type === "supergroup") {
