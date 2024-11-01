@@ -220,9 +220,11 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
 }
 
 function handleNewMembers(msg) {
+  const { chat } = msg;
+
   msg.new_chat_members.forEach((member) => {
     try {
-      console.log(`New chat member: ${member.id} / ${member.username} / ${member.first_name} / ${member.last_name}`);
+      console.log(`new chat member: ${member.id} / ${member.username} / ${member.first_name} / ${member.last_name} in chat: ${chat.id} / ${chat.title}`);
       userJoinTimes[member.id] = Date.now();
     } catch (error) {
       console.error(`Failed to get user info`);
