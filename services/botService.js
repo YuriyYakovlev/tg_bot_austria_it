@@ -79,6 +79,7 @@ setTimeout(() => {
 async function handleMessage(msg) {
   const { chat, from, text } = msg;
   const chatId = chat.id;
+  const chatTitle = chat.title;
   const userId = from.id;
   const username = from.username;
   const firstName = from.first_name;
@@ -87,7 +88,7 @@ async function handleMessage(msg) {
   // console.log(`processing message in chat: ${chatId}`);
   const userStatus = await userVerificationService.verifyUser(chatId, userId, username, firstName, lastName);
   if (userStatus && !userStatus.verified && text) {
-    console.log(`Suspicious message from ${userId} / ${username} / ${firstName} / ${lastName} to chat ${chatId} (${chat.type}): 
+    console.log(`Suspicious message from ${userId} / ${username} / ${firstName} / ${lastName} to chat ${chatId} / ${chatTitle} / (${chat.type}): 
       ${text.replace(/\n/g, ' ').substring(0, 30)} ...`);
   }
 
