@@ -43,7 +43,7 @@ async function classifyMessages() {
     }
     //console.log(`Classification Job finished. ${count} new spam message(s) detected.`);
   } catch (error) {
-    console.error('Error in classifyMessages:', error);
+    console.error('Error in classifyMessages:', error.message);
   }
 }
 

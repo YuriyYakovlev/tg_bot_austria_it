@@ -262,8 +262,8 @@ async function cleanup() {
     await kickSpammers();
     await messagesCacheService.deleteOldCachedMessages();
     cleanupUserJoinTimes();
-  } catch (err) {
-    console.error('Error while performing cleanup:', err);
+  } catch (error) {
+    console.error('Error while performing cleanup:', error.message);
   }
 }
 
