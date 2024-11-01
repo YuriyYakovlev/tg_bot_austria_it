@@ -87,8 +87,8 @@ async function handleMessage(msg) {
   // console.log(`processing message in chat: ${chatId}`);
   const userStatus = await userVerificationService.verifyUser(chatId, userId, username, firstName, lastName);
   if (userStatus && !userStatus.verified && text) {
-    console.log(`${userId} / ${username} / ${firstName} / ${lastName} sent a message to chat ${chatId} / ${chat.type}: 
-      ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
+    console.log(`Suspicious message from ${userId} / ${username} / ${firstName} / ${lastName} to chat ${chatId} / ${chat.type}: 
+      ${ text.length > 30 ? text.substring(0, 30) + "..."  : text }`);
   }
 
   if (chat.type === "group" || chat.type === "supergroup") {
@@ -120,7 +120,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
 
     // Cache the message
     if(text) {
-      console.log(`message from ${username} was deleted`);
+      // console.log(`message from ${username} was deleted`);
       messagesCacheService.cacheUserMessage(userId, chatId, messageId, text);
     
       // Generate a unique key for the chat-user combination

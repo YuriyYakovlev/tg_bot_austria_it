@@ -12,7 +12,7 @@ async function classifyMessages() {
     //console.log(`Classification Job started`);
     const [messages] = await db.query('SELECT messageId, messageText FROM cached_messages WHERE is_spam IS FALSE');
     if (messages.length === 0) {
-      console.log('No messages to classify.');
+      //console.log('No messages to classify.');
       return;
     }
     const formattedMessages = messages.map(msg => `{"message_id":"${msg.messageId}", "text":${JSON.stringify(msg.messageText)}}`);
