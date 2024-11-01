@@ -257,10 +257,14 @@ async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
 }
 
 async function cleanup() {
-  await spamDetectionService.classifyMessages();
-  await kickSpammers();
-  await messagesCacheService.deleteOldCachedMessages();
-  cleanupUserJoinTimes();
+  try {
+    await spamDetectionService.classifyMessages();
+    await kickSpammers();
+    await messagesCacheService.deleteOldCachedMessages();
+    cleanupUserJoinTimes();
+  } catch (err) {
+    console.error('Error while performing cleanup:', err);
+  }
 }
 
 async function kickSpammers() {

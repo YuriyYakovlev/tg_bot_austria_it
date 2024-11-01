@@ -8,8 +8,12 @@ const pool = mysql.createPool({
     database: config.dbConfig.DATABASE,
     waitForConnections: true,
     connectionLimit: 10,
-    connectTimeout: 30000,
+    connectTimeout: 60000,
     queueLimit: 0
+});
+
+pool.on('error', (err) => {
+    console.error('Database pool error:', err);
 });
 
 async function query(sql, params) {
