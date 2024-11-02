@@ -49,9 +49,9 @@ async function deleteCachedMessage(messageId) {
 
 async function deleteOldCachedMessages() {
   try {
-    const deleteOldNonSpam =
-      "DELETE FROM cached_messages WHERE is_spam = FALSE AND messageDate <= NOW() - INTERVAL 24 HOUR";
-    await db.query(deleteOldNonSpam);
+    const deleteOldMessages =
+      "DELETE FROM cached_messages WHERE messageDate <= NOW() - INTERVAL 3 DAY";
+    await db.query(deleteOldMessages);
     //console.log(`Deleted old non-spam cached messages.`);
   } catch (error) {
     console.error("Failed to delete old cached messages:", error);
