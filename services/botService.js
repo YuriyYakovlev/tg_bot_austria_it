@@ -4,6 +4,8 @@ const userVerificationService = require("./userVerificationService");
 const spamDetectionService = require("./spamDetectionService");
 const userModerationService = require("./userModerationService");
 const messagesCacheService = require("./messagesCacheService");
+const chatSettingsService = require('./chatSettingsService');
+const languageService = require('./languageService');
 // const newsService = require("../extras/newsService");
 // const eventsService = require("../extras/eventsService");
 const config = require("../config/config");
@@ -88,8 +90,8 @@ async function handleMessage(msg) {
   // console.log(`processing message in chat: ${chatId}`);
   const userStatus = await userVerificationService.verifyUser(chatId, userId, username, firstName, lastName);
   if (userStatus && !userStatus.verified && text) {
-    console.log(`Suspicious message from ${userId} / ${username} / ${firstName} / ${lastName} to chat ${chatId} / ${chatTitle} / (${chat.type}): 
-      ${text.replace(/\n/g, ' ').substring(0, 30)} ...`);
+    console.log(`message from ${userId} / ${username} / ${firstName} / ${lastName} to chat ${chatId} / ${chatTitle} / (${chat.type}): 
+      ${text.replace(/\n/g, ' ').substring(0, 50)}`);
   }
 
   if (chat.type === "group" || chat.type === "supergroup") {
@@ -131,7 +133,10 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
       const lastPromptTime = lastUserPromptTime[userKey] || 0;
       const currentTime = Date.now();
       if (currentTime - lastPromptTime > 600000) {
-          sendTemporaryMessage(bot, chatId, config.messages.verifyPromptGroup(username), 40000);
+          const language = await chatSettingsService.getLanguageForChat(chatId);
+          const messages = languageService.getMessages(language).messages;
+
+          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), 40000);
           lastUserPromptTime[userKey] = currentTime;
           //console.log(`sent temporary verify message to ${userId} / ${username} to chat ${chatId}`);
       }
@@ -159,16 +164,21 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
 }
 
 async function handlePrivateMessage(userStatus, chatId, text, userId, username) {
+  const cachedMessages = await messagesCacheService.retrieveCachedMessages(userId);
+  
+  const language = await chatSettingsService.getLanguageForChat(cachedMessages.length > 0 ? cachedMessages[0].chatId : chatId);
+  const messages = languageService.getMessages(language).messages;
+
   if (userStatus && !userStatus.verified) {
     if (!userStatus.allowed) {
-        await bot.sendMessage(chatId, config.messages.maxAttemptReached).catch(console.error);
+        await bot.sendMessage(chatId, messages.maxAttemptReached).catch(console.error);
         console.log(`sent max attepmt reached for ${userId} / ${username}`);
         return;
     }
 
     if (text === "/verify" || text === "/start") {
       console.log(`CAPTCHA for ${userId} / ${username}: ${userStatus.captcha.substring(0, 30)}`);
-      await bot.sendMessage(chatId, config.messages.welcome + userStatus.captcha).catch(console.error);
+      await bot.sendMessage(chatId, messages.welcome + userStatus.captcha).catch(console.error);
       return;
     }
     
@@ -177,14 +187,13 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
       console.log(`${userId} / ${username} answers CAPTCHA correctly in chat ${chatId}`);
       try {
         await userVerificationService.setUserVerified(userId);
-        await bot.sendMessage(chatId, config.messages.verificationComplete);
+        await bot.sendMessage(chatId, messages.verificationComplete);
 
-        const messages = await messagesCacheService.retrieveCachedMessages(userId);
-        if (messages.length > 0) {
-          await bot.sendMessage(userId, config.messages.copyPasteFromCache);
+        if (cachedMessages.length > 0) {
+          await bot.sendMessage(userId, messages.copyPasteFromCache);
         }
 
-        messages.forEach(async (message) => {
+        cachedMessages.forEach(async (message) => {
           try {
             await bot.sendMessage(userId, message.messageText);
             //console.log(`Reminded cached message for user ${userId}`);
@@ -196,25 +205,25 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
 
       } catch (error) {
         console.error("Failed to set user as verified:", error);
-        await bot.sendMessage(chatId, config.messages.verificationError).catch(console.error);
+        await bot.sendMessage(chatId, messages.verificationError).catch(console.error);
       }
     } else {
       try {
-        let newCaptcha = userVerificationService.getRandomCaptcha(userId); // show a new CAPTCHA in case of wrong answer
+        let newCaptcha = await userVerificationService.getRandomCaptcha(chatId, userId); // show a new CAPTCHA in case of wrong answer
         await userVerificationService.updateUserCaptcha(userId, newCaptcha);
 
-        bot.sendMessage(chatId, config.messages.incorrectResponse + newCaptcha.question);
+        bot.sendMessage(chatId, messages.incorrectResponse + newCaptcha.question);
         console.log(`CAPTCHA for ${userId} / ${username} again: ${newCaptcha.question.substring(0, 30)}`);
       } catch (error) {
         console.error("Failed to update CAPTCHA info:", error);
-        bot.sendMessage(chatId, config.messages.verificationError);
+        bot.sendMessage(chatId, messages.verificationError);
       }
     }
   } else {
     if (text) {
       console.log(`user ${userId} / ${username} sent this message to private chat: ${text} `);
     }
-    await bot.sendMessage(userId, config.messages.thanksMessage).catch(console.error);
+    await bot.sendMessage(userId, messages.thanksMessage).catch(console.error);
     //console.log(`sent thanks message to ${userId} / ${username} `);
   }
 }
@@ -289,7 +298,9 @@ async function kickSpammers() {
           }
       }
       if(deletedCount > 0 && chatId) {
-        sendTemporaryMessage(bot, chatId, config.messages.banSpammersComplete(deletedCount), 20000);
+        const language = await chatSettingsService.getLanguageForChat(chatId);
+        const messages = languageService.getMessages(language).messages;
+        sendTemporaryMessage(bot, chatId, messages.banSpammersComplete(deletedCount), 20000);
         //console.log(`sent temporary status message to chat ${chatId}`);
       }
       //console.log(`Kick spammers Job finished`);

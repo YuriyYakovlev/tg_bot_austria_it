@@ -1,6 +1,4 @@
 //messagesCacheService.js
-
-//botService.js
 const db = require("../db/connectors/dbConnector");
 
 async function cacheUserMessage(userId, chatId, messageId, text) {
@@ -18,7 +16,7 @@ async function cacheUserMessage(userId, chatId, messageId, text) {
 async function retrieveCachedMessages(userId) {
   try {
     const [rows] = await db.query(
-      `SELECT messageId, messageText FROM cached_messages WHERE userId = ?`,
+      `SELECT chatId, messageId, messageText FROM cached_messages WHERE userId = ?`,
       [userId]
     );
     // if (rows.length === 0) {

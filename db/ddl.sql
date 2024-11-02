@@ -30,3 +30,13 @@ CREATE TABLE `users` (
 
 ALTER TABLE `users_test`
 ADD COLUMN `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+
+-- tg_bot_aut_it.chat_settings definition
+
+CREATE TABLE `chat_settings` (
+  `chatId` bigint NOT NULL,
+  `title` varchar(255),
+  `language` varchar(10),
+  PRIMARY KEY (`chatId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

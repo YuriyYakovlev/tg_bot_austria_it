@@ -1,5 +1,7 @@
 //userVerificationService.js
 const db = require('../db/connectors/dbConnector');
+const chatSettingsService = require('./chatSettingsService');
+const languageService = require('./languageService');
 const config = require('../config/config');
 const moment = require('moment-timezone');
 
@@ -58,7 +60,10 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
                 return { verified: false, allowed: false, attempts: user.attempts, captcha: null };
             }
 
-            const captcha = user.current_captcha_id ? config.captchas.find(c => c.id === user.current_captcha_id) : getRandomCaptcha(userId);
+            const language = await chatSettingsService.getLanguageForChat(chatId);
+            const captchas = languageService.getMessages(language).captchas;
+
+            const captcha = user.current_captcha_id ? captchas.find(c => c.id === user.current_captcha_id) : getRandomCaptcha(userId);
             const updateResult = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET attempts = ?, last_attempt = NOW(), current_captcha_id = ?, current_captcha_answer = ?  WHERE userId = ?`, [++user.attempts, captcha.id, captcha.answer, userId]);
             if (updateResult && updateResult[0].affectedRows > 0) {
                 // Return the incremented attempts only if the update was successful
@@ -115,21 +120,28 @@ async function resetUserVerification(userId) {
     }
 }
 
-function getRandomCaptcha(userId) {
+async function getRandomCaptcha(chatId, userId) {
+    const language = await chatSettingsService.getLanguageForChat(chatId);
+    const captchas = languageService.getMessages(language).captchas;
+
     const recentCaptchas = recentUserCaptchas[userId] || [];
-    const availableCaptchas = config.captchas.filter(captcha => !recentCaptchas.includes(captcha.id));
+    const availableCaptchas = captchas.filter(captcha => !recentCaptchas.includes(captcha.id));
     const randomCaptcha = availableCaptchas[Math.floor(Math.random() * availableCaptchas.length)];
-    updateRecentCaptchasForUser(userId, randomCaptcha.id);
+    await updateRecentCaptchasForUser(chatId, userId, randomCaptcha.id);
     return randomCaptcha;
 }
 
-function updateRecentCaptchasForUser(userId, newCaptchaId) {
+async function updateRecentCaptchasForUser(chatId, userId, newCaptchaId) {
     if (!recentUserCaptchas[userId]) {
         recentUserCaptchas[userId] = [];
     }
 
     recentUserCaptchas[userId].push(newCaptchaId);
-    if (recentUserCaptchas[userId].length > config.captchas.length) {
+
+    const language = await chatSettingsService.getLanguageForChat(chatId);
+    const captchas = languageService.getMessages(language).captchas;
+
+    if (recentUserCaptchas[userId].length > captchas.length) {
         recentUserCaptchas[userId].shift();  // Remove the oldest CAPTCHA to maintain the limit
     }
 }
