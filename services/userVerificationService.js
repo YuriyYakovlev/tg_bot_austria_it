@@ -25,10 +25,10 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
     }
 
     try {
-        const [rows] = await db.query(`SELECT verified, attempts, last_attempt, current_captcha_id, current_captcha_answer, is_spammer FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
+        const [rows] = await db.query(`SELECT verified, attempts, last_attempt, captcha_id, captcha_answer, is_spammer FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
         if (rows.length === 0) {
             const captcha = getRandomCaptcha(userId);
-            await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified, attempts, last_attempt, current_captcha_id, current_captcha_answer) VALUES (?, ?, FALSE, 0, NULL, ?, ?)`, [chatId, userId, captcha.id, captcha.answer]);
+            await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified, attempts, last_attempt, captcha_id, captcha_answer) VALUES (?, ?, FALSE, 0, NULL, ?, ?)`, [chatId, userId, captcha.id, captcha.answer]);
             return { verified: false, allowed: true, attempts: 0, captcha: captcha.question, answer: captcha.answer };
         }
         
@@ -58,8 +58,8 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
             const language = await chatSettingsService.getLanguageForChat(chatId);
             const captchas = languageService.getMessages(language).captchas;
 
-            const captcha = user.current_captcha_id ? captchas.find(c => c.id === user.current_captcha_id) : getRandomCaptcha(userId);
-            const updateResult = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET attempts = ?, last_attempt = NOW(), current_captcha_id = ?, current_captcha_answer = ?  WHERE userId = ?`, [++user.attempts, captcha.id, captcha.answer, userId]);
+            const captcha = user.captcha_id ? captchas.find(c => c.id === user.captcha_id) : getRandomCaptcha(userId);
+            const updateResult = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET attempts = ?, last_attempt = NOW(), captcha_id = ?, captcha_answer = ?  WHERE userId = ?`, [++user.attempts, captcha.id, captcha.answer, userId]);
             if (updateResult && updateResult[0].affectedRows > 0) {
                 // Return the incremented attempts only if the update was successful
                 return { verified: false, allowed: true, attempts: user.attempts, captcha: captcha.question, answer: captcha.answer };
@@ -87,7 +87,7 @@ async function setUserVerified(userId) {
 async function updateUserCaptcha(userId, newCaptcha) {
     try {
         await db.query(
-            `UPDATE ${config.USERS_TABLE_NAME} SET current_captcha_id = ?, current_captcha_answer = ? WHERE userId = ?`,
+            `UPDATE ${config.USERS_TABLE_NAME} SET captcha_id = ?, captcha_answer = ? WHERE userId = ?`,
             [newCaptcha.id, newCaptcha.answer, userId]
         );
     } catch (error) {
