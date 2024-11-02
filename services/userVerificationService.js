@@ -25,16 +25,11 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
     }
 
     try {
-        const [rows] = await db.query(`SELECT verified, attempts, last_attempt, current_captcha_id, current_captcha_answer, is_spammer, first_name, last_name FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
+        const [rows] = await db.query(`SELECT verified, attempts, last_attempt, current_captcha_id, current_captcha_answer, is_spammer FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
         if (rows.length === 0) {
             const captcha = getRandomCaptcha(userId);
-            await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified, username, attempts, last_attempt, current_captcha_id, current_captcha_answer, first_name, last_name) VALUES (?, ?, FALSE, ?, 0, NULL, ?, ?, ?, ?)`, [chatId, userId, username, captcha.id, captcha.answer, firstName, lastName]);
+            await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified, attempts, last_attempt, current_captcha_id, current_captcha_answer) VALUES (?, ?, FALSE, 0, NULL, ?, ?)`, [chatId, userId, captcha.id, captcha.answer]);
             return { verified: false, allowed: true, attempts: 0, captcha: captcha.question, answer: captcha.answer };
-        } else {
-            // temporary, to update already existing users
-            if((firstName && !rows[0].first_name) || (lastName && !rows[0].last_name))   {
-                await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET first_name = ?, last_name = ? WHERE userId = ?`, [firstName, lastName, userId]);
-            }
         }
         
         let user = rows[0];
