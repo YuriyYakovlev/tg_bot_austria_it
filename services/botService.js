@@ -187,8 +187,8 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
         userStatus.captcha = await userVerificationService.getRandomCaptcha(chatId, userId);
         await userVerificationService.updateUserCaptcha(userId, userStatus.captcha);
       }
-      console.log(`CAPTCHA for ${userId} / ${username}: ${userStatus.captcha.substring(0, 30)}`);
-      await bot.sendMessage(chatId, messages.welcome + userStatus.captcha).catch(console.error);
+      console.log(`CAPTCHA for ${userId} / ${username}: ${userStatus.captcha.question}`);
+      await bot.sendMessage(chatId, messages.welcome + userStatus.captcha.question).catch(console.error);
       return;
     }
     
