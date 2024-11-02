@@ -183,7 +183,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
     }
 
     if (text === "/verify" || text === "/start") {
-      console.log(`CAPTCHA for ${userId} / ${username}: ${userStatus.captcha.substring(0, 30)}`);
+      console.log(`CAPTCHA for ${userId} / ${username}: ${userStatus.captcha}`);
       await bot.sendMessage(chatId, messages.welcome + userStatus.captcha).catch(console.error);
       return;
     }
