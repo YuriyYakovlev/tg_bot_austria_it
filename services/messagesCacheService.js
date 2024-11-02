@@ -4,7 +4,7 @@ const db = require("../db/connectors/dbConnector");
 async function cacheUserMessage(userId, chatId, messageId, text) {
   try {
     await db.query(
-      `INSERT INTO cached_messages (userId, chatId, messageId, messageText) VALUES (?, ?, ?, ?)`,
+      `INSERT INTO cached_messages (userId, chatId, messageId, msg_text) VALUES (?, ?, ?, ?)`,
       [userId, chatId, messageId, text]
     );
     //console.log(`Cached message for user ${userId}`);
@@ -16,7 +16,7 @@ async function cacheUserMessage(userId, chatId, messageId, text) {
 async function retrieveCachedMessages(userId) {
   try {
     const [rows] = await db.query(
-      `SELECT chatId, messageId, messageText FROM cached_messages WHERE userId = ?`,
+      `SELECT chatId, messageId, msg_text FROM cached_messages WHERE userId = ?`,
       [userId]
     );
     // if (rows.length === 0) {
@@ -50,7 +50,7 @@ async function deleteCachedMessage(messageId) {
 async function deleteOldCachedMessages() {
   try {
     const deleteOldMessages =
-      "DELETE FROM cached_messages WHERE messageDate <= NOW() - INTERVAL 3 DAY";
+      "DELETE FROM cached_messages WHERE msg_date <= NOW() - INTERVAL 3 DAY";
     await db.query(deleteOldMessages);
     //console.log(`Deleted old non-spam cached messages.`);
   } catch (error) {

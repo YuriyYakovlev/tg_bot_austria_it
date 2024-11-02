@@ -10,12 +10,12 @@ let vertexAiClient = new vertexAi.VertexAI({
 async function classifyMessages() {
   try {
     //console.log(`Classification Job started`);
-    const [messages] = await db.query('SELECT messageId, messageText FROM cached_messages WHERE spam IS FALSE');
+    const [messages] = await db.query('SELECT messageId, msg_text FROM cached_messages WHERE spam IS FALSE');
     if (messages.length === 0) {
       //console.log('No messages to classify.');
       return;
     }
-    const formattedMessages = messages.map(msg => `{"message_id":"${msg.messageId}", "text":${JSON.stringify(msg.messageText)}}`);
+    const formattedMessages = messages.map(msg => `{"message_id":"${msg.messageId}", "text":${JSON.stringify(msg.msg_text)}}`);
     const request = prepareClassificationRequest(formattedMessages.join(", "));
 
     const generativeModel = vertexAiClient.preview.getGenerativeModel({

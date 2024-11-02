@@ -205,7 +205,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
 
         cachedMessages.forEach(async (message) => {
           try {
-            await bot.sendMessage(userId, message.messageText);
+            await bot.sendMessage(userId, message.msg_text);
             //console.log(`Reminded cached message for user ${userId}`);
             await messagesCacheService.deleteCachedMessage(message.messageId);
           } catch (error) {
