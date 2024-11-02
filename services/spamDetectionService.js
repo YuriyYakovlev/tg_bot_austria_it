@@ -10,7 +10,7 @@ let vertexAiClient = new vertexAi.VertexAI({
 async function classifyMessages() {
   try {
     //console.log(`Classification Job started`);
-    const [messages] = await db.query('SELECT messageId, messageText FROM cached_messages WHERE is_spam IS FALSE');
+    const [messages] = await db.query('SELECT messageId, messageText FROM cached_messages WHERE spam IS FALSE');
     if (messages.length === 0) {
       //console.log('No messages to classify.');
       return;
@@ -36,8 +36,8 @@ async function classifyMessages() {
     parsedResult = parsedResult instanceof Array ? parsedResult : [parsedResult];
     //let count = 0;
     for (const result of parsedResult) {
-      if (result && result.is_spam === 'true') {
-        await db.query('UPDATE cached_messages SET is_spam = ? WHERE messageId = ?', [true, result.message_id]);
+      if (result && result.spam === 'true') {
+        await db.query('UPDATE cached_messages SET spam = ? WHERE messageId = ?', [true, result.message_id]);
         //count++;
       }
     }
@@ -66,7 +66,7 @@ async function isSpamMessage(text) {
     const jsonMatch = textResponse.match(regex);
     let parsedResult = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
     parsedResult = parsedResult instanceof Array ? parsedResult : [parsedResult];
-    return parsedResult.some(result => result.message_id === 'temp_id' && result.is_spam === 'true');
+    return parsedResult.some(result => result.message_id === 'temp_id' && result.spam === 'true');
   } catch (error) {
     console.error('Error in isSpamMessage:', error);
     return false;
@@ -110,7 +110,7 @@ function prepareClassificationRequest(messages) {
 
               ### Task ###
               Analyse the messages below and return a response exactly in this format:
-              { "message_id": "id", "is_spam": "true/false"}
+              { "message_id": "id", "spam": "true/false"}
 
               ### Messages ###
               [${messages}]                

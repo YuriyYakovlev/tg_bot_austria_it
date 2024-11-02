@@ -6,7 +6,7 @@ CREATE TABLE `cached_messages` (
   `messageId` bigint NOT NULL,
   `messageText` text,
   `messageDate` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `is_spam` tinyint(1) DEFAULT '0',
+  `spam` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`messageId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -19,7 +19,7 @@ CREATE TABLE `users` (
   `last_attempt` timestamp NULL DEFAULT NULL,
   `captcha_id` varchar(255) DEFAULT NULL,
   `captcha_answer` varchar(255) DEFAULT NULL,
-  `is_spammer` tinyint(1) DEFAULT '0',
+  `spam` tinyint(1) DEFAULT '0',
   `chatId` bigint DEFAULT NULL,
   `kicked` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`userId`)
