@@ -110,6 +110,7 @@ async function isUserAdmin(chatId, userId) {
 const lastUserPromptTime = {};
 
 async function handleGroupMessage(userId, userStatus, chatId, messageId, username, text) {
+  let messageDeleted = false;
   if (userStatus && !userStatus.verified) {
 
     const isAdmin = await isUserAdmin(chatId, userId);
@@ -119,7 +120,10 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
     }
 
     // Delete the message from the group
-    await bot.deleteMessage(chatId, messageId.toString()).catch(() => { });
+    await bot.deleteMessage(chatId, messageId.toString()).catch((error) => {
+      console.error(`Failed to delete message ${messageId} from chat ${chatId}:`, error);
+    });
+    messageDeleted = true;
 
     // Cache the message
     if(text) {
@@ -152,9 +156,11 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
       if (isSpam) {
         console.log(`${userId} / ${username} sent a potential spam message to chat ${chatId}: 
           ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
-
-        await bot.deleteMessage(chatId, messageId.toString()).catch(() => { });
-        console.log(`Deleted potential spam message from ${username}.`);
+        if (!messageDeleted) {
+          await bot.deleteMessage(chatId, messageId.toString()).catch((error) => {
+            console.error(`Failed to delete message ${messageId} from chat ${chatId}:`, error);
+          });
+        }
         userVerificationService.resetUserVerification(userId);
       } else {
         console.log('no spam in new user message');
