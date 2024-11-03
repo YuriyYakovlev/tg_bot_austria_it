@@ -5,6 +5,6 @@ module.exports = {
         PASSWORD: process.env.DB_PASSWORD,
         DATABASE: process.env.DB_NAME
     },
-    MAX_ATTEMPTS: 10,
+    MAX_ATTEMPTS: 5,
     USERS_TABLE_NAME: process.env.NODE_ENV === 'production' ? 'users' : 'users_test'
 };

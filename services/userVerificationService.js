@@ -3,10 +3,10 @@ const db = require('../db/connectors/dbConnector');
 const chatSettingsService = require('./chatSettingsService');
 const languageService = require('./languageService');
 const config = require('../config/config');
-const moment = require('moment-timezone');
 
 const verifiedUsersCache = {};
 const recentUserCaptchas = {};
+const userAttempts = {};
 const exceptionalUsernames = process.env.EXCEPTIONAL_USERNAMES ? process.env.EXCEPTIONAL_USERNAMES.split(',').map(name => name.trim()) : [];
 const exceptionalFullNames = process.env.EXCEPTIONAL_FULL_NAMES ? process.env.EXCEPTIONAL_FULL_NAMES.split(',').map(name => name.trim()) : [];
 
@@ -16,7 +16,7 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
     const fullName = `${firstName} ${lastName}`.trim();
     if (exceptionalUsernames.includes(username) || exceptionalFullNames.includes(fullName)) {
         console.log(`Verification false for exceptional user: ${userId}`);
-        return { verified: false, allowed: false, attempts: 0, captcha: null };
+        return { verified: false };
     }
 
     // Check if the user is cached and verified
@@ -25,71 +25,29 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
     }
 
     try {
-        const [rows] = await db.query(`SELECT verified, attempts, last_attempt, captcha_id, captcha_answer, spam FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
+        const [rows] = await db.query(`SELECT verified, spam FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
         if (rows.length === 0) {
-            const captcha = getRandomCaptcha(userId);
-            await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified, attempts, last_attempt, captcha_id, captcha_answer) VALUES (?, ?, FALSE, 0, NULL, ?, ?)`, [chatId, userId, captcha.id, captcha.answer]);
-            return { verified: false, allowed: true, attempts: 0, captcha: captcha.question, answer: captcha.answer };
+            await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified) VALUES (?, ?, FALSE)`, [chatId, userId]);
+            return { verified: false };
         }
         
         let user = rows[0];
         if (user.verified && !user.spam) {  
-            verifiedUsersCache[userId] = {
-                verified: true,
-                allowed: true,
-                attempts: user.attempts,
-                captcha: null
-            };
+            verifiedUsersCache[userId] = { verified: true };
             return verifiedUsersCache[userId];
         } else {
-            const lastAttemptTime = moment(user.last_attempt).tz('UTC').toDate(); // Converts database time to UTC
-            const now = moment().utc().toDate(); // Current time in UTC
-            const timeDiff = (now.getTime() - lastAttemptTime.getTime()) / 1000 / 60;
-
-            if (timeDiff && timeDiff > (60 + 180)) { // 3h difference with the database
-                await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET attempts = 0 WHERE userId = ?`, [userId]);
-                user.attempts = 0;  // Reset attempts after the timeout period
-            }
-
-            if ((user.attempts > config.MAX_ATTEMPTS) || user.spam) {
-                return { verified: false, allowed: false, attempts: user.attempts, captcha: null };
-            }
-
-            const language = await chatSettingsService.getLanguageForChat(chatId);
-            const captchas = languageService.getMessages(language).captchas;
-
-            const captcha = user.captcha_id ? captchas.find(c => c.id === user.captcha_id) : getRandomCaptcha(userId);
-            const updateResult = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET attempts = ?, last_attempt = NOW(), captcha_id = ?, captcha_answer = ?  WHERE userId = ?`, [++user.attempts, captcha.id, captcha.answer, userId]);
-            if (updateResult && updateResult[0].affectedRows > 0) {
-                // Return the incremented attempts only if the update was successful
-                return { verified: false, allowed: true, attempts: user.attempts, captcha: captcha.question, answer: captcha.answer };
-            }
+            return { verified: false };
         }
     } catch (error) {
-        console.error('Error in verifyUser:', error);
+        console.error('Error in verifyUser:', error.message);
+        return { verified: false };
     }
 }
 
 async function setUserVerified(userId) {
     try {
         await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET verified = TRUE WHERE userId = ?`, [userId]);
-        verifiedUsersCache[userId] = {
-            verified: true,
-            allowed: true,
-            attempts: 0,
-            captcha: null
-        };
-    } catch (error) {
-        console.error('Error in setUserVerified:', error);
-    }
-}
-
-async function updateUserCaptcha(userId, newCaptcha) {
-    try {
-        await db.query(
-            `UPDATE ${config.USERS_TABLE_NAME} SET captcha_id = ?, captcha_answer = ? WHERE userId = ?`,
-            [newCaptcha.id, newCaptcha.answer, userId]
-        );
+        verifiedUsersCache[userId] = { verified: true };
     } catch (error) {
         console.error('Error in setUserVerified:', error);
     }
@@ -97,17 +55,12 @@ async function updateUserCaptcha(userId, newCaptcha) {
 
 async function resetUserVerification(userId) {
     try {
-        const result = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET verified = FALSE, attempts = 0 WHERE userId = ?`, [userId]);
+        const result = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET verified = FALSE WHERE userId = ?`, [userId]);
         if (result.affectedRows > 0) {
             console.log(`Verification status reset for user ID: ${userId}`);
             // Optionally clear any cached verification status if applicable
             if (verifiedUsersCache[userId]) {
-                verifiedUsersCache[userId] = {
-                    verified: false,
-                    allowed: true,
-                    attempts: 0,
-                    captcha: null
-                };
+                verifiedUsersCache[userId] = { verified: false };
             }
         }
     } catch (error) {
@@ -115,29 +68,72 @@ async function resetUserVerification(userId) {
     }
 }
 
-async function getRandomCaptcha(chatId, userId) {
-    const language = await chatSettingsService.getLanguageForChat(chatId);
+async function getRandomCaptcha(userId, language = null, chatId = null) {
+    if (!language && chatId) {
+        language = await chatSettingsService.getLanguageForChat(chatId);
+    }
     const captchas = languageService.getMessages(language).captchas;
 
     const recentCaptchas = recentUserCaptchas[userId] || [];
     const availableCaptchas = captchas.filter(captcha => !recentCaptchas.includes(captcha.id));
     const randomCaptcha = availableCaptchas[Math.floor(Math.random() * availableCaptchas.length)];
-    await updateRecentCaptchasForUser(chatId, userId, randomCaptcha.id);
+    await updateRecentCaptchasForUser(userId, randomCaptcha.id);
     return randomCaptcha;
 }
 
-async function updateRecentCaptchasForUser(chatId, userId, newCaptchaId) {
+async function getCaptchaAnswer(captchaId, language) {
+    const captchas = languageService.getMessages(language).captchas;
+    const captcha = captchas.find(c => c.id === captchaId);
+    if (captcha) {
+        return captcha.answer;
+    } else {
+        return null;
+    }
+}
+
+async function updateRecentCaptchasForUser(userId, newCaptchaId) {
     if (!recentUserCaptchas[userId]) {
         recentUserCaptchas[userId] = [];
     }
 
     recentUserCaptchas[userId].push(newCaptchaId);
-
-    const language = await chatSettingsService.getLanguageForChat(chatId);
-    const captchas = languageService.getMessages(language).captchas;
+    const captchas = languageService.getMessages().captchas;
 
     if (recentUserCaptchas[userId].length > captchas.length) {
         recentUserCaptchas[userId].shift();  // Remove the oldest CAPTCHA to maintain the limit
+    }
+}
+
+function recordUserAttempt(userId) {
+    const now = Date.now();
+    const HOUR_IN_MS = 60 * 60 * 1000;
+    
+    if (!userAttempts[userId]) {
+        userAttempts[userId] = { count: 1, firstAttemptTime: now };
+        return true;
+    }
+
+    const userRecord = userAttempts[userId];
+    if (now - userRecord.firstAttemptTime < HOUR_IN_MS) {
+        if (userRecord.count >= config.MAX_ATTEMPTS) {
+            return false;
+        }
+        userRecord.count += 1;
+        return true;
+    } else {
+        userRecord.count = 1;
+        userRecord.firstAttemptTime = now;
+        return true;
+    }
+}
+
+function cleanupUserAttempts() {
+    const now = Date.now();
+    const HOUR_IN_MS = 60 * 60 * 1000;
+    for (const userId in userAttempts) {
+        if (now - userAttempts[userId].firstAttemptTime > HOUR_IN_MS) {
+            delete userAttempts[userId];
+        }
     }
 }
 
@@ -145,6 +141,8 @@ module.exports = {
     verifyUser,
     setUserVerified,
     getRandomCaptcha,
-    updateUserCaptcha,
-    resetUserVerification
+    getCaptchaAnswer,
+    resetUserVerification,
+    recordUserAttempt,
+    cleanupUserAttempts
 };

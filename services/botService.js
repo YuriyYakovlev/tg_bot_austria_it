@@ -8,10 +8,10 @@ const chatSettingsService = require('./chatSettingsService');
 const languageService = require('./languageService');
 // const newsService = require("../extras/newsService");
 // const eventsService = require("../extras/eventsService");
-const config = require("../config/config");
 
 let bot;
 const userJoinTimes = {};
+const lastUserPromptTime = {};
 
 function startBotPolling(retryCount = 0) {
   const MAX_RETRIES = 5;
@@ -37,6 +37,58 @@ function startBotPolling(retryCount = 0) {
     }
   });
 
+  bot.on("callback_query", async (callbackQuery) => {
+    const chatId = callbackQuery.message.chat.id;
+    const userId = callbackQuery.from.id;
+
+    const data = JSON.parse(callbackQuery.data);
+    const { type, captchaId, answer, language } = data;
+      
+    await bot.answerCallbackQuery(callbackQuery.id);
+    if (type === 'captcha') {
+      const messages = languageService.getMessages(language).messages;
+      
+      const canAttempt = userVerificationService.recordUserAttempt(userId);  
+      if (!canAttempt) {
+          await bot.sendMessage(chatId, messages.maxAttemptReached).catch(console.error)
+          console.log(`sent max attepmt reached to ${userId}`);
+          return;
+      }
+        
+      let correctAnswer = await userVerificationService.getCaptchaAnswer(captchaId, language)
+      if (answer.toString() === correctAnswer.toString()) {
+        await userVerificationService.setUserVerified(userId);
+        await bot.sendMessage(chatId, messages.verificationComplete);
+        console.log(`${userId} solved CAPTCHA`);
+        
+        const cachedMessages = await messagesCacheService.retrieveCachedMessages(userId);
+        if (cachedMessages.length > 0) {
+          await bot.sendMessage(userId, messages.copyPasteFromCache);
+          cachedMessages.forEach(async (message) => {
+            try {
+              await bot.sendMessage(chatId, message.msg_text);
+              //console.log(`Reminded cached message for user ${userId}`);
+              await messagesCacheService.deleteCachedMessage(message.messageId);
+            } catch (error) {
+              console.error(`Error sending cached message to user ${userId}:`, error);
+            }
+          });
+        }
+      } else {
+        await bot.sendMessage(chatId, messages.incorrectResponse);
+        console.log(`${userId} answered CAPTCHA incorrectly: ${answer}`);
+        let newCaptcha = await userVerificationService.getRandomCaptcha(userId, language);
+        const options = {
+          reply_markup: {
+              inline_keyboard: newCaptcha.inline_keyboard(language)
+          }
+        };
+        await bot.sendMessage(chatId, newCaptcha.question, options).catch(console.error);
+        console.log(`new CAPTCHA for ${userId}: ${newCaptcha.question.substring(0, 50)}`);
+      }
+    } 
+  });
+
   bot.on("polling_error", (error) => {
     //console.error("Polling error");
     if (error.code === 'EFATAL' || error.message.includes('ECONNRESET')) {
@@ -45,9 +97,6 @@ function startBotPolling(retryCount = 0) {
       console.error("Telegram server error, will retry polling...");
       handleRetry(retryCount, MAX_RETRIES);
     }
-    // else {
-    //   console.error("Unexpected error type, may require manual intervention.");
-    // }
   });
 }
 
@@ -87,7 +136,6 @@ async function handleMessage(msg) {
   const firstName = from.first_name;
   const lastName = from.last_name;
  
-  // console.log(`processing message in chat: ${chatId}`);
   const userStatus = await userVerificationService.verifyUser(chatId, userId, username, firstName, lastName);
   if (userStatus && !userStatus.verified && text) {
     console.log(`message from ${userId} / ${username} / ${firstName} / ${lastName} to chat ${chatId} / ${chatTitle} / (${chat.type}): 
@@ -105,9 +153,6 @@ async function isUserAdmin(chatId, userId) {
   const member = await bot.getChatMember(chatId, userId);
   return member.status === 'administrator' || member.status === 'creator';
 }
-
-// Use an object to track the last prompt times for each user in each chat
-const lastUserPromptTime = {};
 
 async function handleGroupMessage(userId, userStatus, chatId, messageId, username, text) {
   let messageDeleted = false;
@@ -154,7 +199,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
       console.log(`check new user ${userId} for spam`);
       const isSpam = await spamDetectionService.isSpamMessage(text);
       if (isSpam) {
-        console.log(`${userId} / ${username} sent a potential spam message to chat ${chatId}: 
+        console.log(`yes, ${userId} sent a potential spam message to chat ${chatId}: 
           ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
         if (!messageDeleted) {
           await bot.deleteMessage(chatId, messageId.toString()).catch((error) => {
@@ -171,63 +216,29 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
 
 async function handlePrivateMessage(userStatus, chatId, text, userId, username) {
   const cachedMessages = await messagesCacheService.retrieveCachedMessages(userId);
-  
   const language = await chatSettingsService.getLanguageForChat(cachedMessages.length > 0 ? cachedMessages[0].chatId : chatId);
   const messages = languageService.getMessages(language).messages;
 
   if (userStatus && !userStatus.verified) {
-    if (!userStatus.allowed) {
-        await bot.sendMessage(chatId, messages.maxAttemptReached).catch(console.error);
-        console.log(`sent max attepmt reached for ${userId} / ${username}`);
+    const canAttempt = userVerificationService.recordUserAttempt(userId);  
+    if (!canAttempt) {
+        await bot.sendMessage(userId, messages.maxAttemptReached).catch(console.error)
+        console.log(`sent max attepmt reached to ${userId}`);
         return;
     }
 
     if (text === "/verify" || text === "/start") {
-      if (!userStatus.captcha) {
-        userStatus.captcha = await userVerificationService.getRandomCaptcha(chatId, userId);
-        await userVerificationService.updateUserCaptcha(userId, userStatus.captcha);
-      }
-      console.log(`CAPTCHA for ${userId} / ${username}: ${userStatus.captcha.question}`);
-      await bot.sendMessage(chatId, messages.welcome + userStatus.captcha.question).catch(console.error);
-      return;
-    }
-    
-    // Handle CAPTCHA response
-    if (text === userStatus.answer) {
-      console.log(`${userId} / ${username} answers CAPTCHA correctly in chat ${chatId}`);
-      try {
-        await userVerificationService.setUserVerified(userId);
-        await bot.sendMessage(chatId, messages.verificationComplete);
+      let captcha = await userVerificationService.getRandomCaptcha(userId, null, chatId);
+      console.log(`CAPTCHA for ${userId} / ${username}: ${captcha.question}`);
+      await bot.sendMessage(chatId, messages.welcome)
 
-        if (cachedMessages.length > 0) {
-          await bot.sendMessage(userId, messages.copyPasteFromCache);
+      const options = {
+        reply_markup: {
+            inline_keyboard: captcha.inline_keyboard(language)
         }
-
-        cachedMessages.forEach(async (message) => {
-          try {
-            await bot.sendMessage(userId, message.msg_text);
-            //console.log(`Reminded cached message for user ${userId}`);
-            await messagesCacheService.deleteCachedMessage(message.messageId);
-          } catch (error) {
-            console.error(`Error sending cached message to user ${userId}:`, error);
-          }
-        });
-
-      } catch (error) {
-        console.error("Failed to set user as verified:", error);
-        await bot.sendMessage(chatId, messages.verificationError).catch(console.error);
-      }
-    } else {
-      try {
-        let newCaptcha = await userVerificationService.getRandomCaptcha(chatId, userId); // show a new CAPTCHA in case of wrong answer
-        await userVerificationService.updateUserCaptcha(userId, newCaptcha);
-
-        bot.sendMessage(chatId, messages.incorrectResponse + newCaptcha.question);
-        console.log(`CAPTCHA for ${userId} / ${username} again: ${newCaptcha.question.substring(0, 30)}`);
-      } catch (error) {
-        console.error("Failed to update CAPTCHA info:", error);
-        bot.sendMessage(chatId, messages.verificationError);
-      }
+      };
+      await bot.sendMessage(chatId, captcha.question, options).catch(console.error);
+      return;
     }
   } else {
     if (text) {
@@ -282,6 +293,7 @@ async function cleanup() {
     await spamDetectionService.classifyMessages();
     await kickSpammers();
     cleanupUserJoinTimes();
+    await userVerificationService.cleanupUserAttempts();
   } catch (error) {
     console.error('Error while performing cleanup:', error.message);
   }
@@ -320,7 +332,7 @@ async function kickSpammers() {
 
 function cleanupUserJoinTimes() {
   const now = Date.now();
-  const THRESHOLD = 1 * 60 * 60 * 1000; // 1 hour
+  const THRESHOLD = 1 * 60 * 60 * 1000;
   for (const userId in userJoinTimes) {
     if (now - userJoinTimes[userId] > THRESHOLD) {
       delete userJoinTimes[userId];
