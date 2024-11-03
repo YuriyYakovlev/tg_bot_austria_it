@@ -281,7 +281,6 @@ async function cleanup() {
   try {
     await spamDetectionService.classifyMessages();
     await kickSpammers();
-    await messagesCacheService.deleteOldCachedMessages();
     cleanupUserJoinTimes();
   } catch (error) {
     console.error('Error while performing cleanup:', error.message);
@@ -302,7 +301,7 @@ async function kickSpammers() {
               await bot.banChatMember(spammer.chatId, spammer.userId);
               await userModerationService.markUserAsKicked(spammer.userId);
               deletedCount++;
-              console.log(`Kicked spammer with userId: ${spammer.userId} from chat ${spammer.chatId}.`);
+              console.log(`Kicked user with userId: ${spammer.userId} from chat ${spammer.chatId}.`);
           } catch (error) {
               //console.error(`Failed to kick and update spammer with userId: ${spammer.userId}`, error.message);
           }

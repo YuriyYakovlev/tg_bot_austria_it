@@ -19,13 +19,6 @@ async function retrieveCachedMessages(userId) {
       `SELECT chatId, messageId, msg_text FROM cached_messages WHERE userId = ?`,
       [userId]
     );
-    // if (rows.length === 0) {
-    //   console.log(`No cached messages found for user ${userId}`);
-    // } else {
-    //   console.log(
-    //     `Retrieved ${rows.length} cached messages for user ${userId}`
-    //   );
-    // }
     return rows;
   } catch (error) {
     console.error(
@@ -47,20 +40,8 @@ async function deleteCachedMessage(messageId) {
   }
 }
 
-async function deleteOldCachedMessages() {
-  try {
-    const deleteOldMessages =
-      "DELETE FROM cached_messages WHERE msg_date <= NOW() - INTERVAL 3 DAY";
-    await db.query(deleteOldMessages);
-    //console.log(`Deleted old non-spam cached messages.`);
-  } catch (error) {
-    console.error("Failed to delete old cached messages:", error);
-  }
-}
-
 module.exports = {
   cacheUserMessage,
   retrieveCachedMessages,
-  deleteCachedMessage,
-  deleteOldCachedMessages,
+  deleteCachedMessage
 };

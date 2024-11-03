@@ -37,3 +37,18 @@ CREATE TABLE `chat_settings` (
   `language` varchar(10),
   PRIMARY KEY (`chatId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+-- scheduled events
+
+CREATE EVENT delete_old_cached_messages
+ON SCHEDULE EVERY 1 DAY
+DO
+  DELETE FROM cached_messages
+  WHERE msg_date <= NOW() - INTERVAL 1 DAY;
+
+CREATE EVENT delete_old_unverified_users
+ON SCHEDULE EVERY 1 DAY
+DO
+  DELETE FROM users
+  WHERE verified = 0 AND created_at <= NOW() - INTERVAL 1 DAY;
