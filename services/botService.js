@@ -91,7 +91,7 @@ async function handleMessage(msg) {
   const userStatus = await userVerificationService.verifyUser(chatId, userId, username, firstName, lastName);
   if (userStatus && !userStatus.verified && text) {
     console.log(`message from ${userId} / ${username} / ${firstName} / ${lastName} to chat ${chatId} / ${chatTitle} / (${chat.type}): 
-      ${text.replace(/\n/g, ' ').substring(0, 50)}`);
+      ${text.replace(/\n/g, ' ').substring(0, 100)}`);
   }
 
   if (chat.type === "group" || chat.type === "supergroup") {

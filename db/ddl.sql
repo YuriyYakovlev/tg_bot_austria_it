@@ -42,7 +42,7 @@ CREATE TABLE `chat_settings` (
 -- scheduled events
 
 CREATE EVENT delete_old_cached_messages
-ON SCHEDULE EVERY 1 DAY
+ON SCHEDULE EVERY 4 DAY
 DO
   DELETE FROM cached_messages
   WHERE msg_date <= NOW() - INTERVAL 1 DAY;
