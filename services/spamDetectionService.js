@@ -15,7 +15,7 @@ async function classifyMessages() {
       //console.log('No messages to classify.');
       return;
     }
-    const formattedMessages = messages.map(msg => `{"message_id":"${msg.messageId}", "text":${JSON.stringify(msg.msg_text)}}`);
+    const formattedMessages = messages.map(msg => `{"message_id":"${msg.messageId}", "text":${JSON.stringify(msg.msg_text.substring(0, 300))}}`);
     const request = prepareClassificationRequest(formattedMessages.join(", "));
 
     const generativeModel = vertexAiClient.preview.getGenerativeModel({
@@ -49,7 +49,7 @@ async function classifyMessages() {
 
 async function isSpamMessage(text) {
   try {
-    const request = prepareClassificationRequest(`{"message_id":"temp_id", "text":${JSON.stringify(text)}}`);
+    const request = prepareClassificationRequest(`{"message_id":"temp_id", "text":${JSON.stringify(text.substring(0, 300))}}`);
     const generativeModel = vertexAiClient.preview.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
