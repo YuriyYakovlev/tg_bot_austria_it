@@ -63,12 +63,12 @@ module.exports = {
         },
         {
             id: "6", 
-            question: "What is the smallest primitive number?", 
-            answer: "2", 
+            question: "Which city is closest to the Eyjafjallajökull volcano?", 
+            answer: "0", 
             inline_keyboard: (language) => [
-                [{ text: "0", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "0", language }) }],
-                [{ text: "1", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "1", language}) }],
-                [{ text: "2", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "2", language }) }]
+                [{ text: "Reykjavik", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "0", language }) }],
+                [{ text: "Kopavogur", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "1", language}) }],
+                [{ text: "Fjallabyggo", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "2", language }) }]
             ]
         },
         {
@@ -103,12 +103,12 @@ module.exports = {
         },
         {
             id: "10", 
-            question: "What is the default port for HTTP?", 
-            answer: "1", 
+            question: "Equal to roughly 746 watts, what animal-based unit is used to measure the rate at which work is done?", 
+            answer: "2", 
             inline_keyboard: (language) => [
-                [{ text: "80", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "1", language }) }],
-                [{ text: "8080", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "2", language}) }],
-                [{ text: "443", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "3", language }) }]
+                [{ text: "Donkeystrength", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "1", language}) }],
+                [{ text: "Horsepower", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "2", language }) }],
+                [{ text: "Zebraforce", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "3", language }) }]
             ]
         }
     ]

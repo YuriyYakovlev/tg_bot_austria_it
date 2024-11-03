@@ -63,12 +63,12 @@ module.exports = {
         },
         {
             id: "6", 
-            question: "Яке найменше примітивне число?", 
-            answer: "2", 
+            question: "До якого міста найближче розташований вулкан Ейяф'яльлайокудль?", 
+            answer: "0", 
             inline_keyboard: (language) => [
-                [{ text: "0", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "0", language }) }],
-                [{ text: "1", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "1", language}) }],
-                [{ text: "2", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "2", language }) }]
+                [{ text: "Рейк'явік", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "0", language }) }],
+                [{ text: "Копавогур", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "1", language}) }],
+                [{ text: "Фьярроабіго", callback_data: JSON.stringify({ type: "captcha", captchaId: "6", answer: "2", language }) }]
             ]
         },
         {
@@ -103,12 +103,12 @@ module.exports = {
         },
         {
             id: "10", 
-            question: "Який порт за замовчуванням для HTTP?", 
-            answer: "1", 
+            question: "Яка одиниця, у рівні приблизно 746 ват, використовується для вимірювання швидкості виконання роботи?", 
+            answer: "2", 
             inline_keyboard: (language) => [
-                [{ text: "80", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "1", language }) }],
-                [{ text: "8080", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "2", language}) }],
-                [{ text: "443", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "3", language }) }]
+                [{ text: "Віслюча сила", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "1", language }) }],
+                [{ text: "Кінська сила", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "2", language}) }],
+                [{ text: "Сила зебри", callback_data: JSON.stringify({ type: "captcha", captchaId: "10", answer: "3", language }) }]
             ]
         }
     ]

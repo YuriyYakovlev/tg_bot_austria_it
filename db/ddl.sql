@@ -15,10 +15,6 @@ CREATE TABLE `cached_messages` (
 CREATE TABLE `users` (
   `userId` bigint NOT NULL,
   `verified` tinyint(1) NOT NULL DEFAULT '0',
-  `attempts` int DEFAULT '0',
-  `last_attempt` timestamp NULL DEFAULT NULL,
-  `captcha_id` varchar(255) DEFAULT NULL,
-  `captcha_answer` varchar(255) DEFAULT NULL,
   `spam` tinyint(1) DEFAULT '0',
   `chatId` bigint DEFAULT NULL,
   `kicked` tinyint(1) DEFAULT '0',
@@ -42,7 +38,7 @@ CREATE TABLE `chat_settings` (
 -- scheduled events
 
 CREATE EVENT delete_old_cached_messages
-ON SCHEDULE EVERY 4 DAY
+ON SCHEDULE EVERY 1 DAY
 DO
   DELETE FROM cached_messages
   WHERE msg_date <= NOW() - INTERVAL 1 DAY;
