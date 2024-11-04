@@ -10,7 +10,7 @@ module.exports = {
         verificationComplete: "Nice hop! You're in. Herzlich willkommen!",
         verificationError: "Yikes, there's a glitch in the pouch. Let's give that another go...",
         copyPasteFromCache: "Here's what you wanted to say earlier! Copy and paste to catch up in the convo:",
-        banSpammersComplete: (spammers) => `🦘 Tossed ${spammers} ${spammers === 1 ? 'sneaky spammer' : 'sneaky spammers'} out of the pouch. See something off? Report it here @${process.env.BOT_URL}`,
+        banSpammersComplete: (spammers) => `🦘 Tossed ${spammers} ${spammers === 1 ? 'sneaky spammer' : 'sneaky spammers'} out of the pouch.`,
         thanksMessage: "Danke sehr! Jump in and enjoy the conversation!",
         spamRemoved: "🦘 Inappropriate content removed!",
         spamNotDetected: "🦘 No issues detected."
