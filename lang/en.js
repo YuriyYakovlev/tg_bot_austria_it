@@ -1,6 +1,6 @@
 module.exports = {
     messages: {
-        verifyPromptGroup: (username) => `🦘 G'day, ${username ? `@${username}` : 'new friend'}! 🦘 To join the conversation, please take a quick test: ${process.env.BOT_URL}`,
+        verifyPromptGroup: (username) => `🦘 G'day, ${username ? `@${username}` : 'new friend'}! To join the conversation, please take a quick test: ${process.env.BOT_URL}`,
         maxAttemptReached: "Looks like you've reached the max attempts. Take a breather and try again soon!",
         welcome: "Welcome aboard! Answer this to bounce into the chat.\n",
         incorrectResponse: "Nope, that's not quite it! Give it another shot: ",
