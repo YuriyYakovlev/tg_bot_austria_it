@@ -31,7 +31,11 @@ function startBotPolling(retryCount = 0) {
       if (msg.new_chat_members) handleNewMembers(msg);
       if (msg.left_chat_member) handleLeftMember(msg);
   
-      await handleMessage(msg);
+      if (msg.reply_to_message && msg.text && msg.text.includes(`${process.env.BOT_URL}`)) {
+        await handleMentionedMessage(msg);
+      } else {
+        await handleMessage(msg);
+      }
     } catch (error) {
       console.error("Error handling message:", error);
     }
@@ -126,6 +130,40 @@ setTimeout(() => {
   cleanup();
 }, 10000);
 
+async function handleMentionedMessage(msg) {
+  const { message_id, chat, reply_to_message } = msg;
+  const chatId = chat.id;
+  const mentionedMessageId = reply_to_message.message_id;
+  const mentionedMessageText = reply_to_message.text;
+  const mentionedUserId = reply_to_message.from.id;
+  
+  if (mentionedMessageText) {
+    console.log(`mentioned message to check: ${mentionedMessageText}`);
+    const isSpam = await spamDetectionService.isOffensiveOrSpamMessage(mentionedMessageText);
+    
+    const language = await chatSettingsService.getLanguageForChat(chatId);
+    const messages = languageService.getMessages(language).messages;
+      
+    if (isSpam) {
+      await bot.deleteMessage(chatId, mentionedMessageId.toString()).catch((error) => {
+        console.error(`Failed to delete message ${mentionedMessageId} from chat ${chatId}:`, error);
+      });
+      await bot.deleteMessage(chatId, message_id.toString()).catch((error) => {
+        console.error(`Failed to delete message ${message_id} from chat ${chatId}:`, error);
+      });
+      
+      sendTemporaryMessage(bot, chatId, messages.spamRemoved, 20000);
+      userVerificationService.resetUserVerification(mentionedUserId);
+      console.log(`Deleted problematic message from chat ${chatId}. User ${mentionedUserId} verification was reset.`);
+    } else {
+      console.log(`Mentioned message ${mentionedMessageId} is not problematic.`);
+      await sendTemporaryMessage(bot, chatId, messages.spamNotDetected, 10000);
+      await bot.deleteMessage(chatId, message_id.toString()).catch((error) => {
+        console.error(`Failed to delete message ${message_id} from chat ${chatId}:`, error);
+      });
+    }
+  }
+}
 
 async function handleMessage(msg) {
   const { chat, from, text } = msg;
@@ -197,7 +235,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
     const joinTime = userJoinTimes[userId];
     if (joinTime && ((Date.now() - joinTime) < 15 * 60 * 1000)) {
       console.log(`check new user ${userId} for spam`);
-      const isSpam = await spamDetectionService.isSpamMessage(text);
+      const isSpam = await spamDetectionService.isOffensiveOrSpamMessage(text);
       if (isSpam) {
         console.log(`yes, ${userId} sent a potential spam message to chat ${chatId}: 
           ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);

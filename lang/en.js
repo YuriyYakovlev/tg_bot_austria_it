@@ -9,6 +9,8 @@ module.exports = {
         copyPasteFromCache: "Here's what you wanted to say earlier! Copy and paste to catch up in the convo:",
         banSpammersComplete: (spammers) => `🦘 Tossed ${spammers} ${spammers === 1 ? 'sneaky spammer' : 'sneaky spammers'} out of the pouch. See something off? Report it here ${process.env.BOT_URL}`,
         thanksMessage: "Danke sehr! Jump in and enjoy the conversation!",
+        spamRemoved: "🦘 Inappropriate content detected and removed!",
+        spamNotDetected: "🦘 No issues detected."
     },
     captchas: [
         {

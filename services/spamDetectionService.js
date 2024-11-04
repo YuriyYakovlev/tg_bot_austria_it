@@ -47,9 +47,9 @@ async function classifyMessages() {
   }
 }
 
-async function isSpamMessage(text) {
+async function isOffensiveOrSpamMessage(text) {
   try {
-    const request = prepareClassificationRequest(`{"message_id":"temp_id", "text":${JSON.stringify(text.substring(0, 300))}}`);
+    const request = prepareSingleClassificationRequest(text.substring(0, 300));
     const generativeModel = vertexAiClient.preview.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
@@ -60,13 +60,22 @@ async function isSpamMessage(text) {
     });
 
     const classificationResponse = await generativeModel.generateContentStream(request);
-    let textResponse = (await classificationResponse.response).candidates[0]
-      .content.parts[0].text;
+    let response = await classificationResponse.response;
+
+    const finishReason = response.candidates[0].finishReason;
+    if (finishReason === "SAFETY") {
+      console.log("Message is dangerous due to safety filters being triggered.");
+      return true;
+    }
+
+    let textResponse = response.candidates[0].content.parts[0].text;
+    textResponse = textResponse.replace(/\n/g, ' ').trim();
+    
     const regex = /(\[.*\]|\{.*\})/;
     const jsonMatch = textResponse.match(regex);
     let parsedResult = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
     parsedResult = parsedResult instanceof Array ? parsedResult : [parsedResult];
-    return parsedResult.some(result => result.message_id === 'temp_id' && result.spam === 'true');
+    return parsedResult.some(result => result.issue === 'true');
   } catch (error) {
     console.error('Error in isSpamMessage:', error);
     return false;
@@ -111,6 +120,7 @@ function prepareClassificationRequest(messages) {
               ### Task ###
               Analyse the messages below and return a response exactly in this format:
               { "message_id": "id", "spam": "true/false"}
+              Return json only, not reasoning or justification.
 
               ### Messages ###
               [${messages}]                
@@ -122,7 +132,27 @@ function prepareClassificationRequest(messages) {
   };
 }
 
+function prepareSingleClassificationRequest(message) {
+  return {
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text: `
+              Instructions:
+              You are a chat guard. Your task is to filter messages and identify inappropriate messages: selling services, scams, rude behavior.
+              Analyse the message below and return a response exactly in this format (return json only, not reasoning or justification): {"issue": "true/false"}
+
+              Message to analyse: "${message}" `
+          },
+        ],
+      },
+    ],
+  };
+}
+
 module.exports = {
   classifyMessages,
-  isSpamMessage,
+  isOffensiveOrSpamMessage,
 };
