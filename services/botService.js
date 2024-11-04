@@ -131,7 +131,7 @@ setTimeout(() => {
 }, 10000);
 
 async function handleMentionedMessage(msg) {
-  const { message_id, chat, reply_to_message } = msg;
+  const { message_id, message_thread_id, chat, reply_to_message } = msg;
   const chatId = chat.id;
   const mentionedMessageId = reply_to_message.message_id;
   const mentionedMessageText = reply_to_message.text;
@@ -148,16 +148,21 @@ async function handleMentionedMessage(msg) {
       await bot.deleteMessage(chatId, mentionedMessageId.toString()).catch((error) => {
         console.error(`Failed to delete message ${mentionedMessageId} from chat ${chatId}:`, error);
       });
-      // await bot.deleteMessage(chatId, message_id.toString()).catch((error) => {
-      //   console.error(`Failed to delete message ${message_id} from chat ${chatId}:`, error);
-      // });
-      await bot.sendMessage(chatId, messages.spamRemoved).catch(console.error)
-      //sendTemporaryMessage(bot, chatId, messages.spamRemoved, 20000);
+      await bot.sendMessage(chatId, messages.spamRemoved,
+        {
+          message_thread_id: message_thread_id
+        }
+      ).catch(console.error)
+
       userVerificationService.resetUserVerification(mentionedUserId);
       console.log(`Deleted problematic message from chat ${chatId}. User ${mentionedUserId} verification was reset.`);
     } else {
-      console.log(`Mentioned message ${mentionedMessageId} is not problematic.`);
-      await sendTemporaryMessage(bot, chatId, messages.spamNotDetected, 5000);
+      console.log(`Mentioned message ${mentionedMessageId} in chat ${chatId} is not problematic.`);
+      await sendTemporaryMessage(bot, chatId, messages.spamNotDetected, 5000,
+        {
+          message_thread_id: message_thread_id
+        }
+      );
       await bot.deleteMessage(chatId, message_id.toString()).catch((error) => {
         console.error(`Failed to delete message ${message_id} from chat ${chatId}:`, error);
       });
