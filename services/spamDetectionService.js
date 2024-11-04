@@ -1,6 +1,7 @@
 // spamDetectionService.js
 const vertexAi = require("@google-cloud/vertexai");
 const db = require("../db/connectors/dbConnector");
+const config = require("../config/config");
 
 let vertexAiClient = new vertexAi.VertexAI({
   project: process.env.PROJECT_ID,
@@ -9,15 +10,17 @@ let vertexAiClient = new vertexAi.VertexAI({
 
 async function classifyMessages() {
   try {
-    //console.log(`Classification Job started`);
-    const [messages] = await db.query('SELECT messageId, msg_text FROM cached_messages WHERE spam IS FALSE');
+    const query = `
+      SELECT messageId, msg_text FROM cached_messages 
+      WHERE spam IS FALSE 
+      AND msg_date > NOW() - INTERVAL ${config.CLEANUP_INTERVAL_HOURS + 2} HOUR`;
+    const [messages] = await db.query(query);
     if (messages.length === 0) {
-      //console.log('No messages to classify.');
       return;
     }
+    console.log('classification job: batch processing');
     const formattedMessages = messages.map(msg => `{"message_id":"${msg.messageId}", "text":${JSON.stringify(msg.msg_text.substring(0, 300))}}`);
     const request = prepareClassificationRequest(formattedMessages.join(", "));
-
     const generativeModel = vertexAiClient.preview.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
@@ -28,20 +31,31 @@ async function classifyMessages() {
     });
 
     const classificationResponse = await generativeModel.generateContentStream(request);
-    let textResponse = (await classificationResponse.response).candidates[0]
-      .content.parts[0].text;
-    const regex = /(\[.*\]|\{.*\})/;
-    const jsonMatch = textResponse.match(regex);
-    let parsedResult = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    parsedResult = parsedResult instanceof Array ? parsedResult : [parsedResult];
-    //let count = 0;
-    for (const result of parsedResult) {
-      if (result && result.spam === 'true') {
-        await db.query('UPDATE cached_messages SET spam = ? WHERE messageId = ?', [true, result.message_id]);
-        //count++;
+    let response = (await classificationResponse.response).candidates[0];
+    const finishReason = response.finishReason;
+    if (finishReason === "SAFETY") {
+      console.log('classification jon: safety filter triggered, try one by one');
+      // 2. safety filter triggered, try one by one
+      for (const message of messages) {
+        let isOffensive = isOffensiveOrSpamMessage(message.msg_text);
+        if (isOffensive) {
+          await db.query('UPDATE cached_messages SET spam = ? WHERE messageId = ?', [true, message.messageId]);
+        }
+      }
+    } else {
+      // batch processing was successful
+      let textResponse = response.content.parts[0].text;
+      const regex = /(\[.*\]|\{.*\})/;
+      textResponse = textResponse.replace(/\n/g, ' ').trim();
+      const jsonMatch = textResponse.match(regex);
+      let parsedResult = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+      parsedResult = parsedResult instanceof Array ? parsedResult : [parsedResult];
+      for (const result of parsedResult) {
+        if (result && result.spam === 'true') {
+          await db.query('UPDATE cached_messages SET spam = ? WHERE messageId = ?', [true, result.message_id]);
+        }
       }
     }
-    //console.log(`Classification Job finished. ${count} new spam message(s) detected.`);
   } catch (error) {
     console.error('Error in classifyMessages:', error.message);
   }
@@ -60,15 +74,15 @@ async function isOffensiveOrSpamMessage(text) {
     });
 
     const classificationResponse = await generativeModel.generateContentStream(request);
-    let response = await classificationResponse.response;
+    let response = (await classificationResponse.response).candidates[0];
 
-    const finishReason = response.candidates[0].finishReason;
+    const finishReason = response.finishReason;
     if (finishReason === "SAFETY") {
       console.log("Message is dangerous due to safety filters being triggered.");
       return true;
     }
 
-    let textResponse = response.candidates[0].content.parts[0].text;
+    let textResponse = response.content.parts[0].text;
     textResponse = textResponse.replace(/\n/g, ' ').trim();
     
     const regex = /(\[.*\]|\{.*\})/;

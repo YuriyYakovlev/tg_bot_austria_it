@@ -6,6 +6,7 @@ const userModerationService = require("./userModerationService");
 const messagesCacheService = require("./messagesCacheService");
 const chatSettingsService = require('./chatSettingsService');
 const languageService = require('./languageService');
+const config = require("../config/config");
 // const newsService = require("../extras/newsService");
 // const eventsService = require("../extras/eventsService");
 
@@ -410,7 +411,7 @@ function cleanupUserJoinTimes() {
 // summarizeEvents();
 setInterval(() => {
   cleanup();
-}, 3600000 * 1);  // 3600000 milliseconds = 1 hour
+}, 3600000 * config.CLEANUP_INTERVAL_HOURS);
 
 
 process.on("unhandledRejection", (reason, p) => {

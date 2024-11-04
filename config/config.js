@@ -6,5 +6,6 @@ module.exports = {
         DATABASE: process.env.DB_NAME
     },
     MAX_ATTEMPTS: 5,
+    CLEANUP_INTERVAL_HOURS: 1,
     USERS_TABLE_NAME: process.env.NODE_ENV === 'production' ? 'users' : 'users_test'
 };
