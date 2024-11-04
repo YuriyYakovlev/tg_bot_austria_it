@@ -187,7 +187,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
 
           sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), 40000);
           lastUserPromptTime[userKey] = currentTime;
-          //console.log(`sent temporary verify message to ${userId} / ${username} to chat ${chatId}`);
+          console.log(`sent temporary verify message to ${userId}`);
       }
     }
   }
