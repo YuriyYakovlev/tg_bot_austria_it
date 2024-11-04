@@ -219,11 +219,18 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
       // Check if a verification message has recently been sent to this user
       const lastPromptTime = lastUserPromptTime[userKey] || 0;
       const currentTime = Date.now();
-      if (currentTime - lastPromptTime > 600000) {
+      if (currentTime - lastPromptTime > 5000) {
           const language = await chatSettingsService.getLanguageForChat(chatId);
           const messages = languageService.getMessages(language).messages;
+          const buttons = languageService.getMessages(language).buttons;
 
-          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), 40000);
+          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), 40000, 
+            {
+              reply_markup: {
+                  inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start`}]]
+              }
+            }
+          );
           lastUserPromptTime[userKey] = currentTime;
           console.log(`sent temporary verify message to ${userId}`);
       }
@@ -313,9 +320,9 @@ function handleLeftMember(msg) {
     }
 }
 
-async function sendTemporaryMessage(bot, chatId, message, timeoutMs) {
+async function sendTemporaryMessage(bot, chatId, message, timeoutMs, options = null) {
     try {
-        const sentMessage = await bot.sendMessage(chatId, message);
+        const sentMessage = await bot.sendMessage(chatId, message, options);
         const messageId = sentMessage.message_id;
 
         setTimeout(async () => {
