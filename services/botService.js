@@ -166,7 +166,7 @@ async function handleMentionedMessage(msg) {
 }
 
 async function handleMessage(msg) {
-  const { chat, from, text } = msg;
+  const { chat, from, text, message_id, message_thread_id } = msg;
   const chatId = chat.id;
   const chatTitle = chat.title;
   const userId = from.id;
@@ -181,7 +181,7 @@ async function handleMessage(msg) {
   }
 
   if (chat.type === "group" || chat.type === "supergroup") {
-    await handleGroupMessage(userId, userStatus, chatId, msg.message_id, username, text);
+    await handleGroupMessage(userId, userStatus, chatId, message_id, message_thread_id, username, text);
   } else if (chat.type === "private") {
     await handlePrivateMessage(userStatus, chatId, text, userId, username);
   }
@@ -192,7 +192,7 @@ async function isUserAdmin(chatId, userId) {
   return member.status === 'administrator' || member.status === 'creator';
 }
 
-async function handleGroupMessage(userId, userStatus, chatId, messageId, username, text) {
+async function handleGroupMessage(userId, userStatus, chatId, messageId, message_thread_id, username, text) {
   let messageDeleted = false;
   if (userStatus && !userStatus.verified) {
 
@@ -228,7 +228,8 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, usernam
             {
               reply_markup: {
                   inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start`}]]
-              }
+              },
+              message_thread_id: message_thread_id
             }
           );
           lastUserPromptTime[userKey] = currentTime;
