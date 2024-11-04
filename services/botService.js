@@ -373,7 +373,7 @@ async function kickSpammers() {
       if(deletedCount > 0 && chatId) {
         const language = await chatSettingsService.getLanguageForChat(chatId);
         const messages = languageService.getMessages(language).messages;
-        sendTemporaryMessage(bot, chatId, messages.banSpammersComplete(deletedCount), 20000);
+        sendTemporaryMessage(bot, chatId, messages.banSpammersComplete(deletedCount), 20000, null);
         //console.log(`sent temporary status message to chat ${chatId}`);
       }
       //console.log(`Kick spammers Job finished`);
