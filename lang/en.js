@@ -1,13 +1,13 @@
 module.exports = {
     messages: {
-        verifyPromptGroup: (username) => `G'day, ${username ? `@${username}` : 'new friend'}! 🦘 To join the conversation, please take a quick test: ${process.env.BOT_URL}`,
+        verifyPromptGroup: (username) => `🦘 G'day, ${username ? `@${username}` : 'new friend'}! 🦘 To join the conversation, please take a quick test: ${process.env.BOT_URL}`,
         maxAttemptReached: "Looks like you've reached the max attempts. Take a breather and try again soon!",
         welcome: "Welcome aboard! Answer this to bounce into the chat.\n",
         incorrectResponse: "Nope, that's not quite it! Give it another shot: ",
         verificationComplete: "Nice hop! You're in. Herzlich willkommen!",
         verificationError: "Yikes, there's a glitch in the pouch. Let's give that another go...",
         copyPasteFromCache: "Here's what you wanted to say earlier! Copy and paste to catch up in the convo:",
-        banSpammersComplete: (spammers) => `✈️ Tossed ${spammers} ${spammers === 1 ? 'sneaky spammer' : 'sneaky spammers'} out of the pouch. See something off? Report it here ${process.env.BOT_URL} 🦘🦘🦘`,
+        banSpammersComplete: (spammers) => `🦘 Tossed ${spammers} ${spammers === 1 ? 'sneaky spammer' : 'sneaky spammers'} out of the pouch. See something off? Report it here ${process.env.BOT_URL}`,
         thanksMessage: "Danke sehr! Jump in and enjoy the conversation!",
     },
     captchas: [
