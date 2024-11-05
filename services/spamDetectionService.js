@@ -15,7 +15,7 @@ async function classifyMessages() {
       WHERE spam IS FALSE 
       AND msg_date > NOW() - INTERVAL ${config.CLEANUP_INTERVAL_HOURS + 2} HOUR`;
     const [messages] = await db.query(query);
-    if (messages.length === 0) {
+    if (!messages || messages.length === 0) {
       return;
     }
     console.log('classification job: batch processing');
@@ -31,8 +31,13 @@ async function classifyMessages() {
     });
 
     const classificationResponse = await generativeModel.generateContentStream(request);
-    let response = (await classificationResponse.response).candidates[0];
-    const finishReason = response.finishReason;
+    
+    let response = (await classificationResponse.response);
+    const hasCandidates = response.candidates && response.candidates.length > 0;
+    if (!hasCandidates) {
+        return;
+    }
+    const finishReason = response.candidates[0].finishReason;
     if (finishReason === "SAFETY") {
       console.log('classification jon: safety filter triggered, try one by one');
       // 2. safety filter triggered, try one by one
@@ -44,7 +49,7 @@ async function classifyMessages() {
       }
     } else {
       // batch processing was successful
-      let textResponse = response.content.parts[0].text;
+      let textResponse = response.candidates[0].content.parts[0].text;
       const regex = /(\[.*\]|\{.*\})/;
       textResponse = textResponse.replace(/\n/g, ' ').trim();
       const jsonMatch = textResponse.match(regex);

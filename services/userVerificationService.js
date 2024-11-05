@@ -85,7 +85,7 @@ async function getCaptchaAnswer(captchaId, language) {
     const captchas = languageService.getMessages(language).captchas;
     const captcha = captchas.find(c => c.id === captchaId);
     if (captcha) {
-        return captcha.answer;
+        return captcha.a;
     } else {
         return null;
     }

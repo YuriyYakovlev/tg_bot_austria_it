@@ -47,11 +47,11 @@ function startBotPolling(retryCount = 0) {
     const userId = callbackQuery.from.id;
 
     const data = JSON.parse(callbackQuery.data);
-    const { type, captchaId, answer, language } = data;
+    const { t, id, a, l } = data;
       
     await bot.answerCallbackQuery(callbackQuery.id);
-    if (type === 'captcha') {
-      const messages = languageService.getMessages(language).messages;
+    if (t === 'c') {
+      const messages = languageService.getMessages(l).messages;
       
       const canAttempt = userVerificationService.recordUserAttempt(userId);  
       if (!canAttempt) {
@@ -60,8 +60,8 @@ function startBotPolling(retryCount = 0) {
           return;
       }
         
-      let correctAnswer = await userVerificationService.getCaptchaAnswer(captchaId, language)
-      if (answer.toString() === correctAnswer.toString()) {
+      let correctAnswer = await userVerificationService.getCaptchaAnswer(id, l)
+      if (a.toString() === correctAnswer.toString()) {
         await userVerificationService.setUserVerified(userId);
         await bot.sendMessage(chatId, messages.verificationComplete);
         console.log(`${userId} solved CAPTCHA`);
@@ -81,15 +81,15 @@ function startBotPolling(retryCount = 0) {
         }
       } else {
         await bot.sendMessage(chatId, messages.incorrectResponse);
-        console.log(`${userId} answered CAPTCHA incorrectly: ${answer}`);
-        let newCaptcha = await userVerificationService.getRandomCaptcha(userId, language);
+        console.log(`${userId} answered CAPTCHA incorrectly: ${a}`);
+        let newCaptcha = await userVerificationService.getRandomCaptcha(userId, l);
         const options = {
           reply_markup: {
-              inline_keyboard: newCaptcha.inline_keyboard(language)
+              inline_keyboard: newCaptcha.inline_keyboard(l)
           }
         };
-        await bot.sendMessage(chatId, newCaptcha.question, options).catch(console.error);
-        console.log(`new CAPTCHA for ${userId}: ${newCaptcha.question.substring(0, 50)}`);
+        await bot.sendMessage(chatId, newCaptcha.q, options).catch(console.error);
+        console.log(`new CAPTCHA for ${userId}: ${newCaptcha.q.substring(0, 50)}`);
       }
     } 
   });
@@ -280,8 +280,8 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
     }
 
     if (text === "/verify" || text === "/start") {
-      let captcha = await userVerificationService.getRandomCaptcha(userId, null, chatId);
-      console.log(`CAPTCHA for ${userId} / ${username}: ${captcha.question}`);
+      let captcha = await userVerificationService.getRandomCaptcha(userId, language, chatId);
+      console.log(`CAPTCHA for ${userId} / ${username}: ${captcha.q}`);
       await bot.sendMessage(chatId, messages.welcome)
 
       const options = {
@@ -289,7 +289,7 @@ async function handlePrivateMessage(userStatus, chatId, text, userId, username) 
             inline_keyboard: captcha.inline_keyboard(language)
         }
       };
-      await bot.sendMessage(chatId, captcha.question, options).catch(console.error);
+      await bot.sendMessage(chatId, captcha.q, options).catch(console.error);
       return;
     }
   } else {
@@ -328,6 +328,10 @@ function handleLeftMember(msg) {
 }
 
 async function sendTemporaryMessage(bot, chatId, message, timeoutMs, options = null) {
+    if(!chatId){
+      console.log(`sendTemporatyMessage: chatId is null. message: ${message}`);
+      return;
+    }
     try {
         const sentMessage = await bot.sendMessage(chatId, message, options);
         const messageId = sentMessage.message_id;
@@ -353,7 +357,6 @@ async function cleanup() {
 
 async function kickSpammers() {
   try {
-      //console.log(`Kick spammers Job started`);
       const spammers = await userModerationService.identifyAndMarkSpammers();
       let deletedCount = 0;
       let chatId;
@@ -367,16 +370,9 @@ async function kickSpammers() {
               deletedCount++;
               console.log(`Kicked user with userId: ${spammer.userId} from chat ${spammer.chatId}.`);
           } catch (error) {
-              //console.error(`Failed to kick and update spammer with userId: ${spammer.userId}`, error.message);
+              console.error(`Failed to kick and update spammer with userId: ${spammer.userId}`, error.message);
           }
       }
-      if(deletedCount > 0 && chatId) {
-        const language = await chatSettingsService.getLanguageForChat(chatId);
-        const messages = languageService.getMessages(language).messages;
-        sendTemporaryMessage(bot, chatId, messages.banSpammersComplete(deletedCount), 20000, null);
-        //console.log(`sent temporary status message to chat ${chatId}`);
-      }
-      //console.log(`Kick spammers Job finished`);
   } catch (error) {
       console.error("Failed to kick spammers:", error);
   }
