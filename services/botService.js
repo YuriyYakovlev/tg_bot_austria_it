@@ -161,7 +161,8 @@ async function handleMentionedMessage(msg) {
       console.log(`Mentioned message ${mentionedMessageId} in chat ${chatId} is not problematic.`);
       await sendTemporaryMessage(bot, chatId, messages.spamNotDetected, 5000,
         {
-          message_thread_id: message_thread_id
+          message_thread_id: message_thread_id,
+          disable_notification: true
         }
       );
       await bot.deleteMessage(chatId, message_id.toString()).catch((error) => {
@@ -235,7 +236,8 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, message
               reply_markup: {
                   inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start`}]]
               },
-              message_thread_id: message_thread_id
+              message_thread_id: message_thread_id,
+              disable_notification: true
             }
           );
           lastUserPromptTime[userKey] = currentTime;
@@ -358,17 +360,18 @@ async function cleanup() {
 async function kickSpammers() {
   try {
       const spammers = await userModerationService.identifyAndMarkSpammers();
-      let deletedCount = 0;
       let chatId;
       if(spammers.length > 0) {
         chatId = spammers[0].chatId;
       }
       for (const spammer of spammers) {
           try {
-              await bot.banChatMember(spammer.chatId, spammer.userId);
-              await userModerationService.markUserAsKicked(spammer.userId);
-              deletedCount++;
-              console.log(`Kicked user with userId: ${spammer.userId} from chat ${spammer.chatId}.`);
+              const isAdmin = await isUserAdmin(spammer.chatId, spammer.userId);
+              if (!isAdmin) {
+                await bot.banChatMember(spammer.chatId, spammer.userId);
+                await userModerationService.markUserAsKicked(spammer.userId);
+                console.log(`Kicked user with userId: ${spammer.userId} from chat ${spammer.chatId}.`);
+              }
           } catch (error) {
               console.error(`Failed to kick and update spammer with userId: ${spammer.userId}`, error.message);
           }
