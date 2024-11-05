@@ -68,16 +68,17 @@ function startBotPolling(retryCount = 0) {
         
         const cachedMessages = await messagesCacheService.retrieveCachedMessages(userId);
         if (cachedMessages.length > 0) {
-          await bot.sendMessage(userId, messages.copyPasteFromCache);
-          cachedMessages.forEach(async (message) => {
-            try {
-              await bot.sendMessage(chatId, message.msg_text);
-              //console.log(`Reminded cached message for user ${userId}`);
-              await messagesCacheService.deleteCachedMessage(message.messageId);
-            } catch (error) {
-              console.error(`Error sending cached message to user ${userId}:`, error);
+          const buttons = cachedMessages.map((message) => ({
+            text: `${message.msg_text.substring(0, 50)}`,
+            copy_text: { text: `${message.msg_text.substring(0, 256)}` },
+          }));
+          const options = {
+            reply_markup: {
+                inline_keyboard: [buttons]
             }
-          });
+          };
+          
+          await bot.sendMessage(chatId, messages.copyPasteFromCache, options);
         }
       } else {
         await bot.sendMessage(chatId, messages.incorrectResponse);
