@@ -16,7 +16,7 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
     const fullName = `${firstName} ${lastName}`.trim();
     if (exceptionalUsernames.includes(username) || exceptionalFullNames.includes(fullName)) {
         console.log(`Verification false for exceptional user: ${userId}`);
-        return { verified: false };
+        return { verified: false, spam: true };
     }
 
     // Check if the user is cached and verified
@@ -25,42 +25,42 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
     }
 
     try {
-        const [rows] = await db.query(`SELECT verified, spam FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
+        const [rows] = await db.query(`SELECT verified, spam, created_at FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
         if (rows.length === 0) {
             await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified) VALUES (?, ?, FALSE)`, [chatId, userId]);
-            return { verified: false };
+            return { verified: false, spam: false, created_at: new Date() };
         }
         
         let user = rows[0];
         if (user.verified && !user.spam) {  
-            verifiedUsersCache[userId] = { verified: true };
+            verifiedUsersCache[userId] = { verified: true, spam: user.spam, created_at: user.created_at };
             return verifiedUsersCache[userId];
         } else {
-            return { verified: false };
+            return { verified: false, spam: user.spam, created_at: user.created_at };
         }
     } catch (error) {
         console.error('Error in verifyUser:', error.message);
-        return { verified: false };
+        return { verified: false, spam: false };
     }
 }
 
 async function setUserVerified(userId) {
     try {
         await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET verified = TRUE WHERE userId = ?`, [userId]);
-        verifiedUsersCache[userId] = { verified: true };
+        verifiedUsersCache[userId] = { verified: true, created_at: new Date() };
     } catch (error) {
         console.error('Error in setUserVerified:', error);
     }
 }
 
-async function resetUserVerification(userId) {
+async function resetUserVerification(userId, spam = false) {
     try {
-        const result = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET verified = FALSE WHERE userId = ?`, [userId]);
+        const result = await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET verified = FALSE, spam = ? WHERE userId = ?`, [spam, userId]);
         if (result.affectedRows > 0) {
             console.log(`Verification status reset for user ID: ${userId}`);
             // Optionally clear any cached verification status if applicable
             if (verifiedUsersCache[userId]) {
-                verifiedUsersCache[userId] = { verified: false };
+                verifiedUsersCache[userId] = { verified: false, spam: spam };
             }
         }
     } catch (error) {
@@ -133,8 +133,13 @@ function cleanupUserAttempts() {
     for (const userId in userAttempts) {
         if (now - userAttempts[userId].firstAttemptTime > HOUR_IN_MS) {
             delete userAttempts[userId];
+            delete recentUserCaptchas[userId];
         }
     }
+}
+
+function cleanupVerifiedUsersCache() {
+    Object.keys(verifiedUsersCache).forEach(key => delete verifiedUsersCache[key]);
 }
 
 module.exports = {
@@ -144,5 +149,6 @@ module.exports = {
     getCaptchaAnswer,
     resetUserVerification,
     recordUserAttempt,
-    cleanupUserAttempts
+    cleanupUserAttempts,
+    cleanupVerifiedUsersCache
 };

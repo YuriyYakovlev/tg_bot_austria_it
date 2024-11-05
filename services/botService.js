@@ -11,7 +11,6 @@ const config = require("../config/config");
 // const eventsService = require("../extras/eventsService");
 
 let bot;
-const userJoinTimes = {};
 const lastUserPromptTime = {};
 
 function startBotPolling(retryCount = 0) {
@@ -203,10 +202,11 @@ async function isUserAdmin(chatId, userId) {
 async function handleGroupMessage(userId, userStatus, chatId, messageId, message_thread_id, username, text) {
   let messageDeleted = false;
   if (userStatus && !userStatus.verified) {
-
+    
     const isAdmin = await isUserAdmin(chatId, userId);
     if (isAdmin) {
         userVerificationService.setUserVerified(userId);
+        console.log('superpower detected');
         return;
     }
 
@@ -215,10 +215,23 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, message
       console.error(`Failed to delete message ${messageId} from chat ${chatId}:`, error);
     });
     messageDeleted = true;
-
-    // Cache the message
+    
     if(text) {
-      // console.log(`message from ${username} was deleted`);
+      // CHECK FOR SPAM
+      if(userStatus.spam === 1 || userStatus.spam === true) {
+        console.log(`user ${userId} was marked as spam, no additional verification needed`);
+        return;
+      }
+      const problematicMessage = await spamDetectionService.isOffensiveOrSpamMessage(text);
+      if (problematicMessage) {
+        console.log(`yes, it was spam from ${userId} to chat ${chatId}`);
+        userVerificationService.resetUserVerification(userId, true);
+        return;
+      } else {
+        console.log(`no problems in message from ${userId} discovered`);
+      }
+
+      // SEND VERIFICATION MESSAGE TO NORMAL USERS
       messagesCacheService.cacheUserMessage(userId, chatId, messageId, text);
     
       // Generate a unique key for the chat-user combination
@@ -244,24 +257,25 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, message
           lastUserPromptTime[userKey] = currentTime;
           console.log(`sent temporary verify message to ${userId}`);
       }
+      return;
     }
   }
 
-  // Check if user joined within the last 15 minutes and call AI service for spam validation
+  // Check if user joined within the last 15 minutes and call AI service for spam validation even for verified users
   if(text) {
-    const joinTime = userJoinTimes[userId];
-    if (joinTime && ((Date.now() - joinTime) < 15 * 60 * 1000)) {
-      console.log(`check new user ${userId} for spam`);
+    const joinTime = new Date(userStatus.created_at);
+    const joinTimeUTC = joinTime.getTime() + (60 * 60 * 1000);
+    if ((Date.now() - joinTimeUTC) < 15 * 60 * 1000) {
+      console.log(`check newly added user ${userId} for spam`);
       const isSpam = await spamDetectionService.isOffensiveOrSpamMessage(text);
       if (isSpam) {
-        console.log(`yes, ${userId} sent a potential spam message to chat ${chatId}: 
-          ${ text.length > 100 ? text.substring(0, 100) + "..."  : text }`);
+        console.log(`yes, it was spam from verified user ${userId} to chat ${chatId}`);
         if (!messageDeleted) {
           await bot.deleteMessage(chatId, messageId.toString()).catch((error) => {
             console.error(`Failed to delete message ${messageId} from chat ${chatId}:`, error);
           });
         }
-        userVerificationService.resetUserVerification(userId);
+        userVerificationService.resetUserVerification(userId, true);
       } else {
         console.log('no spam in new user message');
       }
@@ -310,7 +324,6 @@ function handleNewMembers(msg) {
   msg.new_chat_members.forEach((member) => {
     try {
       console.log(`new chat member: ${member.id} / ${member.username} / ${member.first_name} / ${member.last_name} in chat: ${chat.id} / ${chat.title}`);
-      userJoinTimes[member.id] = Date.now();
     } catch (error) {
       console.error(`Failed to get user info`);
     }
@@ -351,8 +364,8 @@ async function cleanup() {
   try {
     await spamDetectionService.classifyMessages();
     await kickSpammers();
-    cleanupUserJoinTimes();
-    await userVerificationService.cleanupUserAttempts();
+    userVerificationService.cleanupUserAttempts();
+    userVerificationService.cleanupVerifiedUsersCache();
   } catch (error) {
     console.error('Error while performing cleanup:', error.message);
   }
@@ -379,17 +392,6 @@ async function kickSpammers() {
       }
   } catch (error) {
       console.error("Failed to kick spammers:", error);
-  }
-}
-
-function cleanupUserJoinTimes() {
-  const now = Date.now();
-  const THRESHOLD = 1 * 60 * 60 * 1000;
-  for (const userId in userJoinTimes) {
-    if (now - userJoinTimes[userId] > THRESHOLD) {
-      delete userJoinTimes[userId];
-      //console.log(`Removed old join time entry for user ${userId}`);
-    }
   }
 }
 
