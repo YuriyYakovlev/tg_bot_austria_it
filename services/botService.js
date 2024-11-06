@@ -3,9 +3,11 @@ const TelegramBot = require("node-telegram-bot-api");
 const userVerificationService = require("./userVerificationService");
 const spamDetectionService = require("./spamDetectionService");
 const userModerationService = require("./userModerationService");
-const messagesCacheService = require("./messagesCacheService");
-const chatSettingsService = require('./chatSettingsService');
-const languageService = require('./languageService');
+const groupMessageService = require("./groupMessageService");
+const privateMessageService = require("./privateMessageService");
+const callbackService = require("./callbackService");
+const mentionService = require("./mentionService");
+
 const config = require("../config/config");
 // const newsService = require("../extras/newsService");
 // const eventsService = require("../extras/eventsService");
@@ -30,9 +32,8 @@ function startBotPolling(retryCount = 0) {
     try {
       if (msg.new_chat_members) handleNewMembers(msg);
       if (msg.left_chat_member) handleLeftMember(msg);
-  
       if (msg.reply_to_message && msg.text && msg.text.includes(`${process.env.BOT_URL}`)) {
-        await handleMentionedMessage(msg);
+        await mentionService.handleMentionedMessage(bot, msg);
       } else {
         await handleMessage(msg);
       }
@@ -42,59 +43,11 @@ function startBotPolling(retryCount = 0) {
   });
 
   bot.on("callback_query", async (callbackQuery) => {
-    const chatId = callbackQuery.message.chat.id;
-    const userId = callbackQuery.from.id;
-
-    const data = JSON.parse(callbackQuery.data);
-    const { t, id, a, l } = data;
-      
-    await bot.answerCallbackQuery(callbackQuery.id);
-    if (t === 'c') {
-      const messages = languageService.getMessages(l).messages;
-      
-      const canAttempt = userVerificationService.recordUserAttempt(userId);  
-      if (!canAttempt) {
-          await bot.sendMessage(chatId, messages.maxAttemptReached).catch(console.error)
-          console.log(`sent max attepmt reached to ${userId}`);
-          return;
-      }
-        
-      let correctAnswer = await userVerificationService.getCaptchaAnswer(id, l)
-      if (a.toString() === correctAnswer.toString()) {
-        await userVerificationService.setUserVerified(userId);
-        await bot.sendMessage(chatId, messages.verificationComplete);
-        console.log(`${userId} solved CAPTCHA`);
-        
-        const cachedMessages = await messagesCacheService.retrieveCachedMessages(userId);
-        if (cachedMessages.length > 0) {
-          const buttons = cachedMessages.map((message) => ({
-            text: `${message.msg_text.substring(0, 50)}`,
-            copy_text: { text: `${message.msg_text.substring(0, 256)}` },
-          }));
-          const options = {
-            reply_markup: {
-                inline_keyboard: [buttons]
-            }
-          };
-          
-          await bot.sendMessage(chatId, messages.copyPasteFromCache, options);
-
-          const messageIds = cachedMessages.map(message => message.messageId);
-          await deleteCachedMessages(messageIds);
-        }
-      } else {
-        await bot.sendMessage(chatId, messages.incorrectResponse);
-        console.log(`${userId} answered CAPTCHA incorrectly: ${a}`);
-        let newCaptcha = await userVerificationService.getRandomCaptcha(userId, l);
-        const options = {
-          reply_markup: {
-              inline_keyboard: newCaptcha.inline_keyboard(l)
-          }
-        };
-        await bot.sendMessage(chatId, newCaptcha.q, options).catch(console.error);
-        console.log(`new CAPTCHA for ${userId}: ${newCaptcha.q.substring(0, 50)}`);
-      }
-    } 
+    try {
+        await callbackService.processCallbackQuery(bot, callbackQuery);
+    } catch (error) {
+        console.error("Error processing callback query:", error);
+    }
   });
 
   bot.on("polling_error", (error) => {
@@ -134,194 +87,21 @@ setTimeout(() => {
   cleanup();
 }, 10000);
 
-async function handleMentionedMessage(msg) {
-  const { message_id, message_thread_id, chat, reply_to_message } = msg;
-  const chatId = chat.id;
-  const mentionedMessageId = reply_to_message.message_id;
-  const mentionedMessageText = reply_to_message.text;
-  const mentionedUserId = reply_to_message.from.id;
-  
-  if (mentionedMessageText) {
-    console.log(`mentioned message to check: ${mentionedMessageText}`);
-    const isSpam = await spamDetectionService.isOffensiveOrSpamMessage(mentionedMessageText);
-    
-    const language = await chatSettingsService.getLanguageForChat(chatId);
-    const messages = languageService.getMessages(language).messages;
-      
-    if (isSpam) {
-      await bot.deleteMessage(chatId, mentionedMessageId.toString()).catch((error) => {
-        console.error(`Failed to delete message ${mentionedMessageId} from chat ${chatId}:`, error);
-      });
-      await bot.sendMessage(chatId, messages.spamRemoved,
-        {
-          message_thread_id: message_thread_id
-        }
-      ).catch(console.error)
-
-      userVerificationService.resetUserVerification(mentionedUserId);
-      console.log(`Deleted problematic message from chat ${chatId}. User ${mentionedUserId} verification was reset.`);
-    } else {
-      console.log(`Mentioned message ${mentionedMessageId} in chat ${chatId} is not problematic.`);
-      await sendTemporaryMessage(bot, chatId, messages.spamNotDetected, config.MENTIONED_MESSAGE_DURATION_SEC * 1000,
-        {
-          message_thread_id: message_thread_id,
-          disable_notification: true
-        }
-      );
-      setTimeout(async () => {
-        await bot.deleteMessage(chatId, message_id.toString()).catch((error) => {
-          console.error(`Failed to delete message ${message_id} from chat ${chatId}:`, error.message);
-        });
-      }, config.MENTIONED_MESSAGE_DURATION_SEC * 1000);
-    }
-  }
-}
 
 async function handleMessage(msg) {
-  const { chat, from, text, message_id, message_thread_id } = msg;
-  const chatId = chat.id;
-  const chatTitle = chat.title;
-  const userId = from.id;
-  const username = from.username;
-  const firstName = from.first_name;
-  const lastName = from.last_name;
- 
-  const userStatus = await userVerificationService.verifyUser(chatId, userId, username, firstName, lastName);
-  if (userStatus && !userStatus.verified && text) {
-    console.log(`message from ${userId} / ${username} / ${firstName} / ${lastName} to chat ${chatId} / ${chatTitle} / (${chat.type}): 
-      ${text.replace(/\n/g, ' ').substring(0, 100)}`);
-  }
-
+  const { chat } = msg;
+  
   if (chat.type === "group" || chat.type === "supergroup") {
-    await handleGroupMessage(userId, userStatus, chatId, message_id, message_thread_id, username, text);
+    await groupMessageService.handleGroupMessage(bot, msg, lastUserPromptTime);
   } else if (chat.type === "private") {
-    await handlePrivateMessage(userStatus, chatId, text, userId, username);
+    await privateMessageService.handlePrivateMessage(bot, msg);
   }
 }
+
 
 async function isUserAdmin(chatId, userId) {
   const member = await bot.getChatMember(chatId, userId);
   return member.status === 'administrator' || member.status === 'creator';
-}
-
-async function handleGroupMessage(userId, userStatus, chatId, messageId, message_thread_id, username, text) {
-  let messageDeleted = false;
-  if (userStatus && !userStatus.verified) {
-    
-    const isAdmin = await isUserAdmin(chatId, userId);
-    if (isAdmin) {
-        userVerificationService.setUserVerified(userId);
-        console.log('superpower detected');
-        return;
-    }
-
-    // Delete the message from the group
-    await bot.deleteMessage(chatId, messageId.toString()).catch((error) => {
-      console.error(`Failed to delete message ${messageId} from chat ${chatId}:`, error);
-    });
-    messageDeleted = true;
-    
-    if(text) {
-      // CHECK FOR SPAM
-      if(userStatus.spam === 1 || userStatus.spam === true) {
-        console.log(`user ${userId} was marked as spam, no additional verification needed`);
-        return;
-      }
-      const problematicMessage = await spamDetectionService.isOffensiveOrSpamMessage(text);
-      if (problematicMessage) {
-        console.log(`yes, it was spam from ${userId} to chat ${chatId}`);
-        userVerificationService.resetUserVerification(userId, true);
-        // to consider to kick user right here
-        return;
-      } else {
-        console.log(`no problems in message from ${userId} discovered`);
-      }
-
-      // SEND VERIFICATION MESSAGE TO NORMAL USERS
-      messagesCacheService.cacheUserMessage(userId, chatId, messageId, text);
-    
-      // Generate a unique key for the chat-user combination
-      const userKey = `${chatId}-${userId}`;
-
-      // Check if a verification message has recently been sent to this user
-      const lastPromptTime = lastUserPromptTime[userKey] || 0;
-      const currentTime = Date.now();
-      if (currentTime - lastPromptTime > config.VERIFY_PROMPT_DURATION_SEC * 1000) {
-          const language = await chatSettingsService.getLanguageForChat(chatId);
-          const messages = languageService.getMessages(language).messages;
-          const buttons = languageService.getMessages(language).buttons;
-
-          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SEC * 1000, 
-            {
-              reply_markup: {
-                  inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start`}]]
-              },
-              message_thread_id: message_thread_id,
-              disable_notification: true
-            }
-          );
-          lastUserPromptTime[userKey] = currentTime;
-          console.log(`sent temporary verify message to ${userId}`);
-      }
-      return;
-    }
-  }
-
-  // Check if user joined within the last 15 minutes and call AI service for spam validation even for verified users
-  if(text) {
-    const joinTime = new Date(userStatus.created_at);
-    const joinTimeUTC = joinTime.getTime() + (60 * 60 * 1000);
-    if ((Date.now() - joinTimeUTC) < 15 * 60 * 1000) {
-      console.log(`check newly added user ${userId} for spam`);
-      const isSpam = await spamDetectionService.isOffensiveOrSpamMessage(text);
-      if (isSpam) {
-        console.log(`yes, it was spam from verified user ${userId} to chat ${chatId}`);
-        if (!messageDeleted) {
-          await bot.deleteMessage(chatId, messageId.toString()).catch((error) => {
-            console.error(`Failed to delete message ${messageId} from chat ${chatId}:`, error);
-          });
-        }
-        userVerificationService.resetUserVerification(userId, true);
-      } else {
-        console.log('no spam in new user message');
-      }
-    }
-  }
-}
-
-async function handlePrivateMessage(userStatus, chatId, text, userId, username) {
-  const cachedMessages = await messagesCacheService.retrieveCachedMessages(userId);
-  const language = await chatSettingsService.getLanguageForChat(cachedMessages.length > 0 ? cachedMessages[0].chatId : chatId);
-  const messages = languageService.getMessages(language).messages;
-
-  if (userStatus && !userStatus.verified) {
-    const canAttempt = userVerificationService.recordUserAttempt(userId);  
-    if (!canAttempt) {
-        await bot.sendMessage(userId, messages.maxAttemptReached).catch(console.error)
-        console.log(`sent max attepmt reached to ${userId}`);
-        return;
-    }
-
-    if (text === "/verify" || text === "/start") {
-      let captcha = await userVerificationService.getRandomCaptcha(userId, language, chatId);
-      console.log(`CAPTCHA for ${userId} / ${username}: ${captcha.q}`);
-      await bot.sendMessage(chatId, messages.welcome)
-
-      const options = {
-        reply_markup: {
-            inline_keyboard: captcha.inline_keyboard(language)
-        }
-      };
-      await bot.sendMessage(chatId, captcha.q, options).catch(console.error);
-      return;
-    }
-  } else {
-    if (text) {
-      console.log(`user ${userId} / ${username} sent this message to private chat: ${text} `);
-    }
-    await bot.sendMessage(userId, messages.thanksMessage).catch(console.error);
-    //console.log(`sent thanks message to ${userId} / ${username} `);
-  }
 }
 
 function handleNewMembers(msg) {
@@ -397,6 +177,7 @@ async function kickSpammers() {
   }
 }
 
+// Experiments
 // async function summarizeNews() {
 //   let news = await newsService.summarizeNews();
 //   await new Promise(resolve => setTimeout(resolve, 11000)); 
@@ -433,4 +214,3 @@ process.on("SIGTERM", () => {
     bot.stopPolling().then(() => process.exit());
   }
 });
-

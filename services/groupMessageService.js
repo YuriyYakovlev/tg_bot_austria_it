@@ -1,0 +1,108 @@
+// groupMessageService.js
+const userVerificationService = require("./userVerificationService");
+const spamDetectionService = require("./spamDetectionService");
+const messagesCacheService = require("./messagesCacheService");
+const chatSettingsService = require('./chatSettingsService');
+const languageService = require('./languageService');
+const config = require("../config/config");
+
+
+async function handleGroupMessage(bot, msg, lastUserPromptTime) {
+  const { chat, from, text, message_id, message_thread_id } = msg;
+  const chatId = chat.id;
+  const userId = from.id;
+  const username = from.username;
+
+  const userStatus = await userVerificationService.verifyUser(chatId, userId, username, from.first_name, from.last_name);
+
+  let messageDeleted = false;
+
+  if (userStatus && !userStatus.verified) {
+    const isAdmin = await isUserAdmin(bot, chatId, userId);
+    if (isAdmin) {
+      userVerificationService.setUserVerified(userId);
+      console.log('superpower detected');
+      return;
+    }
+
+    await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
+    messageDeleted = true;
+
+    if (text) {
+      // CHECK FOR SPAM
+      if(userStatus.spam === 1 || userStatus.spam === true) {
+        console.log(`user ${userId} was marked as spam, no additional verification needed`);
+        return;
+      }
+      const problematicMessage = await spamDetectionService.isOffensiveOrSpamMessage(text);
+
+      if (problematicMessage) {
+        console.log(`yes, it was spam from ${userId} to chat ${chatId}`);
+        userVerificationService.resetUserVerification(userId, true);
+        // to consider to kick user right here
+        return;
+      }
+
+      // SEND VERIFICATION MESSAGE TO NORMAL USERS
+      messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
+
+      const userKey = `${chatId}-${userId}`;
+      const lastPromptTime = lastUserPromptTime[userKey] || 0;
+      const currentTime = Date.now();
+      
+      if (currentTime - lastPromptTime > config.VERIFY_PROMPT_DURATION_SEC * 1000) {
+        const language = await chatSettingsService.getLanguageForChat(chatId);
+        const messages = languageService.getMessages(language).messages;
+        const buttons = languageService.getMessages(language).buttons;
+
+        sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SEC * 1000, {
+          reply_markup: {
+            inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start` }]]
+          },
+          message_thread_id: message_thread_id,
+          disable_notification: true
+        });
+        
+        lastUserPromptTime[userKey] = currentTime;
+        console.log(`sent temporary verify message to ${userId}`);
+      }
+      return;
+    }
+  }
+
+  if (text) {
+    const joinTime = new Date(userStatus.created_at);
+    const joinTimeUTC = joinTime.getTime() + (60 * 60 * 1000);
+    if ((Date.now() - joinTimeUTC) < 15 * 60 * 1000) {
+        console.log(`check newly added user ${userId} for spam`);
+        const isSpam = await spamDetectionService.isOffensiveOrSpamMessage(text);
+        if (isSpam) {
+        if (!messageDeleted) {
+            await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
+        }
+        userVerificationService.resetUserVerification(userId, true);
+        } else {
+        console.log('no spam in new user message');
+        }
+    }
+  }
+}
+
+async function isUserAdmin(bot, chatId, userId) {
+  const member = await bot.getChatMember(chatId, userId);
+  return member.status === 'administrator' || member.status === 'creator';
+}
+
+async function sendTemporaryMessage(bot, chatId, message, timeoutMs, options = null) {
+  try {
+    const sentMessage = await bot.sendMessage(chatId, message, options);
+    const messageId = sentMessage.message_id;
+    setTimeout(async () => {
+      await bot.deleteMessage(chatId, messageId).catch(() => {});
+    }, timeoutMs);
+  } catch (error) {
+    console.error("Failed to send or delete temporary message:", error);
+  }
+}
+
+module.exports = { handleGroupMessage };

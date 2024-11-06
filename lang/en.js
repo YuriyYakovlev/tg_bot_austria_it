@@ -1,6 +1,7 @@
 module.exports = {
     buttons: {
-        start: "START"
+        start: "START",
+        backToChat: "BACK TO CHAT"
     },
     messages: {
         verifyPromptGroup: (username) => `🦘 G'day, ${username ? `@${username}` : 'new friend'}! To jump into the conversation, please take a quick test.`,
@@ -9,11 +10,11 @@ module.exports = {
         incorrectResponse: "Nope, that's not quite it! Give it another shot: ",
         verificationComplete: "Nice hop! You're in. Herzlich willkommen!",
         verificationError: "Yikes, there's a glitch in the pouch. Let's give that another go...",
-        copyPasteFromCache: "Here's what you wanted to say earlier! Copy and paste to catch up in the convo:",
+        copyPasteFromCache: "Here's what you wanted to say earlier! You can copy them.",
         banSpammersComplete: (spammers) => `🦘 Tossed ${spammers} ${spammers === 1 ? 'sneaky spammer' : 'sneaky spammers'} out of the pouch.`,
         thanksMessage: "Danke sehr! Jump in and enjoy the conversation!",
-        spamRemoved: "🦘 Inappropriate content removed!",
-        spamNotDetected: "🦘 No issues detected."
+        spamRemoved: "🦘 Aha, let's go hunting!",
+        spamNotDetected: "🦘 Relax, boss, all clear!"
     },
     captchas: [
         {
