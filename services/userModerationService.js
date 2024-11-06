@@ -4,29 +4,38 @@ const config = require("../config/config");
 
 
 async function identifyAndMarkSpammers() {
-    const [spam_messages] = await db.query(`SELECT userId, chatId FROM cached_messages WHERE spam = TRUE`);
-    //console.log(`Found ${spam_messages ? spam_messages.length : "0"} spam message(s)`);
-    for (const message of spam_messages) {
-      if (message.userId && message.chatId) {
-        try {
-          await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET spam = TRUE WHERE userId = ? AND kicked = FALSE`,
-            [message.userId]);
-        } catch (error) {
-          console.error(`Failed to mark as spammer userId: ${user.userId}`);
-        }
-      }
-    }
+  try {
+      const [spamUserIds] = await db.query(`
+          SELECT DISTINCT cm.userId
+          FROM cached_messages cm
+          JOIN ${config.USERS_TABLE_NAME} u ON cm.userId = u.userId
+          WHERE cm.spam = TRUE AND u.kicked = FALSE
+      `);
 
-    const [spammers] = await db.query(`SELECT userId, chatId FROM ${config.USERS_TABLE_NAME} WHERE spam = TRUE AND kicked = FALSE`);
-    // if (spammers && spammers.length > 0) {
-    //   console.log(`Found and will be kicked ${spammers.length} spammer(s)`);
-    // }
-    return spammers;
+      const userIds = spamUserIds.map(row => row.userId);
+      if (userIds.length > 0) {
+          await db.query(`
+              UPDATE ${config.USERS_TABLE_NAME}
+              SET spam = TRUE
+              WHERE userId IN (?)
+          `, [userIds]);
+      }
+
+      const [spammers] = await db.query(`
+          SELECT userId, chatId
+          FROM ${config.USERS_TABLE_NAME}
+          WHERE spam = TRUE AND kicked = FALSE
+      `);
+
+      return spammers;
+  } catch (error) {
+      console.error("Error identifying and marking spammers:", error);
+      return [];
+  }
 }
 
 async function markUserAsKicked(userId) {
   await db.query(`UPDATE ${config.USERS_TABLE_NAME} SET kicked = TRUE WHERE userId = ?`, [userId] );
-  //console.log(`Updated spammer records for userId: ${userId} to kicked: TRUE`);
 }
 
 module.exports = {

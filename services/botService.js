@@ -226,6 +226,7 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, message
       if (problematicMessage) {
         console.log(`yes, it was spam from ${userId} to chat ${chatId}`);
         userVerificationService.resetUserVerification(userId, true);
+        // to consider to kick user right here
         return;
       } else {
         console.log(`no problems in message from ${userId} discovered`);
