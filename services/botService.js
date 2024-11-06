@@ -78,6 +78,9 @@ function startBotPolling(retryCount = 0) {
           };
           
           await bot.sendMessage(chatId, messages.copyPasteFromCache, options);
+
+          const messageIds = cachedMessages.map(message => message.messageId);
+          await deleteCachedMessages(messageIds);
         }
       } else {
         await bot.sendMessage(chatId, messages.incorrectResponse);
@@ -159,15 +162,17 @@ async function handleMentionedMessage(msg) {
       console.log(`Deleted problematic message from chat ${chatId}. User ${mentionedUserId} verification was reset.`);
     } else {
       console.log(`Mentioned message ${mentionedMessageId} in chat ${chatId} is not problematic.`);
-      await sendTemporaryMessage(bot, chatId, messages.spamNotDetected, 5000,
+      await sendTemporaryMessage(bot, chatId, messages.spamNotDetected, config.MENTIONED_MESSAGE_DURATION_SEC * 1000,
         {
           message_thread_id: message_thread_id,
           disable_notification: true
         }
       );
-      await bot.deleteMessage(chatId, message_id.toString()).catch((error) => {
-        console.error(`Failed to delete message ${message_id} from chat ${chatId}:`, error);
-      });
+      setTimeout(async () => {
+        await bot.deleteMessage(chatId, message_id.toString()).catch((error) => {
+          console.error(`Failed to delete message ${message_id} from chat ${chatId}:`, error.message);
+        });
+      }, config.MENTIONED_MESSAGE_DURATION_SEC * 1000);
     }
   }
 }
@@ -241,12 +246,12 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, message
       // Check if a verification message has recently been sent to this user
       const lastPromptTime = lastUserPromptTime[userKey] || 0;
       const currentTime = Date.now();
-      if (currentTime - lastPromptTime > 5000) {
+      if (currentTime - lastPromptTime > config.VERIFY_PROMPT_DURATION_SECONDS * 1000) {
           const language = await chatSettingsService.getLanguageForChat(chatId);
           const messages = languageService.getMessages(language).messages;
           const buttons = languageService.getMessages(language).buttons;
 
-          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), 40000, 
+          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SECONDS * 1000, 
             {
               reply_markup: {
                   inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start`}]]
@@ -375,10 +380,6 @@ async function cleanup() {
 async function kickSpammers() {
   try {
       const spammers = await userModerationService.identifyAndMarkSpammers();
-      let chatId;
-      if(spammers.length > 0) {
-        chatId = spammers[0].chatId;
-      }
       for (const spammer of spammers) {
           try {
               const isAdmin = await isUserAdmin(spammer.chatId, spammer.userId);

@@ -29,19 +29,18 @@ async function retrieveCachedMessages(userId) {
   }
 }
 
-async function deleteCachedMessage(messageId) {
+async function deleteCachedMessages(messageIds) {
+  if (messageIds.length === 0) return;
+
   try {
-    await db.query(`DELETE FROM cached_messages WHERE messageId = ?`, [
-      messageId,
-    ]);
-    //console.log(`Deleted cached message ${messageId}`);
+    await db.query(`DELETE FROM cached_messages WHERE messageId IN (?)`, [messageIds]);
   } catch (error) {
-    console.error(`Error deleting cached message ${messageId}:`, error);
+    console.error(`Error deleting cached messages:`, error.message);
   }
 }
 
 module.exports = {
   cacheUserMessage,
   retrieveCachedMessages,
-  deleteCachedMessage
+  deleteCachedMessages
 };
