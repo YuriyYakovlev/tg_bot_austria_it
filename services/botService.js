@@ -246,12 +246,12 @@ async function handleGroupMessage(userId, userStatus, chatId, messageId, message
       // Check if a verification message has recently been sent to this user
       const lastPromptTime = lastUserPromptTime[userKey] || 0;
       const currentTime = Date.now();
-      if (currentTime - lastPromptTime > config.VERIFY_PROMPT_DURATION_SECONDS * 1000) {
+      if (currentTime - lastPromptTime > config.VERIFY_PROMPT_DURATION_SEC * 1000) {
           const language = await chatSettingsService.getLanguageForChat(chatId);
           const messages = languageService.getMessages(language).messages;
           const buttons = languageService.getMessages(language).buttons;
 
-          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SECONDS * 1000, 
+          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SEC * 1000, 
             {
               reply_markup: {
                   inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start`}]]
