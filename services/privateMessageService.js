@@ -17,6 +17,8 @@ async function handlePrivateMessage(bot, msg) {
   const language = await chatSettingsService.getLanguageForChat(cachedMessages.length > 0 ? cachedMessages[0].chatId : chatId);
   const messages = languageService.getMessages(language).messages;
 
+  console.log(`user ${userId} / ${username} sent this message to private chat: ${text} `);
+  
   if (userStatus && !userStatus.verified) {
     const canAttempt = userVerificationService.recordUserAttempt(userId);
     if (!canAttempt) {
@@ -34,10 +36,9 @@ async function handlePrivateMessage(bot, msg) {
       };
       await bot.sendMessage(chatId, captcha.q, options).catch(console.error);
       return;
-    }
-  } else if (text) {
+    } 
+  } else {
     await bot.sendMessage(userId, messages.thanksMessage).catch(console.error);
-    console.log(`user ${userId} / ${username} sent this message to private chat: ${text} `);
   }
 }
 

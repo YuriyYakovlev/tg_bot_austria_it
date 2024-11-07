@@ -28,6 +28,34 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
     await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
     messageDeleted = true;
 
+    let messageContent = msg.text 
+        ? msg.text.replace(/\n/g, ' ').substring(0, 100) 
+        : msg.photo
+        ? '[Photo]'
+        : msg.video
+        ? '[Video]'
+        : msg.audio
+        ? '[Audio]'
+        : msg.document
+        ? '[Document]'
+        : msg.voice
+        ? '[Voice Message]'
+        : msg.video_note
+        ? '[Video Note]'
+        : msg.contact
+        ? '[Contact]'
+        : msg.location
+        ? '[Location]'
+        : msg.sticker
+        ? `[Sticker: ${msg.sticker.emoji || 'Unknown'}]`
+        : msg.poll
+        ? '[Poll]'
+        : msg.animation
+        ? '[Animation]'
+        : '[Unknown content type]';
+
+    console.log(`message from ${userId} / ${username} / ${from.first_name} / ${from.last_name} to chat ${chatId} / ${chat.title} / (${chat.type}): ${messageContent}`);
+
     if (text) {
       // CHECK FOR SPAM
       if(userStatus.spam === 1 || userStatus.spam === true) {
