@@ -17,13 +17,13 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
 
   let messageDeleted = false;
 
-  if (userStatus && !userStatus.verified) {
-    const isAdmin = await isUserAdmin(bot, chatId, userId);
-    if (isAdmin) {
-      userVerificationService.setUserVerified(userId);
-      console.log('superpower detected');
-      return;
-    }
+  if (!userStatus.verified) {
+    // const isAdmin = await isUserAdmin(bot, chatId, userId);
+    // if (isAdmin) {
+    //   userVerificationService.setUserVerified(userId);
+    //   console.log('superpower detected');
+    //   return;
+    // }
 
     await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
     messageDeleted = true;
@@ -117,10 +117,10 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
   }
 }
 
-async function isUserAdmin(bot, chatId, userId) {
-  const member = await bot.getChatMember(chatId, userId);
-  return member.status === 'administrator' || member.status === 'creator';
-}
+// async function isUserAdmin(bot, chatId, userId) {
+//   const member = await bot.getChatMember(chatId, userId);
+//   return member.status === 'administrator' || member.status === 'creator';
+// }
 
 async function sendTemporaryMessage(bot, chatId, message, timeoutMs, options = null) {
   try {

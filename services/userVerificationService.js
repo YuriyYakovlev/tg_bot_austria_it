@@ -27,7 +27,7 @@ async function verifyUser(chatId, userId, username, firstName, lastName) {
     try {
         const [rows] = await db.query(`SELECT verified, spam, created_at FROM ${config.USERS_TABLE_NAME} WHERE userId = ?`, [userId]);
         if (rows.length === 0) {
-            await db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified) VALUES (?, ?, FALSE)`, [chatId, userId]);
+            db.query(`INSERT INTO ${config.USERS_TABLE_NAME} (chatId, userId, verified) VALUES (?, ?, FALSE)`, [chatId, userId]);
             return { verified: false, spam: false, created_at: new Date() };
         }
         
