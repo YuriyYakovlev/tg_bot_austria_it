@@ -7,9 +7,6 @@ const groupMessageService = require("./groupMessageService");
 const privateMessageService = require("./privateMessageService");
 const callbackService = require("./callbackService");
 const mentionService = require("./mentionService");
-const chatSettingsService = require('./chatSettingsService');
-const languageService = require('./languageService');
-
 const config = require("../config/config");
 // const newsService = require("../extras/newsService");
 // const eventsService = require("../extras/eventsService");
@@ -75,7 +72,7 @@ function handleRetry(retryCount, maxRetries) {
       })
       .catch(error => {
         console.error("Error stopping polling:", error);
-        setTimeout(() => startBotPolling(retryCount + 1), delay); // Attempt restart even if stopPolling fails
+        setTimeout(() => startBotPolling(retryCount + 1), delay);
       });
   } else {
     console.error("Max retries reached, stopping the bot");
@@ -100,12 +97,6 @@ async function handleMessage(msg) {
   }
 }
 
-
-async function isUserAdmin(chatId, userId) {
-  const member = await bot.getChatMember(chatId, userId);
-  return member.status === 'administrator' || member.status === 'creator';
-}
-
 function handleNewMembers(msg) {
   const { chat } = msg;
 
@@ -122,86 +113,24 @@ function handleLeftMember(msg) {
     const leftUser = msg.left_chat_member;
     try {
       console.log("Member left or was removed:", JSON.stringify(leftUser, null, 2));
-      //console.log(`Member left or was removed: ${leftUser.username} (ID: ${leftUser.id})`);
       if (leftUser.id) {
         userVerificationService.resetUserVerification(leftUser.id).catch(console.error);
       }
     } catch (error) {
-      console.error(`Failed to get user info`);
-    }
-}
-
-async function sendTemporaryMessage(bot, chatId, message, timeoutMs, options = null) {
-    if(!chatId){
-      console.log(`sendTemporatyMessage: chatId is null. message: ${message}`);
-      return;
-    }
-    try {
-        const sentMessage = await bot.sendMessage(chatId, message, options);
-        const messageId = sentMessage.message_id;
-
-        setTimeout(async () => {
-          await bot.deleteMessage(chatId, messageId).catch(() => { });
-        }, timeoutMs);
-    } catch (error) {
-        console.error('Failed to send or schedule deletion for message', error);
+      console.error(`handleLeftMember`, error.message);
     }
 }
 
 async function cleanup() {
   try {
     await spamDetectionService.classifyMessages();
-    await kickSpammers();
+    await userModerationService.kickSpammers(bot);
     userVerificationService.cleanupUserAttempts();
     userVerificationService.cleanupVerifiedUsersCache();
   } catch (error) {
     console.error('Error while performing cleanup:', error.message);
   }
 }
-
-async function kickSpammers() {
-  const spammersPerChat = new Map();
-
-  try {
-    const spammers = await userModerationService.identifyAndMarkSpammers();
-    for (const spammer of spammers) {
-      try {
-        const isAdmin = await isUserAdmin(spammer.chatId, spammer.userId);
-        if (!isAdmin) {
-          await bot.banChatMember(spammer.chatId, spammer.userId);
-          await userModerationService.markUserAsKicked(spammer.userId);
-          
-          if (spammersPerChat.has(spammer.chatId)) {
-            spammersPerChat.set(spammer.chatId, spammersPerChat.get(spammer.chatId) + 1);
-          } else {
-            spammersPerChat.set(spammer.chatId, 1);
-          }
-          console.log(`Kicked user with userId: ${spammer.userId} from chat ${spammer.chatId}.`);
-        }
-      } catch (error) {
-        console.error(`Failed to kick and update spammer with userId: ${spammer.userId}`, error.message);
-      }
-    }
-
-    for (const [chatId, count] of spammersPerChat.entries()) {
-      try {
-        const language = await chatSettingsService.getLanguageForChat(chatId);
-        const messages = languageService.getMessages(language).messages;
-        const notificationMessage = messages.banSpammersComplete(count);
-        
-        sendTemporaryMessage(bot, chatId, notificationMessage, 20000, {
-          disable_notification: true
-        });
-        console.log(`sent ban notification to chat: ${chatId}`);
-      } catch (error) {
-        console.error(`Failed to send ban notification to chatId: ${chatId}`, error.message);
-      }
-    }
-  } catch (error) {
-    console.error("Failed to kick spammers:", error.message);
-  }
-}
-
 
 // Experiments
 // async function summarizeNews() {
