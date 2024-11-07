@@ -70,6 +70,7 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
         // to consider to kick user right here
         return;
       }
+      console.log(`no spam detected from ${userId} to chat ${chatId}`);
 
       // SEND VERIFICATION MESSAGE TO NORMAL USERS
       messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
