@@ -62,7 +62,7 @@ async function classifyMessages() {
       }
     }
   } catch (error) {
-    console.error('Error in classifyMessages:', error.message);
+    console.error('Error in classifyMessages:', error);
   }
 }
 
@@ -138,7 +138,7 @@ function prepareClassificationRequest(messages) {
 
               ### Task ###
               Analyse the messages below and return a response exactly in this format:
-              { "message_id": "id", "spam": "true/false"}
+              [{ "message_id": "id", "spam": "true/false"}, { "message_id": "id", "spam": "true/false"}]
               Return json only, not reasoning or justification.
 
               ### Messages ###
