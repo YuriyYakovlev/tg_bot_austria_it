@@ -8,7 +8,7 @@ const languageService = require('./languageService');
 const config = require("../config/config");
 
 
-async function handleGroupMessage(bot, msg, lastUserPromptTime) {
+async function handleGroupMessage(bot, msg, userSessionData) {
   const { chat, from, text, message_id, message_thread_id } = msg;
   const chatId = chat.id;
   const userId = from.id;
@@ -25,7 +25,7 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
     //   console.log('superpower detected');
     //   return;
     // }
-
+    
     await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
     messageDeleted = true;
 
@@ -78,11 +78,10 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
       // SEND VERIFICATION MESSAGE TO NORMAL USERS
       messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
 
-      const userKey = `${chatId}-${userId}`;
-      const lastPromptTime = lastUserPromptTime[userKey] || 0;
+      const sessionData = userSessionData.get(userId) || {};
       const currentTime = Date.now();
       
-      if (currentTime - lastPromptTime > config.VERIFY_PROMPT_DURATION_SEC * 1000) {
+      if (!sessionData.promptTime || (currentTime - sessionData.promptTime > config.VERIFY_PROMPT_DURATION_SEC * 1000)) {
         const language = await chatSettingsService.getLanguageForChat(chatId);
         const messages = languageService.getMessages(language).messages;
         const buttons = languageService.getMessages(language).buttons;
@@ -95,7 +94,13 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
           disable_notification: true
         });
         
-        lastUserPromptTime[userKey] = currentTime;
+        userSessionData.set(userId, {
+          chatId,
+          promptTime: currentTime,
+          chat_username: chat.username,
+          thread_id: msg.message_thread_id,
+        });
+
         console.log(`sent temporary verify message to ${userId}`);
       }
       return;

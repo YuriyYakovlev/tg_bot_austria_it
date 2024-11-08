@@ -12,7 +12,7 @@ const config = require("../config/config");
 // const eventsService = require("../extras/eventsService");
 
 let bot;
-const lastUserPromptTime = {};
+const userSessionData = new Map(); // Stores { userId: { chatId, promptTime, chat_username, thread_id } }
 
 function startBotPolling(retryCount = 0) {
   const MAX_RETRIES = 5;
@@ -43,7 +43,7 @@ function startBotPolling(retryCount = 0) {
 
   bot.on("callback_query", async (callbackQuery) => {
     try {
-        await callbackService.processCallbackQuery(bot, callbackQuery);
+        await callbackService.processCallbackQuery(bot, callbackQuery, userSessionData);
     } catch (error) {
         console.error("Error processing callback query:", error);
     }
@@ -91,7 +91,7 @@ async function handleMessage(msg) {
   const { chat } = msg;
   
   if (chat.type === "group" || chat.type === "supergroup") {
-    await groupMessageService.handleGroupMessage(bot, msg, lastUserPromptTime);
+    await groupMessageService.handleGroupMessage(bot, msg, userSessionData);
   } else if (chat.type === "private") {
     await privateMessageService.handlePrivateMessage(bot, msg);
   }

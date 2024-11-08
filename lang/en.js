@@ -10,7 +10,7 @@ module.exports = {
         incorrectResponse: "Nope, that's not quite it! Give it another shot: ",
         verificationComplete: "Nice hop! You're in. Herzlich willkommen!",
         verificationError: "Yikes, there's a glitch in the pouch. Let's give that another go...",
-        copyPasteFromCache: "Here's what you wanted to say earlier! You can copy them.",
+        copyPasteFromCache: "Here's what you wanted to say earlier:",
         banSpammersComplete: (spammers) => `🦘 Tossed ${spammers} ${spammers === 1 ? 'sneaky spammer' : 'sneaky spammers'} out of the pouch.`,
         thanksMessage: "Danke sehr! Jump in and enjoy the conversation!",
         spamRemoved: "🦘 Aha, let's go hunting!",
