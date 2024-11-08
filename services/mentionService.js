@@ -14,12 +14,12 @@ async function handleMentionedMessage(bot, msg) {
   
   if (mentionedMessageText) {
     console.log(`mentioned message to check: ${mentionedMessageText}`);
-    const isSpam = await spamDetectionService.isOffensiveOrSpamMessage(mentionedMessageText);
+    const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(mentionedMessageText);
     
     const language = await chatSettingsService.getLanguageForChat(chatId);
     const messages = languageService.getMessages(language).messages;
       
-    if (isSpam) {
+    if (messageAnalysis.isOffensive) {
       await bot.deleteMessage(chatId, mentionedMessageId.toString()).catch((error) => {
         console.error(`Failed to delete message ${mentionedMessageId} from chat ${chatId}:`, error);
       });
@@ -28,7 +28,7 @@ async function handleMentionedMessage(bot, msg) {
       }).catch(console.error);
 
       userVerificationService.resetUserVerification(mentionedUserId);
-      console.log(`Deleted problematic message from chat ${chatId}. User ${mentionedUserId} verification was reset.`);
+      console.log(`Deleted mentioned message from chat ${chatId}. Reason: ${messageAnalysis.reason}` +`. User ${mentionedUserId} was muted.`);
     } else {
       console.log(`Mentioned message ${mentionedMessageId} in chat ${chatId} is not problematic.`);
       await sendTemporaryMessage(bot, chatId, messages.spamNotDetected, config.MENTIONED_MESSAGE_DURATION_SEC * 1000, {

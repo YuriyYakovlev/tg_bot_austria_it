@@ -1,5 +1,6 @@
 // groupMessageService.js
 const userVerificationService = require("./userVerificationService");
+const userModerationService = require("./userModerationService");
 const spamDetectionService = require("./spamDetectionService");
 const messagesCacheService = require("./messagesCacheService");
 const chatSettingsService = require('./chatSettingsService');
@@ -54,7 +55,7 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
         ? '[Animation]'
         : '[Unknown content type]';
 
-    console.log(`message from ${userId} / ${username} / ${from.first_name} / ${from.last_name} to chat ${chatId} / ${chat.title} / (${chat.type}): ${messageContent}`);
+    console.log(`message from ${userId} / ${username} / ${from.first_name} / ${from.last_name} to chat ${chatId} / ${chat.title}: ${messageContent}`);
 
     if (text) {
       // CHECK FOR SPAM
@@ -62,12 +63,14 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
         console.log(`user ${userId} was marked as spam, no additional verification needed`);
         return;
       }
-      const problematicMessage = await spamDetectionService.isOffensiveOrSpamMessage(text);
+      const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(text);
 
-      if (problematicMessage) {
-        console.log(`yes, it was spam from ${userId} to chat ${chatId}`);
+      if (messageAnalysis.isOffensive) {
+        console.log(`problem detected from ${userId} to chat ${chatId}. Reason: ${messageAnalysis.reason}`);
         userVerificationService.resetUserVerification(userId, true);
-        // to consider to kick user right here
+        if(messageAnalysis.reason === config.KICK_REASONS.ILLEGAL_GOODS) {
+            userModerationService.kickUserIfNotAdmin(bot, chatId, userId);
+        }
         return;
       }
       console.log(`no spam detected from ${userId} to chat ${chatId}`);
@@ -104,12 +107,12 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
     const joinTimeUTC = joinTime.getTime() + (60 * 60 * 1000);
     if ((Date.now() - joinTimeUTC) < 15 * 60 * 1000) {
         console.log(`check newly added user ${userId} for spam`);
-        const isSpam = await spamDetectionService.isOffensiveOrSpamMessage(text);
-        if (isSpam) {
-        if (!messageDeleted) {
-            await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
-        }
-        userVerificationService.resetUserVerification(userId, true);
+        const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(text);
+        if (messageAnalysis.isOffensive) {
+            if (!messageDeleted) {
+                await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
+            }
+            userVerificationService.resetUserVerification(userId, true);
         } else {
         console.log('no spam in new user message');
         }

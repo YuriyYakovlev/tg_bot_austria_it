@@ -42,8 +42,9 @@ async function classifyMessages() {
       console.log('classification jon: safety filter triggered, try one by one');
       // 2. safety filter triggered, try one by one
       for (const message of messages) {
-        let isOffensive = isOffensiveOrSpamMessage(message.msg_text);
-        if (isOffensive) {
+        let messageAnalysis = isOffensiveOrSpamMessage(message.msg_text);
+        if (messageAnalysis.isOffensive) {
+          console.log(`Message ${message.messageId} marked as spam: ${messageAnalysis.reason}`);
           await db.query('UPDATE cached_messages SET spam = ? WHERE messageId = ?', [true, message.messageId]);
         }
       }
@@ -57,6 +58,7 @@ async function classifyMessages() {
       parsedResult = parsedResult instanceof Array ? parsedResult : [parsedResult];
       for (const result of parsedResult) {
         if (result && result.spam === 'true') {
+          console.log(`сlassifyMessages: Detected issue with reason: ${result.reason}`);
           await db.query('UPDATE cached_messages SET spam = ? WHERE messageId = ?', [true, result.message_id]);
         }
       }
@@ -83,8 +85,7 @@ async function isOffensiveOrSpamMessage(text) {
 
     const finishReason = response.finishReason;
     if (finishReason === "SAFETY") {
-      console.log("Message is dangerous due to safety filters being triggered.");
-      return true;
+      return { isOffensive: true, reason: "SAFETY" };
     }
 
     let textResponse = response.content.parts[0].text;
@@ -94,10 +95,15 @@ async function isOffensiveOrSpamMessage(text) {
     const jsonMatch = textResponse.match(regex);
     let parsedResult = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
     parsedResult = parsedResult instanceof Array ? parsedResult : [parsedResult];
-    return parsedResult.some(result => result.issue === 'true');
+    for (const result of parsedResult) {
+      if (result && result.issue === 'true') {
+        return { isOffensive: true, reason: result.reason };
+      }
+    }
+    return { isOffensive: false, reason: null };
   } catch (error) {
-    console.error('Error in isSpamMessage:', error);
-    return false;
+    console.error('Error in isSpamMessage:', error.message);
+    return { isOffensive: false, reason: "Error processing message" };
   }
 }
 
@@ -151,6 +157,7 @@ function prepareClassificationRequest(messages) {
   };
 }
 
+const reasonsList = Object.values(config.KICK_REASONS).join(", ");
 function prepareSingleClassificationRequest(message) {
   return {
     contents: [
@@ -161,7 +168,8 @@ function prepareSingleClassificationRequest(message) {
             text: `
               Instructions:
               You are a chat guard. Your task is to filter messages and identify inappropriate messages: selling services, scams, rude behavior.
-              Analyse the message below and return a response exactly in this format (return json only, not reasoning or justification): {"issue": "true/false"}
+              Analyse the message below and return a response exactly in this format (return json only): {"issue": "true/false", "reason": "reason"}
+              List of possible reasons: ${reasonsList}.
 
               Message to analyse: "${message}" `
           },
