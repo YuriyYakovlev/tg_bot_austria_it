@@ -40,16 +40,18 @@ async function markUserAsKicked(userId) {
 
 async function kickUserIfNotAdmin(bot, chatId, userId) {
   try {
-    const member = await bot.getChatMember(chatId, userId);
-    const isAdmin = member.status === 'administrator' || member.status === 'creator';
-    if(isAdmin) {
-      console.log(`superpower detected`);
-      return false;
-    } else {
-      await bot.banChatMember(chatId, userId);
-      await markUserAsKicked(userId);
-      console.log(`Kicked user with userId: ${userId} from chat ${chatId}.`);
-      return true;
+    if(chatId !== userId) {
+      const member = await bot.getChatMember(chatId, userId);
+      const isAdmin = member.status === 'administrator' || member.status === 'creator';
+      if(isAdmin) {
+        console.log(`superpower detected`);
+        return false;
+      } else {
+        await bot.banChatMember(chatId, userId);
+        await markUserAsKicked(userId);
+        console.log(`Kicked user with userId: ${userId} from chat ${chatId}.`);
+        return true;
+      }
     }
   } catch (error) {
     console.error(`Failed to check or kick user with userId: ${userId} in chat ${chatId}`, error.message);

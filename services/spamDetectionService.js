@@ -64,7 +64,7 @@ async function classifyMessages() {
       }
     }
   } catch (error) {
-    console.error('Error in classifyMessages:', error);
+    console.error('Error in classifyMessages:', error.message);
   }
 }
 

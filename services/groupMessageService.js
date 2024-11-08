@@ -66,14 +66,14 @@ async function handleGroupMessage(bot, msg, lastUserPromptTime) {
       const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(text);
 
       if (messageAnalysis.isOffensive) {
-        console.log(`problem detected from ${userId} to chat ${chatId}. Reason: ${messageAnalysis.reason}`);
+        console.log(`problem detected from ${userId} to chat ${chatId}: ${messageAnalysis.reason}`);
         userVerificationService.resetUserVerification(userId, true);
         if(messageAnalysis.reason === config.KICK_REASONS.ILLEGAL_GOODS) {
             userModerationService.kickUserIfNotAdmin(bot, chatId, userId);
         }
         return;
       }
-      console.log(`no spam detected from ${userId} to chat ${chatId}`);
+      console.log(`no problems detected from ${userId} to chat ${chatId}`);
 
       // SEND VERIFICATION MESSAGE TO NORMAL USERS
       messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
