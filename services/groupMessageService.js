@@ -7,7 +7,7 @@ const chatSettingsService = require('./chatSettingsService');
 const languageService = require('./languageService');
 const config = require("../config/config");
 
-
+const kickReasons = [config.KICK_REASONS.ILLEGAL_GOODS, config.KICK_REASONS.SCAM_OR_SPAM];
 async function handleGroupMessage(bot, msg, userSessionData) {
   const { chat, from, text, message_id, message_thread_id } = msg;
   const chatId = chat.id;
@@ -68,7 +68,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
       if (messageAnalysis.isOffensive) {
         console.log(`problem detected from ${userId} to chat ${chatId}: ${messageAnalysis.reason}`);
         userVerificationService.resetUserVerification(userId, true);
-        if(messageAnalysis.reason === config.KICK_REASONS.ILLEGAL_GOODS) {
+        if (kickReasons.includes(messageAnalysis.reason)) {
             userModerationService.kickUserIfNotAdmin(bot, chatId, userId);
         }
         return;
