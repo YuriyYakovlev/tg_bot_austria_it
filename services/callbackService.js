@@ -38,17 +38,17 @@ async function handleCorrectAnswer(bot, chatId, userId, messages, buttons, userS
     const replyMarkup = { inline_keyboard: [] };
 
     const cachedMessages = await messagesCacheService.retrieveCachedMessages(userId);
-    if (cachedMessages.length > 0) {
+    const filteredMessages = cachedMessages.filter(message => message.msg_text.length < 256);
+    if (filteredMessages.length > 0) {
         finalMessage += `\n\n${messages.copyPasteFromCache}`;
 
-        const cachedButtons = cachedMessages.map((message) => ({
+        const cachedButtons = filteredMessages.map((message) => ({
             text: `${message.msg_text.substring(0, 50)}`,
             copy_text: { text: `${message.msg_text.substring(0, 256)}` },
         }));
         replyMarkup.inline_keyboard.push(cachedButtons);
-        
-        await messagesCacheService.deleteCachedMessages(cachedMessages.map(m => m.messageId));
     }
+    messagesCacheService.deleteCachedMessages(cachedMessages.map(m => m.messageId));
 
     const sessionData = userSessionData.get(userId);
     if (sessionData?.chat_username && sessionData.thread_id) {
