@@ -104,6 +104,8 @@ async function handleGroupMessage(bot, msg, userSessionData) {
         console.log(`sent temporary verify message to ${userId}`);
       }
       return;
+    } else{
+      console.log(`msg: ${JSON.stringify(msg, null, 2)}`);
     }
   }
 
@@ -119,7 +121,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
             }
             userVerificationService.resetUserVerification(userId, true);
         } else {
-        console.log('no spam in new user message');
+          console.log('no spam in new user message');
         }
     }
   }

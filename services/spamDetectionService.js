@@ -141,6 +141,7 @@ function prepareClassificationRequest(messages) {
               18. Безкоштовні вступні заняття з німецької мови!
               19. CPOЧHO❗️ Пaссивный зaρaбoтoκ. Удaленнαя cфeρa.
               20. Раді повідомити про нове велике надходження товарів у нашому магазині!
+              21. На постоянную основу нужен человек на Бинанс со знанием Русского/Украинского языка
 
               ### Task ###
               Analyse the messages below and return a response exactly in this format:
