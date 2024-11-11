@@ -9,7 +9,7 @@ const callbackService = require("./callbackService");
 const mentionService = require("./mentionService");
 const config = require("../config/config");
 // const newsService = require("../extras/newsService");
-// const eventsService = require("../extras/eventsService");
+//const eventsService = require("../extras/eventsService");
 
 let bot;
 const userSessionData = new Map(); // Stores { userId: { chatId, promptTime, chat_username, thread_id } }
@@ -144,11 +144,11 @@ async function cleanup() {
 //   let events = await eventsService.summarizeEvents();
 //   await new Promise(resolve => setTimeout(resolve, 1000)); //11000)); 
 //   //await bot.sendMessage(353740703, events).catch(console.error);
-//   console.log('summarised events: ' + events);
+//   console.log('summarised events: ' + JSON.stringify(events, null, 2));
 // }
 
 //summarizeNews();
-// summarizeEvents();
+//summarizeEvents();
 setInterval(() => {
   cleanup();
 }, 3600000 * config.CLEANUP_INTERVAL_HOURS);

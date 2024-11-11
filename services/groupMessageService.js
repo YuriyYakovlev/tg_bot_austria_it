@@ -53,6 +53,8 @@ async function handleGroupMessage(bot, msg, userSessionData) {
         ? '[Poll]'
         : msg.animation
         ? '[Animation]'
+        : msg.new_chat_member
+        ? '[New Chat Member]'
         : '[Unknown content type]';
 
     console.log(`message from ${userId} / ${username} / ${from.first_name} / ${from.last_name} to chat ${chatId} / ${chat.title}: ${messageContent}`);
@@ -104,7 +106,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
         console.log(`sent temporary verify message to ${userId}`);
       }
       return;
-    } else{
+    } else if (messageContent === '[Unknown content type]') {
       console.log(`msg: ${JSON.stringify(msg, null, 2)}`);
     }
   }
