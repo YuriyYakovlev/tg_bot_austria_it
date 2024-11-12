@@ -106,7 +106,7 @@ async function updateRecentCaptchasForUser(userId, newCaptchaId) {
 
 function recordUserAttempt(userId) {
     const now = Date.now();
-    const HOUR_IN_MS = 60 * 60 * 1000;
+    const HOUR_IN_MS = config.ATTEMPTS_TIMEOUT_MIN * 60 * 1000;
     
     if (!userAttempts[userId]) {
         userAttempts[userId] = { count: 1, firstAttemptTime: now };

@@ -3,6 +3,7 @@ const userVerificationService = require("./userVerificationService");
 const messagesCacheService = require("./messagesCacheService");
 const chatSettingsService = require('./chatSettingsService');
 const languageService = require('./languageService');
+const config = require("../config/config");
 
 
 async function handlePrivateMessage(bot, msg) {
@@ -22,7 +23,7 @@ async function handlePrivateMessage(bot, msg) {
   if (userStatus && !userStatus.verified) {
     const canAttempt = userVerificationService.recordUserAttempt(userId);
     if (!canAttempt) {
-      await bot.sendMessage(userId, messages.maxAttemptReached).catch(console.error);
+      await bot.sendMessage(userId, messages.maxAttemptReached(config.ATTEMPTS_TIMEOUT_MIN)).catch(console.error);
       console.log(`sent max attepmt reached to ${userId}`);
       return;
     }
@@ -30,11 +31,10 @@ async function handlePrivateMessage(bot, msg) {
     if (text === "/verify" || text === "/start") {
       const captcha = await userVerificationService.getRandomCaptcha(userId, language, chatId);
       console.log(`CAPTCHA for ${userId} / ${username}: ${captcha.q}`);
-      await bot.sendMessage(chatId, messages.welcome);
       const options = {
         reply_markup: { inline_keyboard: captcha.inline_keyboard(language) }
       };
-      await bot.sendMessage(chatId, captcha.q, options).catch(console.error);
+      await bot.sendMessage(chatId, messages.welcome + '\n\n' + captcha.q, options).catch(console.error);
       return;
     } 
   } else {

@@ -5,9 +5,9 @@ module.exports = {
     },
     messages: {
         verifyPromptGroup: (username) => `🦘 G'day, ${username ? `@${username}` : 'new friend'}! To jump into the conversation, please take a quick test.`,
-        maxAttemptReached: "Looks like you've reached the max attempts. Take a breather and try again soon!",
-        welcome: "Welcome aboard! Answer this to bounce into the chat.\n",
-        incorrectResponse: "Nope, that's not quite it! Give it another shot: ",
+        maxAttemptReached: (min) => `Looks like you've reached the max attempts. Take a breather and try again in ${min} minutes}!`,
+        welcome: "Welcome aboard! Answer this to bounce into the chat.",
+        incorrectResponse: "Nope, that's not quite it! Give it another shot:",
         verificationComplete: "Nice hop! You're in. Herzlich willkommen!",
         verificationError: "Yikes, there's a glitch in the pouch. Let's give that another go...",
         copyPasteFromCache: "Here's what you wanted to say earlier:",

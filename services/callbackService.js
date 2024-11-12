@@ -2,6 +2,7 @@
 const userVerificationService = require("./userVerificationService");
 const messagesCacheService = require("./messagesCacheService");
 const languageService = require("./languageService");
+const config = require("../config/config");
 
 async function processCallbackQuery(bot, callbackQuery, userSessionData) {
     const chatId = callbackQuery.message.chat.id;
@@ -16,7 +17,7 @@ async function processCallbackQuery(bot, callbackQuery, userSessionData) {
         
         const canAttempt = userVerificationService.recordUserAttempt(userId);
         if (!canAttempt) {
-            await bot.sendMessage(chatId, messages.maxAttemptReached).catch(console.error);
+            await bot.sendMessage(chatId, messages.maxAttemptReached(config.ATTEMPTS_TIMEOUT_MIN)).catch(console.error);
             console.log(`sent max attepmt reached to ${userId}`);
             return;
         }
@@ -65,7 +66,6 @@ async function handleCorrectAnswer(bot, chatId, userId, messages, buttons, userS
 
 
 async function handleIncorrectAnswer(bot, chatId, userId, a, l, messages) {
-    await bot.sendMessage(chatId, messages.incorrectResponse);
     console.log(`${userId} answered CAPTCHA incorrectly: ${a}`);
     const newCaptcha = await userVerificationService.getRandomCaptcha(userId, l);
     const options = {
@@ -73,7 +73,7 @@ async function handleIncorrectAnswer(bot, chatId, userId, a, l, messages) {
             inline_keyboard: newCaptcha.inline_keyboard(l)
         }
     };
-    await bot.sendMessage(chatId, newCaptcha.q, options).catch(console.error);
+    await bot.sendMessage(chatId, messages.incorrectResponse + '\n\n' + newCaptcha.q, options).catch(console.error);
     console.log(`new CAPTCHA for ${userId}: ${newCaptcha.q.substring(0, 50)}`);
 }
 
