@@ -29,7 +29,6 @@ function startBotPolling(retryCount = 0) {
 
   bot.on("message", async (msg) => {
     try {
-      if (msg.new_chat_members) handleNewMembers(msg);
       if (msg.left_chat_member) handleLeftMember(msg);
       if (msg.reply_to_message && msg.text && msg.text.includes(`${process.env.BOT_URL}`)) {
         await mentionService.handleMentionedMessage(bot, msg);
@@ -95,18 +94,6 @@ async function handleMessage(msg) {
   } else if (chat.type === "private") {
     await privateMessageService.handlePrivateMessage(bot, msg);
   }
-}
-
-function handleNewMembers(msg) {
-  const { chat } = msg;
-
-  msg.new_chat_members.forEach((member) => {
-    try {
-      console.log(`new chat member: ${member.id} / ${member.username} / ${member.first_name} / ${member.last_name} in chat: ${chat.id} / ${chat.title}`);
-    } catch (error) {
-      console.error(`Failed to get user info`);
-    }
-  });
 }
 
 function handleLeftMember(msg) {
