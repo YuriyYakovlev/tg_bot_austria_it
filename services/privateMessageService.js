@@ -32,9 +32,10 @@ async function handlePrivateMessage(bot, msg) {
       const captcha = await userVerificationService.getRandomCaptcha(userId, language, chatId);
       console.log(`CAPTCHA for ${userId} / ${username}: ${captcha.q}`);
       const options = {
+        parse_mode: 'html',
         reply_markup: { inline_keyboard: captcha.inline_keyboard(language) }
       };
-      await bot.sendMessage(chatId, messages.welcome + '\n\n' + captcha.q, options).catch(console.error);
+      await bot.sendMessage(chatId, messages.welcome + '\n\n' + `<b>${captcha.q}</b>`, options).catch(console.error);
       return;
     } 
   } else {

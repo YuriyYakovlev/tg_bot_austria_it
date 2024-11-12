@@ -69,11 +69,10 @@ async function handleIncorrectAnswer(bot, chatId, userId, a, l, messages) {
     console.log(`${userId} answered CAPTCHA incorrectly: ${a}`);
     const newCaptcha = await userVerificationService.getRandomCaptcha(userId, l);
     const options = {
-        reply_markup: {
-            inline_keyboard: newCaptcha.inline_keyboard(l)
-        }
+        parse_mode: 'html',
+        reply_markup: { inline_keyboard: newCaptcha.inline_keyboard(l) }
     };
-    await bot.sendMessage(chatId, messages.incorrectResponse + '\n\n' + newCaptcha.q, options).catch(console.error);
+    await bot.sendMessage(chatId, messages.incorrectResponse + '\n\n' + `<b>${newCaptcha.q}</b>`, options).catch(console.error);
     console.log(`new CAPTCHA for ${userId}: ${newCaptcha.q.substring(0, 50)}`);
 }
 
