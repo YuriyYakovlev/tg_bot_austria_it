@@ -39,22 +39,26 @@ module.exports = {
         },
         {
             id: "3", 
-            q: "Why can't a programmer find love?", 
-            a: "3", 
+            q: "Which planet is the largest in the solar system?",
+            a: "4",
             inline_keyboard: (language) => [
-                [{ text: "He is always debugging", callback_data: JSON.stringify({ t: "c", id: "3", a: "1", l: language }) }],
-                [{ text: "He thinks all relationships are iterations", callback_data: JSON.stringify({ t: "c", id: "3", a: "2", l: language}) }],
-                [{ text: "He's afraid of commits", callback_data: JSON.stringify({ t: "c", id: "3", a: "3", l: language }) }]
+                [{ text: "Earth", callback_data: JSON.stringify({ t: "c", id: "3", a: "1", l: language }) }],
+                [{ text: "Venus", callback_data: JSON.stringify({ t: "c", id: "3", a: "2", l: language }) }],
+                [{ text: "Mars", callback_data: JSON.stringify({ t: "c", id: "3", a: "3", l: language }) }],
+                [{ text: "Jupiter", callback_data: JSON.stringify({ t: "c", id: "3", a: "4", l: language }) }],
+                [{ text: "Saturn", callback_data: JSON.stringify({ t: "c", id: "3", a: "5", l: language }) }]
             ]
         },
         {
             id: "4", 
-            q: "Why do programmers prefer dark mode?", 
-            a: "3", 
+            q: "Who wrote the novel 'War and Peace'?",
+            a: "2",
             inline_keyboard: (language) => [
-                [{ text: "It's easier for the eyes", callback_data: JSON.stringify({ t: "c", id: "4", a: "1", l: language }) }],
-                [{ text: "They are vampires", callback_data: JSON.stringify({ t: "c", id: "4", a: "2", l: language}) }],
-                [{ text: "Because light attracts bugs", callback_data: JSON.stringify({ t: "c", id: "4", a: "3", l: language }) }]
+                [{ text: "Fyodor Dostoevsky", callback_data: JSON.stringify({ t: "c", id: "4", a: "1", l: language }) }],
+                [{ text: "Lev Tolstoy", callback_data: JSON.stringify({ t: "c", id: "4", a: "2", l: language }) }],
+                [{ text: "Alexander Pushkin", callback_data: JSON.stringify({ t: "c", id: "4", a: "3", l: language }) }],
+                [{ text: "Anton Chekhov", callback_data: JSON.stringify({ t: "c", id: "4", a: "4", l: language }) }],
+                [{ text: "Ivan Turgenev", callback_data: JSON.stringify({ t: "c", id: "4", a: "5", l: language }) }]
             ]
         },
         {
@@ -99,12 +103,14 @@ module.exports = {
         },
         {
             id: "9", 
-            q: "Why did the developer run out of money?", 
-            a: "2", 
+            q: "Which chemical element has the symbol 'O'?",
+            a: "1",
             inline_keyboard: (language) => [
-                [{ text: "Insufficient funds", callback_data: JSON.stringify({ t: "c", id: "9", a: "1", l: language }) }],
-                [{ text: "Spent all his cache", callback_data: JSON.stringify({ t: "c", id: "9", a: "2", l: language}) }],
-                [{ text: "Lost a bet", callback_data: JSON.stringify({ t: "c", id: "9", a: "3", l: language }) }]
+                [{ text: "Oxygen", callback_data: JSON.stringify({ t: "c", id: "9", a: "1", l: language }) }],
+                [{ text: "Hydrogen", callback_data: JSON.stringify({ t: "c", id: "9", a: "2", l: language }) }],
+                [{ text: "Sodium", callback_data: JSON.stringify({ t: "c", id: "9", a: "3", l: language }) }],
+                [{ text: "Iron", callback_data: JSON.stringify({ t: "c", id: "9", a: "4", l: language }) }],
+                [{ text: "Uranus", callback_data: JSON.stringify({ t: "c", id: "9", a: "5", l: language }) }]
             ]
         },
         {

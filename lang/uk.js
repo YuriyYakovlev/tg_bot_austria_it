@@ -39,22 +39,26 @@ module.exports = {
         },
         {
             id: "3", 
-            q: "Чому програміст не може знайти кохання?", 
-            a: "3", 
+            q: "Яка планета є найбільшою у Сонячній системі?",
+            a: "4",
             inline_keyboard: (language) => [
-                [{ text: "Він постійно відлагоджує код", callback_data: JSON.stringify({ t: "c", id: "3", a: "1", l: language }) }],
-                [{ text: "Він вважає, що всі стосунки – це ітерації", callback_data: JSON.stringify({ t: "c", id: "3", a: "2", l: language}) }],
-                [{ text: "Він боїться комітів", callback_data: JSON.stringify({ t: "c", id: "3", a: "3", l: language }) }]
+                [{ text: "Земля", callback_data: JSON.stringify({ t: "c", id: "3", a: "1", l: language }) }],
+                [{ text: "Венера", callback_data: JSON.stringify({ t: "c", id: "3", a: "2", l: language }) }],
+                [{ text: "Марс", callback_data: JSON.stringify({ t: "c", id: "3", a: "3", l: language }) }],
+                [{ text: "Юпітер", callback_data: JSON.stringify({ t: "c", id: "3", a: "4", l: language }) }],
+                [{ text: "Сатурн", callback_data: JSON.stringify({ t: "c", id: "3", a: "5", l: language }) }]
             ]
         },
         {
             id: "4", 
-            q: "Чому програмісти надають перевагу темному режиму?", 
-            a: "3", 
+            q: "Хто написав роман 'Війна і мир'?",
+            a: "2",
             inline_keyboard: (language) => [
-                [{ text: "Легше для очей", callback_data: JSON.stringify({ t: "c", id: "4", a: "1", l: language }) }],
-                [{ text: "Вони вампіри", callback_data: JSON.stringify({ t: "c", id: "4", a: "2", l: language}) }],
-                [{ text: "Бо світло приваблює баги", callback_data: JSON.stringify({ t: "c", id: "4", a: "3", l: language }) }]
+                [{ text: "Федір Достоєвський", callback_data: JSON.stringify({ t: "c", id: "4", a: "1", l: language }) }],
+                [{ text: "Лев Толстой", callback_data: JSON.stringify({ t: "c", id: "4", a: "2", l: language }) }],
+                [{ text: "Олександр Пушкін", callback_data: JSON.stringify({ t: "c", id: "4", a: "3", l: language }) }],
+                [{ text: "Антон Чехов", callback_data: JSON.stringify({ t: "c", id: "4", a: "4", l: language }) }],
+                [{ text: "Іван Тургенєв", callback_data: JSON.stringify({ t: "c", id: "4", a: "5", l: language }) }]
             ]
         },
         {
@@ -99,12 +103,14 @@ module.exports = {
         },
         {
             id: "9", 
-            q: "Чому програміст залишився без грошей?", 
-            a: "2", 
+            q: "Який хімічний елемент має символ 'O'?",
+            a: "1",
             inline_keyboard: (language) => [
-                [{ text: "Недостатньо коштів", callback_data: JSON.stringify({ t: "c", id: "9", a: "1", l: language }) }],
-                [{ text: "Витратив весь кеш", callback_data: JSON.stringify({ t: "c", id: "9", a: "2", l: language}) }],
-                [{ text: "Програв парі", callback_data: JSON.stringify({ t: "c", id: "9", a: "3", l: language }) }]
+                [{ text: "Кисень", callback_data: JSON.stringify({ t: "c", id: "9", a: "1", l: language }) }],
+                [{ text: "Водень", callback_data: JSON.stringify({ t: "c", id: "9", a: "2", l: language }) }],
+                [{ text: "Натрій", callback_data: JSON.stringify({ t: "c", id: "9", a: "3", l: language }) }],
+                [{ text: "Залізо", callback_data: JSON.stringify({ t: "c", id: "9", a: "4", l: language }) }],
+                [{ text: "Уран", callback_data: JSON.stringify({ t: "c", id: "9", a: "5", l: language }) }]
             ]
         },
         {

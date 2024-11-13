@@ -43,26 +43,26 @@ module.exports = {
         },
         {
             id: "3", 
-            q: "Чому програміст не може знайти кохання?", 
-            a: "4", 
+            q: "Який з наступних принципів програмування означає повторне використання коду?",
+            a: "5",
             inline_keyboard: (language) => [
-                [{ text: "Він постійно відлагоджує код", callback_data: JSON.stringify({ t: "c", id: "3", a: "1", l: language }) }],
-                [{ text: "Вважає, що стосунки це ітерації", callback_data: JSON.stringify({ t: "c", id: "3", a: "2", l: language }) }],
-                [{ text: "Занадто захоплений  кодом", callback_data: JSON.stringify({ t: "c", id: "3", a: "3", l: language }) }],
-                [{ text: "Він боїться комітів", callback_data: JSON.stringify({ t: "c", id: "3", a: "4", l: language }) }],
-                [{ text: "Йому бракує часу", callback_data: JSON.stringify({ t: "c", id: "3", a: "5", l: language }) }]
+                [{ text: "Інкапсуляція", callback_data: JSON.stringify({ t: "c", id: "3", a: "1", l: language }) }],
+                [{ text: "Поліморфізм", callback_data: JSON.stringify({ t: "c", id: "3", a: "2", l: language }) }],
+                [{ text: "Рекурсія", callback_data: JSON.stringify({ t: "c", id: "4", a: "3", l: language }) }],
+                [{ text: "Абстракція", callback_data: JSON.stringify({ t: "c", id: "3", a: "4", l: language }) }],
+                [{ text: "Наслідування", callback_data: JSON.stringify({ t: "c", id: "3", a: "5", l: language }) }]
             ]
         },
         {
             id: "4", 
-            q: "Чому програмісти надають перевагу темному режиму?", 
-            a: "5", 
+            q: "Скільки байт містить один кілобайт (у традиційній системі обчислення)?",
+            a: "2",
             inline_keyboard: (language) => [
-                [{ text: "Легше для очей", callback_data: JSON.stringify({ t: "c", id: "4", a: "1", l: language }) }],
-                [{ text: "Вони вампіри", callback_data: JSON.stringify({ t: "c", id: "4", a: "2", l: language }) }],
-                [{ text: "Звичка з дитинства", callback_data: JSON.stringify({ t: "c", id: "4", a: "3", l: language }) }],
-                [{ text: "Економія батареї", callback_data: JSON.stringify({ t: "c", id: "4", a: "4", l: language }) }],
-                [{ text: "Бо світло приваблює баги", callback_data: JSON.stringify({ t: "c", id: "4", a: "5", l: language }) }]
+                [{ text: "1000", callback_data: JSON.stringify({ t: "c", id: "4", a: "1", l: language }) }],
+                [{ text: "1024", callback_data: JSON.stringify({ t: "c", id: "4", a: "2", l: language }) }],
+                [{ text: "512", callback_data: JSON.stringify({ t: "c", id: "4", a: "3", l: language }) }],
+                [{ text: "2048", callback_data: JSON.stringify({ t: "c", id: "4", a: "4", l: language }) }],
+                [{ text: "4096", callback_data: JSON.stringify({ t: "c", id: "4", a: "5", l: language }) }]
             ]
         },
         {
@@ -115,14 +115,14 @@ module.exports = {
         },
         {
             id: "9", 
-            q: "Чому програміст залишився без грошей?", 
-            a: "2", 
+            q: "Який математичний оператор використовується для обчислення залишку від ділення?",
+            a: "3",
             inline_keyboard: (language) => [
-                [{ text: "Недостатньо коштів", callback_data: JSON.stringify({ t: "c", id: "9", a: "1", l: language }) }],
-                [{ text: "Витратив весь кеш", callback_data: JSON.stringify({ t: "c", id: "9", a: "2", l: language}) }],
-                [{ text: "Програв парі", callback_data: JSON.stringify({ t: "c", id: "9", a: "3", l: language }) }],
-                [{ text: "Неправильний тип змінної", callback_data: JSON.stringify({ t: "c", id: "9", a: "4", l: language }) }],
-                [{ text: "Всі гроші в бюджеті", callback_data: JSON.stringify({ t: "c", id: "9", a: "5", l: language }) }]
+                [{ text: "+", callback_data: JSON.stringify({ t: "c", id: "9", a: "1", l: language }) }],
+                [{ text: "-", callback_data: JSON.stringify({ t: "c", id: "9", a: "2", l: language }) }],
+                [{ text: "%", callback_data: JSON.stringify({ t: "c", id: "9", a: "3", l: language }) }],
+                [{ text: "*", callback_data: JSON.stringify({ t: "c", id: "9", a: "4", l: language }) }],
+                [{ text: "/", callback_data: JSON.stringify({ t: "c", id: "9", a: "5", l: language }) }]
             ]
         },
         {
