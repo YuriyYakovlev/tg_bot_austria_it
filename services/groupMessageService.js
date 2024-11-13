@@ -88,13 +88,19 @@ async function handleGroupMessage(bot, msg, userSessionData) {
         const messages = languageService.getMessages(language).messages;
         const buttons = languageService.getMessages(language).buttons;
 
-        sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SEC * 1000, {
+        const options = {
           reply_markup: {
             inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start` }]]
           },
-          message_thread_id: message_thread_id,
-          disable_notification: true
-        });
+          disable_notification: true,
+        };
+        
+        console.log(`thread_id: ${message_thread_id}`);
+        if (message_thread_id) {
+          options.message_thread_id = message_thread_id;
+        }
+
+        sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SEC * 1000, options);
         
         userSessionData.set(userId, {
           chatId,
@@ -142,7 +148,7 @@ async function sendTemporaryMessage(bot, chatId, message, timeoutMs, options = n
       await bot.deleteMessage(chatId, messageId).catch(() => {});
     }, timeoutMs);
   } catch (error) {
-    console.error("Failed to send or delete temporary message:", error);
+    console.error("Failed to send or delete temporary message:", error.message);
   }
 }
 
