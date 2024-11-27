@@ -53,7 +53,7 @@ function startBotPolling(retryCount = 0) {
     if (error.code === 'EFATAL' || error.message.includes('ECONNRESET')) {
       handleRetry(retryCount, MAX_RETRIES);
     } else if (error.code === 'ETELEGRAM' && error.message.includes('502 Bad Gateway')) {
-      console.error("Telegram server error, will retry polling...");
+      //console.error("Telegram server error, will retry polling...");
       handleRetry(retryCount, MAX_RETRIES);
     }
   });
@@ -62,12 +62,12 @@ function startBotPolling(retryCount = 0) {
 function handleRetry(retryCount, maxRetries) {
   if (retryCount < maxRetries) {
     const delay = 5000 * Math.pow(2, retryCount);
-    console.log(`Attempting to restart polling after ${delay} ms...`);
+    //console.log(`Attempting to restart polling after ${delay} ms...`);
     bot.stopPolling() // Ensure polling is stopped before retrying
       .then(() => {
-        console.log("Polling stopped successfully.");
+        //console.log("Polling stopped successfully.");
         setTimeout(() => startBotPolling(retryCount + 1), delay);
-        console.log("Restarting polling.");
+        //console.log("Restarting polling.");
       })
       .catch(error => {
         console.error("Error stopping polling:", error);

@@ -75,8 +75,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
         }
         return;
       }
-      console.log(`no problems detected from ${userId} to chat ${chatId}`);
-
+      
       // SEND VERIFICATION MESSAGE TO NORMAL USERS
       messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
 
@@ -95,7 +94,6 @@ async function handleGroupMessage(bot, msg, userSessionData) {
           disable_notification: true,
         };
         
-        console.log(`thread_id: ${message_thread_id}`);
         if (message_thread_id) {
           options.message_thread_id = message_thread_id;
         }
@@ -128,9 +126,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
                 await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
             }
             userVerificationService.resetUserVerification(userId, true);
-        } else {
-          console.log('no spam in new user message');
-        }
+        } 
     }
   }
 }
