@@ -74,7 +74,7 @@ function handleRetry(retryCount, maxRetries) {
         setTimeout(() => startBotPolling(retryCount + 1), delay);
       });
   } else {
-    console.error("Max retries reached, stopping the bot");
+    //console.error("Max retries reached, stopping the bot");
     process.exit(1);
   }
 }

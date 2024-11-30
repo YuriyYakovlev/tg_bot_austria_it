@@ -63,7 +63,7 @@ module.exports = {
         },
         {
             id: "5", 
-            q: "How many values can a boolean t represent?", 
+            q: "How many values can a boolean type represent?", 
             a: "2", 
             inline_keyboard: (language) => [
                 [{ text: "0", callback_data: JSON.stringify({ t: "c", id: "5", a: "0", l: language }) }],
