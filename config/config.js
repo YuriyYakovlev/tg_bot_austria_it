@@ -20,6 +20,7 @@ module.exports = {
         COURSE_OFFERS: "Course offers",
         FINANCIAL_HELP: "Asking for a financial help",
         ONLINE_EDUCATION: "Online education offers",
+        DATING: "Dating proposal",
         OTHER: "Other" 
     },
     USERS_TABLE_NAME: process.env.NODE_ENV === 'production' ? 'users' : 'users_test'

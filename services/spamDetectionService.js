@@ -168,7 +168,7 @@ function prepareSingleClassificationRequest(message) {
           {
             text: `
               Instructions:
-              You are a chat guard. Your task is to filter messages and identify inappropriate messages: selling services, selling courses (including educational, language, or blockchain trading courses), scams, rude behavior, or asking for financial help.
+              You are a chat guard. Your task is to filter messages and identify inappropriate messages: selling services, selling courses (including educational, language, or blockchain trading courses), scams, dating proposals, rude behavior, or asking for financial help.
                Pay special attention to messages that mention offers for free services or courses, online education (especially language learning or trading), or any offers that seem like promotional tactics.
               Analyse the message below and return a response exactly in this format (return json only): {"issue": "true/false", "reason": "reason"}
               List of possible reasons: ${reasonsList}.
