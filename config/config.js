@@ -18,6 +18,7 @@ module.exports = {
         PERSONAL_DATA: "Personal data",
         SCAM_OR_SPAM: "Scam or spam",
         COURSE_OFFERS: "Course offers",
+        SELLING_SERVICES: "Selling services",
         FINANCIAL_HELP: "Asking for a financial help",
         ONLINE_EDUCATION: "Online education offers",
         DATING: "Dating proposal",

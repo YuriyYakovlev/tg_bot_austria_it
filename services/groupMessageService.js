@@ -7,7 +7,15 @@ const chatSettingsService = require('./chatSettingsService');
 const languageService = require('./languageService');
 const config = require("../config/config");
 
-const kickReasons = [config.KICK_REASONS.ILLEGAL_GOODS, config.KICK_REASONS.SCAM_OR_SPAM];
+const kickReasons = [
+  config.KICK_REASONS.ILLEGAL_GOODS, 
+  config.KICK_REASONS.SCAM_OR_SPAM, 
+  config.KICK_REASONS.FINANCIAL_HELP, 
+  config.KICK_REASONS.COURSE_OFFERS,
+  config.KICK_REASONS.ONLINE_EDUCATION,
+  config.KICK_REASONS.DATING,
+  config.KICK_REASONS.SELLING_SERVICES
+];
 async function handleGroupMessage(bot, msg, userSessionData) {
   const { chat, from, text, message_id, message_thread_id } = msg;
   const chatId = chat.id;
