@@ -1,9 +1,9 @@
 // spamDetectionService.js
-const vertexAi = require("@google-cloud/vertexai");
+const { VertexAI }  = require("@google-cloud/vertexai");
 const db = require("../db/connectors/dbConnector");
 const config = require("../config/config");
 
-let vertexAiClient = new vertexAi.VertexAI({
+let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
   location: process.env.LOCATION,
 });
@@ -21,7 +21,7 @@ async function classifyMessages() {
     console.log('classification job: batch processing');
     const formattedMessages = messages.map(msg => `{"message_id":"${msg.messageId}", "text":${JSON.stringify(msg.msg_text.substring(0, 300))}}`);
     const request = prepareClassificationRequest(formattedMessages.join(", "));
-    const generativeModel = vertexAiClient.preview.getGenerativeModel({
+    const generativeModel = vertexAI.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
         max_output_tokens: 1000,
@@ -71,7 +71,7 @@ async function classifyMessages() {
 async function isOffensiveOrSpamMessage(text) {
   try {
     const request = prepareSingleClassificationRequest(text.substring(0, 300));
-    const generativeModel = vertexAiClient.preview.getGenerativeModel({
+    const generativeModel = vertexAI.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
         max_output_tokens: 1000,

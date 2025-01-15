@@ -8,8 +8,8 @@ const privateMessageService = require("./privateMessageService");
 const callbackService = require("./callbackService");
 const mentionService = require("./mentionService");
 const config = require("../config/config");
+const eventsService = require("../extras/eventsService");
 // const newsService = require("../extras/newsService");
-//const eventsService = require("../extras/eventsService");
 
 let bot;
 const userSessionData = new Map(); // Stores { userId: { chatId, promptTime, chat_username, thread_id } }
@@ -127,12 +127,24 @@ async function cleanup() {
 //   console.log('summarised news: ' + news);
 // }
 
-// async function summarizeEvents() {
-//   let events = await eventsService.summarizeEvents();
-//   await new Promise(resolve => setTimeout(resolve, 1000)); //11000)); 
-//   //await bot.sendMessage(353740703, events).catch(console.error);
-//   console.log('summarised events: ' + JSON.stringify(events, null, 2));
-// }
+async function postUpcomingEvents() {
+  try {
+    const events = await eventsService.fetchUpcomingEvents();
+    if (!events) {
+      console.log("No upcoming events found.");
+      return;
+    }
+
+    const chatId = process.env.EVENTS_GROUP_ID; 
+    const threadId = process.env.EVENTS_THREAD_ID; 
+    
+    await bot.sendMessage(chatId, events, {
+        message_thread_id: threadId
+    });
+  } catch (error) {
+    console.error("Error posting monthly events:", error.message);
+  }
+}
 
 //summarizeNews();
 //summarizeEvents();
@@ -156,3 +168,5 @@ process.on("SIGTERM", () => {
     bot.stopPolling().then(() => process.exit());
   }
 });
+
+module.exports = { postUpcomingEvents };
