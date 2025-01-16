@@ -9,7 +9,7 @@ const callbackService = require("./callbackService");
 const mentionService = require("./mentionService");
 const config = require("../config/config");
 const eventsService = require("../extras/eventsService");
-// const newsService = require("../extras/newsService");
+const newsService = require("../extras/newsService");
 
 let bot;
 const userSessionData = new Map(); // Stores { userId: { chatId, promptTime, chat_username, thread_id } }
@@ -119,14 +119,6 @@ async function cleanup() {
   }
 }
 
-// Experiments
-// async function summarizeNews() {
-//   let news = await newsService.summarizeNews();
-//   await new Promise(resolve => setTimeout(resolve, 11000)); 
-//   await bot.sendMessage(353740703, news).catch(console.error);
-//   console.log('summarised news: ' + news);
-// }
-
 async function postUpcomingEvents() {
   try {
     const events = await eventsService.fetchUpcomingEvents();
@@ -135,7 +127,7 @@ async function postUpcomingEvents() {
       return;
     }
 
-    const chatId = process.env.EVENTS_GROUP_ID; 
+    const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EVENTS_THREAD_ID; 
     
     await bot.sendMessage(chatId, events, {
@@ -146,8 +138,26 @@ async function postUpcomingEvents() {
   }
 }
 
-//summarizeNews();
-//summarizeEvents();
+async function postNewsDigest() {
+  try {
+    const news = await newsService.fetchNewsDigest();
+    if (!news) {
+      console.log("No upcoming events found.");
+      return;
+    }
+
+    const chatId = process.env.GROUP_ID; 
+    const threadId = process.env.NEWS_THREAD_ID; 
+    
+    await bot.sendMessage(chatId, news, {
+        message_thread_id: threadId,
+        parse_mode: "HTML"
+    });
+  } catch (error) {
+    console.error("Error posting monthly events:", error.message);
+  }
+}
+
 setInterval(() => {
   cleanup();
 }, 3600000 * config.CLEANUP_INTERVAL_HOURS);
@@ -169,4 +179,7 @@ process.on("SIGTERM", () => {
   }
 });
 
-module.exports = { postUpcomingEvents };
+module.exports = { 
+  postUpcomingEvents,
+  postNewsDigest
+};
