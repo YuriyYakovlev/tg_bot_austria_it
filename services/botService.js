@@ -12,6 +12,7 @@ const config = require("../config/config");
 const eventsService = require("../extras/eventsService");
 const newsService = require("../extras/newsService");
 const vacanciesService = require("../extras/vacanciesService");
+const eduService = require("../extras/eduService");
 
 let bot;
 const userSessionData = new Map(); // Stores { userId: { chatId, promptTime, chat_username, thread_id } }
@@ -180,6 +181,30 @@ async function postNewVacancies() {
   }
 }
 
+async function postWordOfTheDay() {
+  try {
+    const wordOfTheDay = await eduService.fetchWordOfTheDay();
+    if (!wordOfTheDay) {
+      console.log("No word of the day found.");
+      return;
+    }
+
+    const chatId = process.env.GROUP_ID; 
+    const threadId = process.env.EDU_THREAD_ID; 
+    
+    const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n<i>${wordOfTheDay.description}</i>`;
+
+    await bot.sendMessage(chatId, 
+      message,
+      {
+        message_thread_id: threadId,
+        parse_mode: "HTML"
+      });
+  } catch (error) {
+    console.error("Error posting new vacancies:", error.message);
+  }
+}
+
 setInterval(() => {
   cleanup();
 }, 3600000 * config.CLEANUP_INTERVAL_HOURS);
@@ -204,5 +229,6 @@ process.on("SIGTERM", () => {
 module.exports = { 
   postUpcomingEvents,
   postNewsDigest,
-  postNewVacancies
+  postNewVacancies,
+  postWordOfTheDay
 };
