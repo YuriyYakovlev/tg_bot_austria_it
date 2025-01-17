@@ -39,6 +39,21 @@ app.post('/news-digest', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+app.post('/new-vacancies', async (req, res) => {
+    try {
+        const today = new Date().toISOString().slice(0, 10);
+        if (lastExecutionDate === today) {
+            return res.status(429).send('Exceeded execution threshold');
+        }
+        lastExecutionDate = today;
+
+        await botService.postNewVacancies();
+        res.status(200).send('New vacancies posted successfully');
+    } catch (error) {
+        console.error('Error posting new vacancies:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);

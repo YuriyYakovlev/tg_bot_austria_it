@@ -8,8 +8,10 @@ const privateMessageService = require("./privateMessageService");
 const callbackService = require("./callbackService");
 const mentionService = require("./mentionService");
 const config = require("../config/config");
+
 const eventsService = require("../extras/eventsService");
 const newsService = require("../extras/newsService");
+const vacanciesService = require("../extras/vacanciesService");
 
 let bot;
 const userSessionData = new Map(); // Stores { userId: { chatId, promptTime, chat_username, thread_id } }
@@ -158,6 +160,26 @@ async function postNewsDigest() {
   }
 }
 
+async function postNewVacancies() {
+  try {
+    const vacancies = await vacanciesService.fetchNewVacancies();
+    if (!vacancies) {
+      console.log("No new vacancies found.");
+      return;
+    }
+
+    const chatId = process.env.GROUP_ID; 
+    const threadId = process.env.VACANCIES_THREAD_ID; 
+    
+    await bot.sendMessage(chatId, vacancies, {
+        message_thread_id: threadId,
+        parse_mode: "HTML"
+    });
+  } catch (error) {
+    console.error("Error posting new vacancies:", error.message);
+  }
+}
+
 setInterval(() => {
   cleanup();
 }, 3600000 * config.CLEANUP_INTERVAL_HOURS);
@@ -181,5 +203,6 @@ process.on("SIGTERM", () => {
 
 module.exports = { 
   postUpcomingEvents,
-  postNewsDigest
+  postNewsDigest,
+  postNewVacancies
 };
