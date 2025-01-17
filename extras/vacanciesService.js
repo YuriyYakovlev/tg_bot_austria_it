@@ -88,6 +88,9 @@ function prepareRequest(period) {
                 <ins>Dynatrace</ins> - Cloud Engineer Python
                 Вимоги: Python, AWS, CI/CD
 
+                Джерела:
+                  devjobs.at, englishjobsearch.at, karriere.at, metajob.at, startup.jobs, eurotechjobs.com, academicpositions.com.
+
                 🔍 Зверніть увагу: Вакансії зібрані з відкритих джерел. Для деталей або подання заявки знайдіть інформацію в Інтернеті та зверніться до компанії напряму.
                 
                 Бажаю всім продуктивного тижня!
