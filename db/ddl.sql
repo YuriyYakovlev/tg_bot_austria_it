@@ -1,5 +1,4 @@
 -- tg_bot_aut_it.cached_messages definition
-
 CREATE TABLE `cached_messages` (
   `userId` bigint NOT NULL,
   `chatId` bigint NOT NULL,
@@ -11,7 +10,6 @@ CREATE TABLE `cached_messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- tg_bot_aut_it.users definition
-
 CREATE TABLE `users` (
   `userId` bigint NOT NULL,
   `verified` tinyint(1) NOT NULL DEFAULT '0',
@@ -26,7 +24,6 @@ ADD COLUMN `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 
 -- tg_bot_aut_it.chat_settings definition
-
 CREATE TABLE `chat_settings` (
   `chatId` bigint NOT NULL,
   `title` varchar(255),
@@ -36,7 +33,6 @@ CREATE TABLE `chat_settings` (
 
 
 -- scheduled events
-
 CREATE EVENT delete_old_cached_messages
 ON SCHEDULE EVERY 1 DAY
 DO
@@ -48,3 +44,13 @@ ON SCHEDULE EVERY 1 DAY
 DO
   DELETE FROM users
   WHERE verified = 0 AND created_at <= NOW() - INTERVAL 1 DAY;
+
+
+-- word of the day
+CREATE TABLE `word_of_the_day_history` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `word` VARCHAR(255) NOT NULL,
+  `description` TEXT NOT NULL,
+  `used_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `chat_id` BIGINT NULL COMMENT 'Optional: for per-chat tracking'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -1,15 +1,35 @@
-// spamDetectionService.js
-const { VertexAI }  = require("@google-cloud/vertexai");
+const { VertexAI } = require("@google-cloud/vertexai");
+const db = require('../db/connectors/dbConnector');
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
   location: process.env.LOCATION,
 });
 
-const previousWords = [];
-
-async function fetchWordOfTheDay() {
+async function fetchPreviousWords(chatId = null) {
+  const query = `SELECT word FROM word_of_the_day_history WHERE chat_id = ? OR chat_id IS NULL`;
   try {
+    const [rows] = await db.query(query, [chatId]);
+    return rows.map(row => row.word);
+  } catch (error) {
+    console.error('Error fetching previous words from the database:', error.message);
+    return [];
+  }
+}
+
+async function addWordToHistory(word, description, chatId = null) {
+  const query = `INSERT INTO word_of_the_day_history (word, description, chat_id) VALUES (?, ?, ?)`;
+  try {
+    await db.query(query, [word, description, chatId]);
+    //console.log('Word added to history:', word);
+  } catch (error) {
+    console.error('Error adding word to history:', error.message);
+  }
+}
+
+async function fetchWordOfTheDay(chatId = null) {
+  try {
+    const previousWords = await fetchPreviousWords(chatId);
 
     const request = prepareRequest(previousWords);
     const generativeModel = vertexAI.getGenerativeModel({
@@ -20,25 +40,20 @@ async function fetchWordOfTheDay() {
         top_p: 1,
       },
       tools: [
-      {
-        googleSearch: {}
-      }
-    ]
+        {
+          googleSearch: {},
+        },
+      ],
     });
 
     const classificationResponse = await generativeModel.generateContentStream(request);
-    
     let response = (await classificationResponse.response);
     const hasCandidates = response.candidates && response.candidates.length > 0;
     if (!hasCandidates) {
-        return;
+      return;
     }
     let textResponse = response.candidates[0].content.parts[0].text;
-
-    textResponse = textResponse.replaceAll('*', '');
-    textResponse = textResponse.replaceAll('```json', '');
-    textResponse = textResponse.replaceAll('```', '');
-    //console.log(textResponse);
+    textResponse = textResponse.replaceAll('*', '').replaceAll('```json', '').replaceAll('```', '');
 
     let wordData;
     try {
@@ -49,18 +64,19 @@ async function fetchWordOfTheDay() {
     }
 
     if (wordData && wordData.word && wordData.description) {
-      previousWords.push(wordData.word);
+      await addWordToHistory(wordData.word, wordData.description, chatId);
       return { word: wordData.word, description: wordData.description };
     } else {
       console.error('Invalid data format:', textResponse);
       return;
     }
   } catch (error) {
-    console.error('Error in classifyMessages:', error.message);
+    console.error('Error in fetchWordOfTheDay:', error.message);
   }
 }
 
-function prepareRequest(period) {
+function prepareRequest(previousWords) {
+  const excludedWords = previousWords.length > 0 ? previousWords.join(", ") : "none";
   return {
     contents: [
       {
@@ -68,21 +84,21 @@ function prepareRequest(period) {
         parts: [
           {
             text: `
-              You are a bot in IT community chat. They are ukrainians who learn German.
-              You should do word of the day, ideally on IT thematics.
+              You are a bot in IT community chat. They are Ukrainians who learn German.
+              You should do a "word of the day," ideally on IT thematics.
               Give me a word of the day.
 
-              Preffered output:
-              - the word of the day on German
-              - its translation and short meaning on ukrainian
+              Preferred output:
+              - The word of the day in German
+              - Its translation and short meaning in Ukrainian
               
-              Output should be in json: {“word”, “description”}
+              Output should be in JSON: {“word”, “description”}
               
               Example of output: {“die Datenintegrität” , “Цілісність даних. Це забезпечення точності та повноти даних протягом усього їх життєвого циклу, а також захист їх від несанкціонованих змін.”}
               
               Do not do introductions or summary.
-              Use tricky and difficult words. Do not use words, which sounds on both languages similarly or have English roots.
-              Do not use these words: “${previousWords.join(", ")}”.
+              Use tricky and difficult words. Do not use words, which sound similar in both languages or have English roots.
+              Do not use these words: “${excludedWords}”.
               Let's try. Give me the word of the day.
             `,
           },
@@ -93,5 +109,5 @@ function prepareRequest(period) {
 }
 
 module.exports = {
-  fetchWordOfTheDay
+  fetchWordOfTheDay,
 };

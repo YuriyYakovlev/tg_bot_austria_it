@@ -37,7 +37,7 @@ async function fetchNewVacancies() {
 
     textResponse = textResponse.replaceAll('*', '');
     textResponse = textResponse.replaceAll('<br>', '');
-    console.log(textResponse);
+    //console.log(textResponse);
     return textResponse;
   } catch (error) {
     console.error('Error in classifyMessages:', error.message);
