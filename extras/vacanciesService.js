@@ -1,4 +1,4 @@
-// spamDetectionService.js
+// vacanciesService.js
 const { VertexAI }  = require("@google-cloud/vertexai");
 const moment = require('moment');
 
@@ -7,9 +7,62 @@ let vertexAI = new VertexAI({
   location: process.env.LOCATION,
 });
 
+async function postNewVacancies(bot) {
+  try {
+    const result = await fetchNewVacancies();
+    if (!result) {
+      console.log("No new vacancies found.");
+      return;
+    }
+
+    const groupedVacancies = groupVacanciesByCategory(result.vacancies);
+    let message = 'Доброго ранку, спільното! Ось огляд цікавих вакансій 🇦🇹:\n\n';
+
+    for (const [category, vacancies] of Object.entries(groupedVacancies)) {
+      message += `🔹 <b>${category}</b>\n`;
+
+      vacancies.forEach(vacancy => {
+        message += `<b>${vacancy.position}</b> в <em>${vacancy.company}</em>\n`;
+        if (vacancy.city && vacancy.city !== 'Not specified') {
+          message += `<u>Локація</u>: ${vacancy.city}\n`;
+        }
+        if (vacancy.tech_stack && vacancy.tech_stack !== 'Not specified') {
+          message += `<u>Tech Stack</u>: ${vacancy.tech_stack}\n`;
+        }
+        if (vacancy.salary && vacancy.salary !== 'Not specified') {
+          message += `<u>Дохід</u>: ${vacancy.salary}\n`;
+        }
+        if (vacancy.benefits && vacancy.benefits !== 'Not specified') {
+          message += `<u>Benefits</u>: ${vacancy.benefits}\n`;
+        }
+        message += `\n`;
+      });
+      message += '\n';
+    }
+
+    // console.log(message);
+
+    message += `Зверніть увагу: Вакансії зібрані з відкритих джерел. Для подання заявки зверніться до компаній напряму.\n\n`;
+    message += `Джерела: ${result.sources}\n\n
+                Бажаю всім продуктивного тижня!`;
+
+    const chatId = process.env.GROUP_ID; 
+    const threadId = process.env.VACANCIES_THREAD_ID; 
+    
+    const messageChunks = splitMessage(message);
+    for (const chunk of messageChunks) {
+      await bot.sendMessage(chatId, chunk, {
+        message_thread_id: threadId,
+        parse_mode: "HTML",
+      });
+    }
+  } catch (error) {
+    console.error("Error posting new vacancies:", error.message);
+  }
+}
+
 async function fetchNewVacancies() {
   try {
-
     const currentMonthYear = moment().format("DD MMMM YYYY");
     const request = prepareRequest(currentMonthYear);
     const generativeModel = vertexAI.getGenerativeModel({
@@ -34,11 +87,17 @@ async function fetchNewVacancies() {
         return;
     }
     let textResponse = response.candidates[0].content.parts[0].text;
+    textResponse = textResponse.replaceAll('*', '').replaceAll('```json', '').replaceAll('```', '');
 
-    textResponse = textResponse.replaceAll('*', '');
-    textResponse = textResponse.replaceAll('<br>', '');
     //console.log(textResponse);
-    return textResponse;
+    let result;
+    try {
+      result = JSON.parse(textResponse);
+    } catch (err) {
+      console.error('Failed to parse the vacancies:', err.message);
+      return;
+    }
+    return result;
   } catch (error) {
     console.error('Error in classifyMessages:', error.message);
   }
@@ -52,49 +111,37 @@ function prepareRequest(period) {
         parts: [
           {
             text: `
-              ### Інструкції ###
-              Ти - рекрутмент асистент в спільноті, що спеціалізується на інформаційних технологіях в Австрії.
-              Зроби підсумок нових вакансій для Австрії за попередній тиждень. Сьогодні ${period}.
+              We are an IT community of Ukrainians who have relocated to Austria and are actively seeking work opportunities. 
+              Most of us are private entrepreneurs and many are still learning German. 
+              Therefore, we prioritize vacancies that either:
+               - Do not have strict German language requirements, or
+               - Are explicitly open to English-speaking candidates.
+              
+              You are an assistant for this group, specializing in Information Technologies in Austria. 
+              Your task is to compile a concise list of up to 20 new IT-related vacancies in Austria, grouped by technologies (e.g., Frontend, Backend, DevOps, Data Science, etc.).
 
-              Використовуй наступну схему для кожної вакансії:
-              компанія - короткий опис вакансії, включаючи знання німецької мови, рівень позиції, формат роботи, ключові вимоги (якщо є)
-
-              Важливо:
-              1. Переконайся, що кожна вакансія містить конкретну назву компанії. Вакансії без назви компанії не включай до списку.
-              2. Якщо можливо, додавай інформацію про рівень позиції, формат роботи (дистанційна, офіс, гібрид), основні вимоги чи мову спілкування.
-              3. Не включай посади, якщо інформації недостатньо для складання зрозумілого оголошення.
-
-              Додай по 5 найцікавіших вакансій для кожної технології.
-              Виділяй технології як strong HTML розміткою.
-
-              Не дублюй привітання у своїй відповіді.
-              Не закінчуй підсумок сумаризацієй або розʼясненнями.
-
-              Приклад оформлення:
-              -----
-                Доброго ранку, спільното! Ось огляд цікавих вакансій за попередній тиждень 🇦🇹.
-
-                --- Java ---
-                <ins>Bitmovin</ins> - Senior Software Engineer Java (LIVE Encoding)
-                Проект: Інструменти для потокового відео
-                Вимоги: Java 11+, Spring, Kubernetes
-
-                <ins>Accenture</ins> - Junior Consultant Technology Strategy & Advisory (all genders)
-                Проект: Консалтинг в сфері IT-стратегії
-                Формат роботи: Гібридна (Відень)
-                Зарплата: в євро якщо вказана
-
-                --- Python ---
-                <ins>Dynatrace</ins> - Cloud Engineer Python
-                Вимоги: Python, AWS, CI/CD
-
-                Джерела:
-                  devjobs.at, englishjobsearch.at, karriere.at, metajob.at, startup.jobs, eurotechjobs.com, academicpositions.com.
-
-                🔍 Зверніть увагу: Вакансії зібрані з відкритих джерел. Для деталей або подання заявки знайдіть інформацію в Інтернеті та зверніться до компанії напряму.
-                
-                Бажаю всім продуктивного тижня!
-              -----
+              Important considerations:
+               - Prioritize vacancies suitable for English-speaking professionals with limited German proficiency.
+               - Include freelance or contract-based roles if available.
+               - Avoid listing vacancies that do not mention the company name.
+              
+              Today is ${period}.
+              
+              Output should be a JSON: 
+              { 
+                "vacancies" : [
+                  {
+                    "position" : "position name (on original language)", 
+                    "company : "company name",
+                    "category": "technology category (e.g., Frontend, Backend, DevOps, etc.)",
+                    "city": "define city name or remote", 
+                    "tech_stack": "list of required tech stack (on original language). Skip if not defined.",
+                    "salary" : "salary level in EURO. Skip if not defined.",
+                    "benefits" : "benefits, if defined (on Ukrainian)"
+                  },
+                ],
+                "sources" : "sources of information, for example: devjobs.at, karriere.at, metajob.at, startup.jobs"
+              }
             `,
           },
         ],
@@ -103,6 +150,62 @@ function prepareRequest(period) {
   };
 }
 
+function groupVacanciesByCategory(vacancies) {
+  const grouped = {};
+  
+  // Group vacancies by category
+  vacancies.forEach(vacancy => {
+    if (vacancy.company && vacancy.company !== 'Various Companies') {
+      const category = vacancy.category || "Інші";
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push(vacancy);
+    }
+  });
+
+  // Reassign single-vacancy groups to 'Інші'
+  const otherCategory = "Інші";
+  grouped[otherCategory] = grouped[otherCategory] || [];
+
+  Object.entries(grouped).forEach(([category, vacancyList]) => {
+    if (vacancyList.length === 1 && category !== otherCategory) {
+      grouped[otherCategory].push(...vacancyList);
+      delete grouped[category];
+    }
+  });
+
+  // Remove empty categories
+  Object.keys(grouped).forEach(category => {
+    if (grouped[category].length === 0) {
+      delete grouped[category];
+    }
+  });
+  
+  return grouped;
+}
+
+function splitMessage(message, maxLength = 4098) {
+  const messageChunks = [];
+  while (message.length > 0) {
+    let chunk = message.slice(0, maxLength);
+
+    const lastOpeningTagIndex = chunk.lastIndexOf('<');
+    const lastClosingTagIndex = chunk.lastIndexOf('>');
+    if (lastOpeningTagIndex > lastClosingTagIndex) {
+      const closingTagIndex = message.indexOf('>', lastOpeningTagIndex);
+      if (closingTagIndex !== -1) {
+        chunk = message.slice(0, closingTagIndex + 1);
+      }
+    }
+
+    messageChunks.push(chunk);
+    message = message.slice(chunk.length);
+  }
+  return messageChunks;
+}
+
+
 module.exports = {
-  fetchNewVacancies
+  postNewVacancies
 };

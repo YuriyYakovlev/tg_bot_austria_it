@@ -1,3 +1,4 @@
+// eduService.js
 const { VertexAI } = require("@google-cloud/vertexai");
 const db = require('../db/connectors/dbConnector');
 
@@ -24,6 +25,30 @@ async function addWordToHistory(word, description, chatId = null) {
     //console.log('Word added to history:', word);
   } catch (error) {
     console.error('Error adding word to history:', error.message);
+  }
+}
+
+async function postWordOfTheDay(bot) {
+  try {
+    const wordOfTheDay = await fetchWordOfTheDay();
+    if (!wordOfTheDay) {
+      console.log("No word of the day found.");
+      return;
+    }
+
+    const chatId = process.env.GROUP_ID; 
+    const threadId = process.env.EDU_THREAD_ID; 
+    
+    const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.english} / ${wordOfTheDay.ukrainian})\n\n<i>${wordOfTheDay.description}</i>`;
+
+    await bot.sendMessage(chatId, 
+      message,
+      {
+        message_thread_id: threadId,
+        parse_mode: "HTML"
+      });
+  } catch (error) {
+    console.error("Error posting new vacancies:", error.message);
   }
 }
 
@@ -65,7 +90,7 @@ async function fetchWordOfTheDay(chatId = null) {
 
     if (wordData && wordData.word && wordData.description) {
       await addWordToHistory(wordData.word, wordData.description, chatId);
-      return { word: wordData.word, description: wordData.description };
+      return { word: wordData.word, english: wordData.english, ukrainian: wordData.ukrainian, description: wordData.description };
     } else {
       console.error('Invalid data format:', textResponse);
       return;
@@ -90,11 +115,13 @@ function prepareRequest(previousWords) {
 
               Preferred output:
               - The word of the day in German
-              - Its translation and short meaning in Ukrainian
+              - Its translation to English 
+              - Its translation to Ukrainian
+              - Its description on Ukrainian
               
-              Output should be in JSON: {“word”, “description”}
+              Output should be in JSON: {“word”, "english", "ukrainian", “description”}
               
-              Example of output: {“die Datenintegrität” , “Цілісність даних. Це забезпечення точності та повноти даних протягом усього їх життєвого циклу, а також захист їх від несанкціонованих змін.”}
+              Example of output: {“die Datenintegrität” , "Data Integrity", “Цілісність даних", "Це забезпечення точності та повноти даних протягом усього їх життєвого циклу, а також захист їх від несанкціонованих змін.”}
               
               Do not do introductions or summary.
               Use tricky and difficult words. Do not use words, which sound similar in both languages or have English roots.
@@ -109,5 +136,5 @@ function prepareRequest(previousWords) {
 }
 
 module.exports = {
-  fetchWordOfTheDay,
+  postWordOfTheDay,
 };

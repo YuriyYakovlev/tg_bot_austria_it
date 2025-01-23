@@ -86,7 +86,7 @@ function handleRetry(retryCount, maxRetries) {
 setTimeout(() => {
   startBotPolling();
   cleanup();
-}, 10000);
+}, config.START_TIMEOUT_MSEC);
 
 
 async function handleMessage(msg) {
@@ -123,87 +123,37 @@ async function cleanup() {
 }
 
 async function postUpcomingEvents() {
-  try {
-    const events = await eventsService.fetchUpcomingEvents();
-    if (!events) {
-      console.log("No upcoming events found.");
-      return;
-    }
-
-    const chatId = process.env.GROUP_ID; 
-    const threadId = process.env.EVENTS_THREAD_ID; 
-    
-    await bot.sendMessage(chatId, events, {
-        message_thread_id: threadId
-    });
-  } catch (error) {
-    console.error("Error posting monthly events:", error.message);
+  if (!bot) {
+    console.error("Bot is not initialized yet.");
+    return;
   }
+  await eventsService.postUpcomingEvents(bot);
 }
 
 async function postNewsDigest() {
-  try {
-    const news = await newsService.fetchNewsDigest();
-    if (!news) {
-      console.log("No upcoming events found.");
-      return;
-    }
-
-    const chatId = process.env.GROUP_ID; 
-    const threadId = process.env.NEWS_THREAD_ID; 
-    
-    await bot.sendMessage(chatId, news, {
-        message_thread_id: threadId,
-        parse_mode: "HTML"
-    });
-  } catch (error) {
-    console.error("Error posting monthly events:", error.message);
+  if (!bot) {
+    console.error("Bot is not initialized yet.");
+    return;
   }
+  await newsService.postNewsDigest(bot);
 }
 
 async function postNewVacancies() {
-  try {
-    const vacancies = await vacanciesService.fetchNewVacancies();
-    if (!vacancies) {
-      console.log("No new vacancies found.");
-      return;
-    }
-
-    const chatId = process.env.GROUP_ID; 
-    const threadId = process.env.VACANCIES_THREAD_ID; 
-    
-    await bot.sendMessage(chatId, vacancies, {
-        message_thread_id: threadId,
-        parse_mode: "HTML"
-    });
-  } catch (error) {
-    console.error("Error posting new vacancies:", error.message);
+  if (!bot) {
+    console.error("Bot is not initialized yet.");
+    return;
   }
+  await vacanciesService.postNewVacancies(bot);
 }
 
 async function postWordOfTheDay() {
-  try {
-    const wordOfTheDay = await eduService.fetchWordOfTheDay();
-    if (!wordOfTheDay) {
-      console.log("No word of the day found.");
-      return;
-    }
-
-    const chatId = process.env.GROUP_ID; 
-    const threadId = process.env.EDU_THREAD_ID; 
-    
-    const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n<i>${wordOfTheDay.description}</i>`;
-
-    await bot.sendMessage(chatId, 
-      message,
-      {
-        message_thread_id: threadId,
-        parse_mode: "HTML"
-      });
-  } catch (error) {
-    console.error("Error posting new vacancies:", error.message);
+  if (!bot) {
+    console.error("Bot is not initialized yet.");
+    return;
   }
+  await eduService.postWordOfTheDay(bot);
 }
+
 
 setInterval(() => {
   cleanup();

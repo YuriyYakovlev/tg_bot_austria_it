@@ -6,6 +6,7 @@ module.exports = {
         PASSWORD: process.env.DB_PASSWORD,
         DATABASE: process.env.DB_NAME
     },
+    START_TIMEOUT_MSEC: process.env.START_TIMEOUT_MSEC,
     MAX_ATTEMPTS: 5,
     ATTEMPTS_TIMEOUT_MIN: 15,
     CLEANUP_INTERVAL_HOURS: 1,

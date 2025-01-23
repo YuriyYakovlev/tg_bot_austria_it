@@ -1,4 +1,4 @@
-// spamDetectionService.js
+// eventsService.js
 const { VertexAI }  = require("@google-cloud/vertexai");
 const moment = require('moment');
 
@@ -6,6 +6,35 @@ let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
   location: process.env.LOCATION,
 });
+
+async function postUpcomingEvents(bot) {
+  try {
+    const events = await fetchUpcomingEvents();
+    if (!events) {
+      console.log("No upcoming events found.");
+      return;
+    }
+
+    let message = 'Вітаю, спільното. Нагадую, що цього місяця відбудуться такі події та мітапи 🇦🇹:\n\n';
+    for(let i = 0; i < events.length; i++) {
+      message += `${events[i].date} - <em>${events[i].location}</em> - <strong>${events[i].name}</strong> - ${events[i].description}\n\n`;
+    }
+
+    const chatId = process.env.GROUP_ID; 
+    const threadId = process.env.EVENTS_THREAD_ID; 
+    
+    const messageChunks = splitMessage(message);
+    for (const chunk of messageChunks) {
+      await bot.sendMessage(chatId, chunk, {
+        message_thread_id: threadId,
+        parse_mode: "HTML",
+      });
+    }
+
+  } catch (error) {
+    console.error("Error posting monthly events:", error.message);
+  }
+}
 
 async function fetchUpcomingEvents() {
   try {
@@ -34,10 +63,17 @@ async function fetchUpcomingEvents() {
         return;
     }
     let textResponse = response.candidates[0].content.parts[0].text;
+    textResponse = textResponse.replaceAll('*', '').replaceAll('```json', '').replaceAll('```', '');
 
-    textResponse = textResponse.replaceAll('*', '');
-    //console.log(textResponse);
-    return textResponse;
+    let events;
+    try {
+      events = JSON.parse(textResponse);
+    } catch (err) {
+      console.error('Failed to parse the events:', err.message);
+      return;
+    }
+    //console.log(events);
+    return events;
   } catch (error) {
     console.error('Error in classifyMessages:', error.message);
   }
@@ -51,21 +87,19 @@ function prepareRequest(period) {
         parts: [
           {
             text: `
-              ### Інструкції ###
-              Ти - асистент в спільноті, що спеціалізується на інформаційних технологіях в Австрії.
-              Знайди список майбутніх конференцій, вебінарів та зустрічей в цьому місяці. Сьогодні ${period}.
-              Використовуй наступну схему для кожної події:
-              dd.mm - місто - назва - опис події
-
-              - Переконайся, що події є актуальними.
-              - Додайте 5-10 подій.
-              - розділяй події подвійним переносом строки
+              You are an assistant specializing in information technology in Austria.
+              Find a list of upcoming conferences, webinars and meetings in Austria for the current month. 
+              Today is ${period}.
+              Double check, that events are relevant.
               
-              Приклади відповідей:
-               - Доброго раночку друзі, ось список івентів, які плануються на цей місяць
-               - Вітаю, спільното. Нагадую, що цього місяця відбудуться такі події та мітапи
-
-              Не дублюй привітання у своїй відповіді.
+              Output should be a JSON array: 
+              [ 
+                {
+                  "date": “date of EVENT (dd.mm)”, 
+                  "location": "location of EVENT (on Ukrainian)", 
+                  "name": "name of EVENT (on original language)", 
+                  "description": “description of EVENT (on Ukrainian)”
+              ]
             `,
           },
         ],
@@ -74,6 +108,26 @@ function prepareRequest(period) {
   };
 }
 
+function splitMessage(message, maxLength = 4098) {
+  const messageChunks = [];
+  while (message.length > 0) {
+    let chunk = message.slice(0, maxLength);
+
+    const lastOpeningTagIndex = chunk.lastIndexOf('<');
+    const lastClosingTagIndex = chunk.lastIndexOf('>');
+    if (lastOpeningTagIndex > lastClosingTagIndex) {
+      const closingTagIndex = message.indexOf('>', lastOpeningTagIndex);
+      if (closingTagIndex !== -1) {
+        chunk = message.slice(0, closingTagIndex + 1);
+      }
+    }
+
+    messageChunks.push(chunk);
+    message = message.slice(chunk.length);
+  }
+  return messageChunks;
+}
+
 module.exports = {
-  fetchUpcomingEvents
+  postUpcomingEvents
 };

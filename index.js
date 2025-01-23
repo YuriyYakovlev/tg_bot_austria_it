@@ -5,17 +5,19 @@ require('./services/botService');
 const app = express();
 const port = process.env.PORT || 8080;
 
-let lastExecutionDate = null;
-
+let eventsExecutionDate = null;
+let newsExecutionDate = null;
+let vacanciesExecutionDate = null;
+let wordExecutionDate = null;
 // Endpoint for scheduled events
 const botService = require('./services/botService');
 app.post('/scheduled-events', async (req, res) => {
     try {
         const today = new Date().toISOString().slice(0, 10);
-        if (lastExecutionDate === today) {
+        if (eventsExecutionDate === today) {
             return res.status(429).send('Exceeded execution threshold');
         }
-        lastExecutionDate = today;
+        eventsExecutionDate = today;
 
         await botService.postUpcomingEvents();
         res.status(200).send('Events posted successfully');
@@ -24,13 +26,14 @@ app.post('/scheduled-events', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
 app.post('/news-digest', async (req, res) => {
     try {
         const today = new Date().toISOString().slice(0, 10);
-        if (lastExecutionDate === today) {
+        if (newsExecutionDate === today) {
             return res.status(429).send('Exceeded execution threshold');
         }
-        lastExecutionDate = today;
+        newsExecutionDate = today;
 
         await botService.postNewsDigest();
         res.status(200).send('News posted successfully');
@@ -42,10 +45,10 @@ app.post('/news-digest', async (req, res) => {
 app.post('/new-vacancies', async (req, res) => {
     try {
         const today = new Date().toISOString().slice(0, 10);
-        if (lastExecutionDate === today) {
+        if (vacanciesExecutionDate === today) {
             return res.status(429).send('Exceeded execution threshold');
         }
-        lastExecutionDate = today;
+        vacanciesExecutionDate = today;
 
         await botService.postNewVacancies();
         res.status(200).send('New vacancies posted successfully');
@@ -58,10 +61,10 @@ app.post('/new-vacancies', async (req, res) => {
 app.post('/word-of-the-day', async (req, res) => {
     try {
         const today = new Date().toISOString().slice(0, 10);
-        if (lastExecutionDate === today) {
+        if (wordExecutionDate === today) {
             return res.status(429).send('Exceeded execution threshold');
         }
-        lastExecutionDate = today;
+        wordExecutionDate = today;
 
         await botService.postWordOfTheDay();
         res.status(200).send('Word of the day posted successfully');
