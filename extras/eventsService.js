@@ -1,6 +1,8 @@
 // eventsService.js
 const { VertexAI }  = require("@google-cloud/vertexai");
 const moment = require('moment');
+const textUtils = require("../utils/textUtils");
+
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
@@ -23,7 +25,7 @@ async function postUpcomingEvents(bot) {
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EVENTS_THREAD_ID; 
     
-    const messageChunks = splitMessage(message);
+    const messageChunks = textUtils.split(message);
     for (const chunk of messageChunks) {
       await bot.sendMessage(chatId, chunk, {
         message_thread_id: threadId,
@@ -106,26 +108,6 @@ function prepareRequest(period) {
       },
     ],
   };
-}
-
-function splitMessage(message, maxLength = 4098) {
-  const messageChunks = [];
-  while (message.length > 0) {
-    let chunk = message.slice(0, maxLength);
-
-    const lastOpeningTagIndex = chunk.lastIndexOf('<');
-    const lastClosingTagIndex = chunk.lastIndexOf('>');
-    if (lastOpeningTagIndex > lastClosingTagIndex) {
-      const closingTagIndex = message.indexOf('>', lastOpeningTagIndex);
-      if (closingTagIndex !== -1) {
-        chunk = message.slice(0, closingTagIndex + 1);
-      }
-    }
-
-    messageChunks.push(chunk);
-    message = message.slice(chunk.length);
-  }
-  return messageChunks;
 }
 
 module.exports = {
