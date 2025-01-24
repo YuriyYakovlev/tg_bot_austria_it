@@ -1,6 +1,7 @@
 // eduService.js
 const { VertexAI } = require("@google-cloud/vertexai");
 const db = require('../db/connectors/dbConnector');
+const audioGenService = require("./audioGenService");
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
@@ -39,16 +40,24 @@ async function postWordOfTheDay(bot) {
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EDU_THREAD_ID; 
     
-    const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.english} / ${wordOfTheDay.ukrainian})\n\n<i>${wordOfTheDay.description}</i>`;
+    const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.english} / ${wordOfTheDay.ukrainian})\n\n<i>${wordOfTheDay.description_ua}</i>`;
 
-    await bot.sendMessage(chatId, 
-      message,
-      {
-        message_thread_id: threadId,
-        parse_mode: "HTML"
-      });
+    // await bot.sendMessage(chatId, message, {
+    //   message_thread_id: threadId,
+    //   parse_mode: "HTML"
+    // });
+
+    let audio = await audioGenService.generateAudio(`${wordOfTheDay.word}. ${wordOfTheDay.description_de}`);
+    
+    await bot.sendVoice(chatId, audio, {
+      message_thread_id: threadId,
+      caption: message,
+      parse_mode: "HTML"
+    });
+
+ 
   } catch (error) {
-    console.error("Error posting new vacancies:", error.message);
+    console.error("Error posting word of the day:", error.message);
   }
 }
 
@@ -88,9 +97,9 @@ async function fetchWordOfTheDay(chatId = null) {
       return;
     }
 
-    if (wordData && wordData.word && wordData.description) {
-      await addWordToHistory(wordData.word, wordData.description, chatId);
-      return { word: wordData.word, english: wordData.english, ukrainian: wordData.ukrainian, description: wordData.description };
+    if (wordData && wordData.word && wordData.description_ua) {
+      await addWordToHistory(wordData.word, wordData.description_ua, chatId);
+      return { word: wordData.word, english: wordData.english, ukrainian: wordData.ukrainian, description_ua: wordData.description_ua, description_de: wordData.description_de };
     } else {
       console.error('Invalid data format:', textResponse);
       return;
@@ -109,21 +118,27 @@ function prepareRequest(previousWords) {
         parts: [
           {
             text: `
-              You are a bot in IT community chat. They are Ukrainians who learn German.
-              You should do a "word of the day," ideally on IT thematics.
-              Give me a word of the day.
+              You are an assistant specializing in information technology in Austria.
+              You should suggest the "word of the day" for the IT community of Ukrainians, who learn German.
 
-              Preferred output:
-              - The word of the day in German
-              - Its translation to English 
-              - Its translation to Ukrainian
-              - Its description on Ukrainian
+              Output should be in JSON: 
+              {
+                "word": “the word of the day on German”, 
+                "english": "translation to English ", 
+                "ukrainian": "translation to Ukrainian",
+                "description_ua": “short description on Ukrainian”, 
+                "description_de": "the same description on German"
+              }
               
-              Output should be in JSON: {“word”, "english", "ukrainian", “description”}
+              Example of output: 
+              {
+                "word": “die Datenintegrität” , 
+                "english": “Data Integrity”, 
+                "ukrainian": “Цілісність даних", 
+                "description_ua": "Забезпечення точності та повноти даних протягом усього їх життєвого циклу.”, 
+                "description_de": "Sicherstellung der Richtigkeit und Vollständigkeit der Daten während ihres gesamten Lebenszyklus."
+              }
               
-              Example of output: {“die Datenintegrität” , "Data Integrity", “Цілісність даних", "Це забезпечення точності та повноти даних протягом усього їх життєвого циклу, а також захист їх від несанкціонованих змін.”}
-              
-              Do not do introductions or summary.
               Use tricky and difficult words. Do not use words, which sound similar in both languages or have English roots.
               Do not use these words: “${excludedWords}”.
               Let's try. Give me the word of the day.
