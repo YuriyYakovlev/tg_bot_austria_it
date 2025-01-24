@@ -20,26 +20,29 @@ async function postNewsDigest(bot) {
       return;
     }
 
-    let caption = `<b>Доброго раночку друзі, ось що відбувалось в австрійському ІТ минулого тижня</b>:\n\n`;
+    let caption = `<b>Доброго ранку друзі, ось що відбувалось в австрійському ІТ минулого тижня</b>:\n\n`;
     let message = "";
     if(news.analytics && news.analytics.length > 0) {
       message += `<b>Аналітика</b>\n`;
       for(let i = 0; i < news.analytics.length; i++) {
-        message += `• ${news.analytics[i].item}\n\n`;
+        message += `${news.analytics[i].item}\n\n`;
+        break;
       }
     }
 
     if(news.news_digest && news.news_digest.length > 0) {
       message += `<b>Дайджест новин</b>\n`;
       for(let i = 0; i < news.news_digest.length; i++) {
-        message += `• ${news.news_digest[i].item}\n\n`;
+        message += `${news.news_digest[i].item}\n\n`;
+        break;
       }
     }
 
     if(news.challenges_opportunities && news.challenges_opportunities.length > 0) {
       message += `<b>Виклики та можливості</b>\n`;
       for(let i = 0; i < news.challenges_opportunities.length; i++) {
-        message += `• ${news.challenges_opportunities[i].item}\n\n`;
+        message += `${news.challenges_opportunities[i].item}\n\n`;
+        break;
       }
     }
 
@@ -137,10 +140,11 @@ function prepareRequest(period) {
               Group report on these categories:
 
               Analytics
-              - Analysis of demand for specific IT skills and technologies in Austria today (${period}). Highlight entry-level and mid-level opportunities. Mention any shifts in required skills compared to the previous period. Don't mention salaries. If the information is not reliable, do not include it.
+              - Analysis of demand for specific IT skills and technologies in Austria today (${period}). Two sentences maximum. Highlight entry-level and mid-level opportunities. Mention any shifts in required skills compared to the previous period. Don't mention salaries. If the information is not reliable, do not include it.
              
               News Digest
-              - Digest of significant news and events in the Austrian IT sector over the past week, around ${period}. Include news about:
+              - Digest of significant news and events in the Austrian IT sector over the past week, around ${period}. Two sentences maximum. 
+              Include news about:
                   - Changes in Austrian IT job market conditions (e.g., hiring freezes, layoffs, new investments).
                   - Updates on regulations or policies affecting IT professionals.
                   - Major projects or initiatives in the Austrian IT sector that could create opportunities.
@@ -148,11 +152,11 @@ function prepareRequest(period) {
                   - New Austrian IT startups that are hiring or have recently announced funding rounds in the past week. Don't mention about startups, which are not related to and were not founded in Austria.
 
               Challenges & Opportunities
-              - A balanced overview of current challenges and opportunities in the Austrian IT sector. This may include:
+              - A balanced overview of current challenges and opportunities in the Austrian IT sector. Two sentences maximum. 
+              This may include:
                   - Discussion of skills gaps or areas of high demand and potential opportunities.
                   - Reports on salary trends (if reliable data becomes available, but still avoid focusing solely on salary).
 
-              Each group should contain up to 5 items.
               Output language: Ukrainian.
               Output should be a JSON:
               {
