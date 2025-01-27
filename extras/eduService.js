@@ -126,7 +126,7 @@ function prepareRequest(previousWords) {
                 "word": “the word of the day on German”, 
                 "english": "translation to English ", 
                 "ukrainian": "translation to Ukrainian",
-                "description_ua": “short description on Ukrainian”, 
+                "description_ua": “short description on Ukrainian. One sentence.”, 
                 "description_de": "the same description on German"
               }
               

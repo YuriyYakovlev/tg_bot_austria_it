@@ -9,6 +9,8 @@ let eventsExecutionDate = null;
 let newsExecutionDate = null;
 let vacanciesExecutionDate = null;
 let wordExecutionDate = null;
+let weekendExecutionDate = null;
+
 // Endpoint for scheduled events
 const botService = require('./services/botService');
 app.post('/scheduled-events', async (req, res) => {
@@ -74,6 +76,22 @@ app.post('/word-of-the-day', async (req, res) => {
     }
 });
 
+
+app.post('/weekend-events', async (req, res) => {
+    try {
+        const today = new Date().toISOString().slice(0, 10);
+        if (weekendExecutionDate === today) {
+            return res.status(429).send('Exceeded execution threshold');
+        }
+        weekendExecutionDate = today;
+
+        await botService.postWeekendEvents();
+        res.status(200).send('Events posted successfully');
+    } catch (error) {
+        console.error('Error posting weekend events:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
 });

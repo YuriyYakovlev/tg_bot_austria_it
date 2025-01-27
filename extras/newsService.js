@@ -46,7 +46,8 @@ async function postNewsDigest(bot) {
       }
     }
 
-    message += `<u>Джерела</u>: ${news.sources}`;
+    message += `<u>Джерела</u>: ${news.sources}\n\n`;
+    message += `<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
 
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EVENTS_THREAD_ID; 
@@ -175,7 +176,7 @@ function prepareRequest(period) {
                     "item" : "description",
                   },
                 ],
-                "sources" : "sources of information, for example: The Recursive, Vindobona, Revli, EU-Startups, Tech Funding News, Austrian government websites, local IT communities",
+                "sources" : "sources of information",
                 "question": "a very short question, based on the presented news, to initiate the discussion in the chat. Start with: 'Як ви вважаєте...'"
               }
             `,

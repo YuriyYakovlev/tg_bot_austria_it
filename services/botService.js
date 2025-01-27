@@ -13,6 +13,7 @@ const eventsService = require("../extras/eventsService");
 const newsService = require("../extras/newsService");
 const vacanciesService = require("../extras/vacanciesService");
 const eduService = require("../extras/eduService");
+const weekendService = require("../extras/weekendService");
 
 let bot;
 const userSessionData = new Map(); // Stores { userId: { chatId, promptTime, chat_username, thread_id } }
@@ -154,6 +155,14 @@ async function postWordOfTheDay() {
   await eduService.postWordOfTheDay(bot);
 }
 
+async function postWeekendEvents() {
+  if (!bot) {
+    console.error("Bot is not initialized yet.");
+    return;
+  }
+  await weekendService.postWeekendEvents(bot);
+}
+
 
 setInterval(() => {
   cleanup();
@@ -180,5 +189,6 @@ module.exports = {
   postUpcomingEvents,
   postNewsDigest,
   postNewVacancies,
-  postWordOfTheDay
+  postWordOfTheDay,
+  postWeekendEvents
 };
