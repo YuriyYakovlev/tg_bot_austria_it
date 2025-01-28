@@ -9,6 +9,7 @@ let eventsExecutionDate = null;
 let newsExecutionDate = null;
 let vacanciesExecutionDate = null;
 let wordExecutionDate = null;
+let slangExecutionDate = null;
 let weekendExecutionDate = null;
 
 // Endpoint for scheduled events
@@ -72,6 +73,22 @@ app.post('/word-of-the-day', async (req, res) => {
         res.status(200).send('Word of the day posted successfully');
     } catch (error) {
         console.error('Error posting word of the day:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+app.post('/slang-of-the-day', async (req, res) => {
+    try {
+        const today = new Date().toISOString().slice(0, 10);
+        if (slangExecutionDate === today) {
+            return res.status(429).send('Exceeded execution threshold');
+        }
+        slangExecutionDate = today;
+
+        await botService.postSlangOfTheDay();
+        res.status(200).send('Slang of the day posted successfully');
+    } catch (error) {
+        console.error('Error posting slang of the day:', error);
         res.status(500).send('Internal Server Error');
     }
 });

@@ -12,8 +12,11 @@ const config = require("../config/config");
 const eventsService = require("../extras/eventsService");
 const newsService = require("../extras/newsService");
 const vacanciesService = require("../extras/vacanciesService");
-const eduService = require("../extras/eduService");
 const weekendService = require("../extras/weekendService");
+
+const germanITWodService = require("../extras/wod/germanITWodService");
+const austrianWodService = require("../extras/wod/austrianWodService");
+
 
 let bot;
 const userSessionData = new Map(); // Stores { userId: { chatId, promptTime, chat_username, thread_id } }
@@ -152,7 +155,15 @@ async function postWordOfTheDay() {
     console.error("Bot is not initialized yet.");
     return;
   }
-  await eduService.postWordOfTheDay(bot);
+  await germanITWodService.postWordOfTheDay(bot);
+}
+
+async function postSlangOfTheDay() {
+  if (!bot) {
+    console.error("Bot is not initialized yet.");
+    return;
+  }
+  await austrianWodService.postWordOfTheDay(bot);
 }
 
 async function postWeekendEvents() {
@@ -190,5 +201,6 @@ module.exports = {
   postNewsDigest,
   postNewVacancies,
   postWordOfTheDay,
+  postSlangOfTheDay,
   postWeekendEvents
 };

@@ -1,7 +1,7 @@
 // eduService.js
 const { VertexAI } = require("@google-cloud/vertexai");
-const db = require('../db/connectors/dbConnector');
-const audioGenService = require("./audioGenService");
+const db = require('../../db/connectors/dbConnector');
+const audioGenService = require("../audioGenService");
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
