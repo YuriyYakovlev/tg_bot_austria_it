@@ -42,19 +42,18 @@ async function postWordOfTheDay(bot) {
     
     const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.english} / ${wordOfTheDay.ukrainian})\n\n<i>${wordOfTheDay.description_ua}</i>`;
 
-    // await bot.sendMessage(chatId, message, {
-    //   message_thread_id: threadId,
-    //   parse_mode: "HTML"
-    // });
-
-    let audio = await audioGenService.generateAudio(`${wordOfTheDay.word}. ${wordOfTheDay.description_de}`);
+    let audio = await audioGenService.generateMultilingualAudioConcatenated(
+      wordOfTheDay.word,
+      wordOfTheDay.ukrainian,
+      wordOfTheDay.description_ua, 
+      wordOfTheDay.description_de
+    );
     
     await bot.sendVoice(chatId, audio, {
       message_thread_id: threadId,
       caption: message,
       parse_mode: "HTML"
     });
-
  
   } catch (error) {
     console.error("Error posting word of the day:", error.message);
