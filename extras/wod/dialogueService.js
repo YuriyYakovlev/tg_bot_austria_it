@@ -9,12 +9,14 @@ let vertexAI = new VertexAI({
 
 async function generateAudioDialogue(word, isSlang = false) {
   try {
-    const dialogue = await generateDialogue(word, isSlang);
-    if (!dialogue) {
+    const dialogueData = await generateDialogue(word, isSlang);
+    
+    if (!dialogueData || !dialogueData.dialogue) {
       console.log("No dialogue found.");
       return;
     }
-    //console.log('dialogue', dialogue);
+    const dialogue  = dialogueData.dialogue;
+
     const max_sentence1 = dialogue.dialogue[0].text
     const max_sentence2 = dialogue.dialogue[2].text
     const anna_sentence1 = dialogue.dialogue[1].text
@@ -24,8 +26,14 @@ async function generateAudioDialogue(word, isSlang = false) {
     let audio = await audioGenService.generateDialogueAudioConcatenated(
       max_sentence1, max_sentence2, anna_sentence1, anna_sentence2
     );
+
+    //console.log(dialogue);
+    //console.log(dialogue.image_prompt);
     
-    return audio;
+    return {
+      audio: audio,
+      image_prompt: dialogue.image_prompt
+    };
  
   } catch (error) {
     console.error("Error generating dialogue:", error.message);
@@ -68,7 +76,7 @@ async function generateDialogue(word, isSlang) {
       return null;
     }
 
-    if (!Array.isArray(dialogueData) || !dialogueData.every(entry => entry.speaker && entry.text)) {
+    if (!Array.isArray(dialogueData.dialogue)) {
       console.error('Invalid dialogue format:', dialogueData);
       return null;
     }
@@ -92,23 +100,34 @@ function prepareRequest(word, isSlang) {
           {
             text: `
               You are a German teacher.  
-              Your task is to generate a short, natural-sounding dialogue around a given word.  
+              Your task is to generate a short, natural-sounding dialogue around a given word and a related image generation prompt.  
               Dialogue requirements:  
                 - Use two speakers: Max and Anna.  
                 - Each speaker should have two lines, making a total of four exchanges.  
                 - The dialogue should be in German.  
                 - Include real-life auxiliary words (e.g., "naja", "also").  
+
+              Image Prompt Requirements:
+                - The image prompt should be a concise description of a scene depicting the context of the dialogue.
+                - It should be designed to generate a visually relevant and engaging image that complements the dialogue.
+                - Include elements from the dialogue in the prompt.
+                - Use descriptive and clear language.
+                - Be written in English.
+
               ${slangNotice} 
 
               Output should be in JSON: 
-              [
-                { "speaker": "Max", "text": "Max's first sentence" },
-                { "speaker": "Anna", "text": "Anna's first sentence" },
-                { "speaker": "Max", "text": "Max's second sentence" },
-                { "speaker": "Anna", "text": "Anna's second sentence" }
-              ]
+              {
+                "dialogue": [
+                  { "speaker": "Max", "text": "Max's first sentence" },
+                  { "speaker": "Anna", "text": "Anna's first sentence" },
+                  { "speaker": "Max", "text": "Max's second sentence" },
+                  { "speaker": "Anna", "text": "Anna's second sentence" }
+                  ],
+                "image_prompt": "A concise image generation prompt"
+              }
 
-              Now, generate a dialogue using the word '${word}'.
+              Now, generate a dialogue and an image prompt using the word '${word}'.
             `,
           },
         ],

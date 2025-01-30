@@ -3,6 +3,7 @@ const { VertexAI } = require("@google-cloud/vertexai");
 const db = require('../../db/connectors/dbConnector');
 const audioGenService = require("../audioGenService");
 const dialogueService = require("./dialogueService");
+const imageGenService = require("../imageGenService");
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
@@ -51,13 +52,27 @@ async function postWordOfTheDay(bot) {
     );
     
     let dialogue = await dialogueService.generateAudioDialogue(wordOfTheDay.word);    
-    let voice= await audioGenService.mergeAudioStreams([audio, dialogue]);
+    let voice= await audioGenService.mergeAudioStreams([audio, dialogue.audio]);
 
-    await bot.sendVoice(chatId, voice, {
-      message_thread_id: threadId,
-      caption: message,
-      parse_mode: "HTML"
-    });
+    const image = await imageGenService.generateImage(dialogue.image_prompt);
+    
+    if (image) {
+      await bot.sendPhoto(chatId, image, {
+        caption: message,
+        parse_mode: "HTML",
+        message_thread_id: threadId,
+      });
+
+      await bot.sendVoice(chatId, voice, {
+        message_thread_id: threadId,
+      });
+    } else {
+        await bot.sendVoice(chatId, voice, {
+            message_thread_id: threadId,
+            caption: message,
+            parse_mode: "HTML"
+        });
+    }
  
   } catch (error) {
     console.error("Error posting word of the day:", error.message);

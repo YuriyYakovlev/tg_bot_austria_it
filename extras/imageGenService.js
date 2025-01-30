@@ -13,7 +13,7 @@ const predictionServiceClient = new PredictionServiceClient(clientOptions);
 
 async function generateImage(prompt) {
     try {
-        const endpoint = `projects/${process.env.PROJECT_ID}/locations/${process.env.LOCATION}/publishers/google/models/imagen-3.0-generate-001`;
+        const endpoint = `projects/${process.env.PROJECT_ID}/locations/${process.env.LOCATION}/publishers/google/models/imagen-3.0-generate-002`;
 
         const promptText = {
             prompt: prompt,
@@ -25,6 +25,7 @@ async function generateImage(prompt) {
             sampleCount: 1,
             aspectRatio: '1:1',
             safetyFilterLevel: 'block_some',
+            personGeneration: 'allow_adult'
         };
         const parameters = helpers.toValue(parameter);
 
