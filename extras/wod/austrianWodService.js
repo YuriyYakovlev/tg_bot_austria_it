@@ -2,6 +2,7 @@
 const { VertexAI } = require("@google-cloud/vertexai");
 const db = require('../../db/connectors/dbConnector');
 const audioGenService = require("../audioGenService");
+const dialogueService = require("./dialogueService");
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
@@ -40,7 +41,7 @@ async function postWordOfTheDay(bot) {
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EDU_THREAD_ID; 
     
-    const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.ukrainian})\n\n<i>${wordOfTheDay.description_ua}</i>`;
+    const message = `<u>Сленг дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.ukrainian})\n\n<i>${wordOfTheDay.description_ua}</i>`;
 
     let audio = await audioGenService.generateMultilingualAudioConcatenated(
       wordOfTheDay.word,
@@ -48,15 +49,18 @@ async function postWordOfTheDay(bot) {
       wordOfTheDay.description_ua, 
       wordOfTheDay.description_de
     );
-    
-    await bot.sendVoice(chatId, audio, {
+
+    let dialogue = await dialogueService.generateAudioDialogue(wordOfTheDay.word, true);    
+    let voice= await audioGenService.mergeAudioStreams([audio, dialogue]);
+
+    await bot.sendVoice(chatId, voice, {
       message_thread_id: threadId,
       caption: message,
       parse_mode: "HTML"
     });
  
   } catch (error) {
-    console.error("Error posting word of the day:", error.message);
+    console.error("Error posting slang of the day:", error.message);
   }
 }
 

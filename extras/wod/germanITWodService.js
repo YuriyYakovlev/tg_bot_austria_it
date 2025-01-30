@@ -2,6 +2,7 @@
 const { VertexAI } = require("@google-cloud/vertexai");
 const db = require('../../db/connectors/dbConnector');
 const audioGenService = require("../audioGenService");
+const dialogueService = require("./dialogueService");
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
@@ -49,7 +50,10 @@ async function postWordOfTheDay(bot) {
       wordOfTheDay.description_de
     );
     
-    await bot.sendVoice(chatId, audio, {
+    let dialogue = await dialogueService.generateAudioDialogue(wordOfTheDay.word);    
+    let voice= await audioGenService.mergeAudioStreams([audio, dialogue]);
+
+    await bot.sendVoice(chatId, voice, {
       message_thread_id: threadId,
       caption: message,
       parse_mode: "HTML"

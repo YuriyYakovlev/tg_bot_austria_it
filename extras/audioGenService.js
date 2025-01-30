@@ -1,25 +1,29 @@
-// audioGenService.js (modified for concatenation)
 const { TextToSpeechClient } = require("@google-cloud/text-to-speech");
-const { Readable } = require('stream');
-const concat = require('concat-stream');
+const { Readable } = require("stream");
+const concat = require("concat-stream");
 
+const client = new TextToSpeechClient({
+    projectId: process.env.PROJECT_ID,
+});
+
+/**
+ * Generates an audio stream for the given text and language.
+ */
 async function generateAudioForLanguage(text, languageCode, voiceName) {
-    let audioContent = '';
-    const client = new TextToSpeechClient({
-        projectId: process.env.PROJECT_ID,
-    });
     try {
         const [response] = await client.synthesizeSpeech({
             input: { text },
             voice: {
                 languageCode: languageCode,
-                name: voiceName
+                name: voiceName,
             },
             audioConfig: {
-                audioEncoding: 'MP3',
-                speakingRate : 1.0
+                audioEncoding: "MP3",
+                speakingRate: 0,
+                pitch: 0
             },
         });
+
         if (response.audioContent) {
             const audioStream = new Readable();
             audioStream._read = () => {};
@@ -27,22 +31,19 @@ async function generateAudioForLanguage(text, languageCode, voiceName) {
             audioStream.push(null);
             return audioStream;
         }
-        return audioContent;
-
+        return null;
     } catch (error) {
-        console.log('error', error.message);
+        console.error("Error generating audio:", error.message);
         return null;
     }
 }
 
-
-async function generateMultilingualAudioConcatenated(wordGerman, wordUkrainian, ukrainianText, germanText) {
-    const ukrainianWordAudioStream = await generateAudioForLanguage(wordUkrainian, "uk-UA", "uk-UA-Wavenet-A");
-    const ukrainianTextAudioStream = await generateAudioForLanguage(ukrainianText, "uk-UA", "uk-UA-Wavenet-A");
-    const germanWordAudioStream = await generateAudioForLanguage(wordGerman, "de-DE", "de-DE-Studio-B");
-    const germanTextAudioStream = await generateAudioForLanguage(germanText, "de-DE", "de-DE-Studio-B");
-
-    if (!ukrainianWordAudioStream || !ukrainianTextAudioStream || !germanWordAudioStream || !germanTextAudioStream) {
+/**
+ * Merges multiple audio streams in order.
+ */
+async function mergeAudioStreams(audioStreams) {
+    if (!audioStreams || audioStreams.some((stream) => !stream)) {
+        console.error("Error: One or more audio streams are invalid.");
         return null;
     }
 
@@ -50,28 +51,54 @@ async function generateMultilingualAudioConcatenated(wordGerman, wordUkrainian, 
         const combinedStream = new Readable();
         combinedStream._read = () => {};
 
-        germanWordAudioStream.pipe(concat(germanWordBuffer => { // 1. German word first
-            combinedStream.push(germanWordBuffer);
-            ukrainianWordAudioStream.pipe(concat(ukrainianWordBuffer => { // 2. Ukrainian word second
-                combinedStream.push(ukrainianWordBuffer);
-                ukrainianTextAudioStream.pipe(concat(ukrainianTextBuffer => { // 3. Ukrainian text third
-                    combinedStream.push(ukrainianTextBuffer);
-                    germanTextAudioStream.pipe(concat(germanTextBuffer => { // 4. German text fourth
-                        combinedStream.push(germanTextBuffer);
-                        combinedStream.push(null); // Signal end of stream
-                        resolve(combinedStream);
-                    }))
-                    .on('error', reject);
-                }))
-                .on('error', reject);
-            }))
-            .on('error', reject);
-        }))
-        .on('error', reject);
+        const processNext = (index) => {
+            if (index >= audioStreams.length) {
+                combinedStream.push(null); // Signal end of stream
+                return resolve(combinedStream);
+            }
+
+            audioStreams[index].pipe(
+                concat((buffer) => {
+                    combinedStream.push(buffer);
+                    processNext(index + 1);
+                })
+            ).on("error", reject);
+        };
+
+        processNext(0);
     });
 }
 
+/**
+ * Generates and merges multilingual audio.
+ */
+async function generateMultilingualAudioConcatenated(wordGerman, wordUkrainian, ukrainianText, germanText) {
+    const audioStreams = await Promise.all([
+        generateAudioForLanguage(wordGerman, "de-DE", "de-DE-Studio-B"),
+        generateAudioForLanguage(wordUkrainian, "uk-UA", "uk-UA-Wavenet-A"),
+        generateAudioForLanguage(ukrainianText, "uk-UA", "uk-UA-Wavenet-A"),
+        generateAudioForLanguage(germanText, "de-DE", "de-DE-Studio-B"),
+    ]);
+
+    return mergeAudioStreams(audioStreams);
+}
+
+/**
+ * Generates and merges dialogue audio.
+ */
+async function generateDialogueAudioConcatenated(max_sentence1, max_sentence2, anna_sentence1, anna_sentence2) {
+    const audioStreams = await Promise.all([
+        generateAudioForLanguage(max_sentence1, "en-US", "en-US-Journey-D"),
+        generateAudioForLanguage(anna_sentence1, "en-US", "en-US-Journey-F"),
+        generateAudioForLanguage(max_sentence2, "en-US", "en-US-Journey-D"),
+        generateAudioForLanguage(anna_sentence2, "en-US", "en-US-Journey-F"),
+    ]);
+
+    return mergeAudioStreams(audioStreams);
+}
 
 module.exports = {
-    generateMultilingualAudioConcatenated
+    generateMultilingualAudioConcatenated,
+    generateDialogueAudioConcatenated,
+    mergeAudioStreams
 };
