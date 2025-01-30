@@ -97,8 +97,22 @@ async function generateDialogueAudioConcatenated(max_sentence1, max_sentence2, a
     return mergeAudioStreams(audioStreams);
 }
 
+async function generateDigestDialogueAudioConcatenated(manSentences, womanSentences) {
+    let audioStreams = [];
+    for (let i = 0; i < Math.max(manSentences.length, womanSentences.length); i++) {
+      if (manSentences[i]) {
+        audioStreams.push(await generateAudioForLanguage(manSentences[i], "en-US", "en-US-Journey-D"));
+      }
+      if (womanSentences[i]) {
+        audioStreams.push(await generateAudioForLanguage(womanSentences[i], "en-US", "en-US-Journey-F"));
+      }
+    }
+    return mergeAudioStreams(audioStreams);
+}
+
 module.exports = {
     generateMultilingualAudioConcatenated,
     generateDialogueAudioConcatenated,
-    mergeAudioStreams
+    mergeAudioStreams,
+    generateDigestDialogueAudioConcatenated
 };

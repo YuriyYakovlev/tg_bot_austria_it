@@ -65,6 +65,8 @@ async function postWordOfTheDay(bot) {
 
       await bot.sendVoice(chatId, voice, {
         message_thread_id: threadId,
+        caption: wordOfTheDay.word,
+        arse_mode: "HTML"
       });
     } else {
         await bot.sendVoice(chatId, voice, {

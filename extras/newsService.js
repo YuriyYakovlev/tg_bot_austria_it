@@ -5,6 +5,8 @@ const { VertexAI }  = require("@google-cloud/vertexai");
 const moment = require('moment');
 const textUtils = require("../utils/textUtils");
 const imageGenService = require("./imageGenService");
+const dialogueDigestService = require("./wod/dialogueDigestService");
+
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
@@ -46,6 +48,9 @@ async function postNewsDigest(bot) {
       }
     }
 
+    let dialogue = await dialogueDigestService.generateAudioDialogue(message);
+
+
     message += `<u>Джерела</u>: ${news.sources}\n\n`;
     message += `<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
 
@@ -65,6 +70,16 @@ async function postNewsDigest(bot) {
       await bot.sendMessage(chatId, chunk, {
         message_thread_id: threadId,
         parse_mode: "HTML",
+      });
+    }
+
+    if(dialogue) {
+      moment.locale('uk');
+      const date = moment().format("DD MMMM YYYY");
+      await bot.sendVoice(chatId, dialogue.audio, {
+        message_thread_id: threadId,
+        caption: `Aвстрія IT 🇦🇹 🇺🇦: дайджест новин (${date})`,
+        arse_mode: "HTML"
       });
     }
 
