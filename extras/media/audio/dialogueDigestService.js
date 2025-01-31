@@ -1,6 +1,6 @@
-// eduService.js
+// dialogueDigestService.js
 const { VertexAI } = require("@google-cloud/vertexai");
-const audioGenService = require("../audioGenService");
+const audioService = require("./audioService");
 const moment = require('moment');
 
 
@@ -31,7 +31,7 @@ async function generateAudioDialogue(digest) {
       }
     });
 
-    let audio = await audioGenService.generateDigestDialogueAudioConcatenated(manSentences, womanSentences);
+    let audio = await audioService.generateDigestDialogueAudioConcatenated(manSentences, womanSentences);
 
     //console.log(dialogue);
     //console.log(dialogue.image_prompt);

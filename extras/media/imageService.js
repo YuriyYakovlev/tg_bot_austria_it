@@ -1,4 +1,4 @@
-// imageGenSrrvice.js
+// imageService.js
 
 const aiplatform = require('@google-cloud/aiplatform');
 const {PredictionServiceClient} = aiplatform.v1;

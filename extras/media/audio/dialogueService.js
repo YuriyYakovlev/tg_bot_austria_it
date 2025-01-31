@@ -1,6 +1,6 @@
-// eduService.js
+// dialogueService.js
 const { VertexAI } = require("@google-cloud/vertexai");
-const audioGenService = require("../audioGenService");
+const audioService = require("./audioService");
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
@@ -23,7 +23,7 @@ async function generateAudioDialogue(word, isSlang = false) {
     const anna_sentence2 = dialogue.dialogue[3].text
 
     
-    let audio = await audioGenService.generateDialogueAudioConcatenated(
+    let audio = await audioService.generateDialogueAudioConcatenated(
       max_sentence1, max_sentence2, anna_sentence1, anna_sentence2
     );
 

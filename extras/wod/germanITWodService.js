@@ -1,35 +1,16 @@
 // eduService.js
 const { VertexAI } = require("@google-cloud/vertexai");
-const db = require('../../db/connectors/dbConnector');
-const audioGenService = require("../audioGenService");
-const dialogueService = require("./dialogueService");
-const imageGenService = require("../imageGenService");
+
+const utils = require("./utils");
+const audioService = require("../media/audio/audioService");
+const dialogueService = require("../media/audio/dialogueService");
+const imageService = require("../media/imageService");
+const videoService = require("../media/videoService");
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
   location: process.env.LOCATION,
 });
-
-async function fetchPreviousWords(chatId = null) {
-  const query = `SELECT word FROM word_of_the_day_history WHERE chat_id = ? OR chat_id IS NULL`;
-  try {
-    const [rows] = await db.query(query, [chatId]);
-    return rows.map(row => row.word);
-  } catch (error) {
-    console.error('Error fetching previous words from the database:', error.message);
-    return [];
-  }
-}
-
-async function addWordToHistory(word, description, chatId = null) {
-  const query = `INSERT INTO word_of_the_day_history (word, description, chat_id) VALUES (?, ?, ?)`;
-  try {
-    await db.query(query, [word, description, chatId]);
-    //console.log('Word added to history:', word);
-  } catch (error) {
-    console.error('Error adding word to history:', error.message);
-  }
-}
 
 async function postWordOfTheDay(bot) {
   try {
@@ -42,33 +23,40 @@ async function postWordOfTheDay(bot) {
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EDU_THREAD_ID; 
     
-    const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.english} / ${wordOfTheDay.ukrainian})\n\n<i>${wordOfTheDay.description_ua}</i>`;
-
-    let audio = await audioGenService.generateMultilingualAudioConcatenated(
-      wordOfTheDay.word,
-      wordOfTheDay.ukrainian,
-      wordOfTheDay.description_ua, 
-      wordOfTheDay.description_de
-    );
-    
+    const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.english} / ${wordOfTheDay.ukrainian})\n<i>${wordOfTheDay.description_ua}</i>`;
     let dialogue = await dialogueService.generateAudioDialogue(wordOfTheDay.word);    
-    let voice= await audioGenService.mergeAudioStreams([audio, dialogue.audio]);
-
-    const image = await imageGenService.generateImage(dialogue.image_prompt);
+    const image = await imageService.generateImage(dialogue.image_prompt);
     
     if (image) {
-      await bot.sendPhoto(chatId, image, {
+      let germanAudio = await audioService.generateGermanAudioConcatenated(wordOfTheDay.word,  wordOfTheDay.description_de);
+      let germanVoice = await audioService.mergeAudioStreams([germanAudio, dialogue.audio]);
+
+      const audioFilePath = await audioService.saveAudioStreamToFile(germanVoice);
+      //let srt = await audioService.generateSRTCaptions(audioFilePath, 'de-DE');
+      //console.log("srt: ", srt);
+      const videoBuffer = await videoService.generateVideoAsBuffer(image, audioFilePath, wordOfTheDay.word);
+
+      await bot.sendVideo(chatId, videoBuffer, {
         caption: message,
         parse_mode: "HTML",
         message_thread_id: threadId,
       });
+      // await bot.sendPhoto(chatId, image, {
+      //   caption: message,
+      //   parse_mode: "HTML",
+      //   message_thread_id: threadId,
+      // });
 
-      await bot.sendVoice(chatId, voice, {
-        message_thread_id: threadId,
-        caption: wordOfTheDay.word,
-        arse_mode: "HTML"
-      });
+      // await bot.sendVoice(chatId, voice, {
+      //   message_thread_id: threadId,
+      //   caption: wordOfTheDay.word,
+      //   arse_mode: "HTML"
+      // });
     } else {
+        let wodAudio = await audioService.generateMultilingualAudioConcatenated(
+          wordOfTheDay.word, wordOfTheDay.ukrainian, wordOfTheDay.description_ua, wordOfTheDay.description_de);
+        let voice = await audioService.mergeAudioStreams([wodAudio, dialogue.audio]);
+
         await bot.sendVoice(chatId, voice, {
             message_thread_id: threadId,
             caption: message,
@@ -83,7 +71,7 @@ async function postWordOfTheDay(bot) {
 
 async function fetchWordOfTheDay(chatId = null) {
   try {
-    const previousWords = await fetchPreviousWords(chatId);
+    const previousWords = await utils.fetchPreviousWords(chatId);
 
     const request = prepareRequest(previousWords);
     const generativeModel = vertexAI.getGenerativeModel({
@@ -118,7 +106,7 @@ async function fetchWordOfTheDay(chatId = null) {
     }
 
     if (wordData && wordData.word && wordData.description_ua) {
-      await addWordToHistory(wordData.word, wordData.description_ua, chatId);
+      await utils.addWordToHistory(wordData.word, wordData.description_ua, chatId);
       return { word: wordData.word, english: wordData.english, ukrainian: wordData.ukrainian, description_ua: wordData.description_ua, description_de: wordData.description_de };
     } else {
       console.error('Invalid data format:', textResponse);

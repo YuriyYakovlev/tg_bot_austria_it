@@ -4,8 +4,8 @@ const { VertexAI }  = require("@google-cloud/vertexai");
 
 const moment = require('moment');
 const textUtils = require("../utils/textUtils");
-const imageGenService = require("./imageGenService");
-const dialogueDigestService = require("./wod/dialogueDigestService");
+const imageService = require("./media/imageService");
+const dialogueDigestService = require("./media/audio/dialogueDigestService");
 
 
 let vertexAI = new VertexAI({
@@ -57,7 +57,7 @@ async function postNewsDigest(bot) {
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EVENTS_THREAD_ID; 
     
-    const image = await imageGenService.generateImage('Central part of Vienna, Austria. Reallistic photo.');
+    const image = await imageService.generateImage('Central part of Vienna, Austria. Reallistic photo.');
     if (image) {
       await bot.sendPhoto(chatId, image, {
         parse_mode: "HTML",
@@ -175,6 +175,18 @@ function prepareRequest(period) {
 
               Output language: Ukrainian.
               Output should be a JSON:
+              {
+                "topics": [
+                {
+                  "title": "Short headline summarizing the topic",
+                  "description": "
+                },
+                "sources" : "sources of information",
+                "question": "a very short question, based on the presented news, to initiate the discussion in the chat. Start with: 'Як ви вважаєте...'"
+              } 
+              ]    
+
+              
               {
                 "analytics" : [
                   {
