@@ -1,5 +1,5 @@
 # Use the official Node.js runtime as a parent image
-FROM node:20-slim
+FROM node:20-alpha
 
 RUN mkdir -p /app
 # Set the working directory to /app
