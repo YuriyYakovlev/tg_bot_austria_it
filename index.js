@@ -1,8 +1,11 @@
 const express = require('express');
 require("dotenv").config({ override: true });
+const path = require('path');
+
 require('./services/botService');
 
 const app = express();
+app.use(express.static(path.join(__dirname, 'public')));
 const port = process.env.PORT || 8080;
 
 let eventsExecutionDate = null;
