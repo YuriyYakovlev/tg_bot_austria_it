@@ -11,6 +11,7 @@ RUN rm -rf node_modules
 
 # Install app dependencies
 RUN npm install
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
 # Make port 8080 available to the world outside this container
 # EXPOSE 8080
