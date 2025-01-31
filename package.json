@@ -19,7 +19,6 @@
   "homepage": "https://github.com/YuriyYakovlev/tg_bot_austria_it#readme",
   "dependencies": {
     "@google-cloud/aiplatform": "^3.34.0",
-    "@google-cloud/storage": "^7.15.0",
     "@google-cloud/text-to-speech": "^5.8.0",
     "@google-cloud/vertexai": "^1.9.2",
     "body-parser": "^1.20.3",
