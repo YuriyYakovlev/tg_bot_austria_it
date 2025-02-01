@@ -35,7 +35,7 @@ async function postWeekendEvents(bot) {
       }
     }
 
-    message += `\n<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
+    //message += `\n<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
 
 
     const chatId = process.env.GROUP_ID; 
@@ -119,7 +119,7 @@ async function fetchUpcomingEvents() {
     let textResponse = response.candidates[0].content.parts[0].text;
     textResponse = textResponse.replaceAll('*', '').replaceAll('```json', '').replaceAll('```', '');
 
-    console.log(textResponse);
+    //console.log(textResponse);
     let events;
     try {
       events = JSON.parse(textResponse);
@@ -142,7 +142,7 @@ function prepareRequest(period) {
         parts: [
           {
             text: `
-              Find a list of top 20 interesting events in Austria for this weekend (Saturday and Sunday).
+              Find a list of top interesting events in Austria for this weekend (Saturday and Sunday).
               Today is ${period}.
               Double check, that events are relevant.
               
