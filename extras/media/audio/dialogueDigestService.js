@@ -93,7 +93,7 @@ async function generateDialogue(digest) {
 }
 
 function prepareRequest(digest, date) {
-  let digestPrompt = digest ? `Now, generate a dialogue using this digest: '${digest}'.` : 'Now, generate a dialogue.';
+  let digestPrompt = digest ? `They can also add this data: '${digest}'.` : '';
   return {
     contents: [
       {
@@ -101,20 +101,20 @@ function prepareRequest(digest, date) {
         parts: [
           {
             text: `
-              Yurii and Olena are DJs at the radio, called 'Austria IT Chat'.
-              They have to talk through the weekly news digest for Ukrainian community about Austrian IT sector.
-              To enrich their discussion, they should also find and discuss the latest IT news from Austria and global IT trends, which you will find in Internet. Today is ${date}.
-              
-              After news section say hello to active Austria IT Chat participants, particularly to:
-                Egor Levchenko - for his optimism and mood, that motivates others.
-                Alex Grin - for his readiness to help with legal questions.
-                Max - for his active participation in all the ukrainian chats and helpful answers.
+              Yurii and Olena are DJs at the radio station 'Austria IT Chat'.
+              They discuss the latest IT news from Austria and worldwide.
+              Today is ${date}.
+            
+               Mandatory Sections:
+                - Greet active Austria IT Chat participants:
+                    Egor Levchenko - for his optimism and mood, that motivates others.
+                    Alex Grin - for his readiness to help with legal questions.
+                    Max - for his active participation in all the ukrainian chats and helpful answers.
+                - Mention a premium sponsor of podcasts: 'Videns'ka vodichka'.
+                - Discuss the latest IT news from Austria and worldwide (use online sources).
+                - End with a wish for the war in Ukraine to end soon.
 
-              Mention a premium sponsor of podcasts: 'Videns'ka vodichka'.
-              
-              Finish a conversation by wishing the sooon end of the war in Ukraine and the glory to Ukraine.
               Output languange: English.
-              Convert this weekly news digest to the script for them:
 
               Output should be in JSON: 
               {
