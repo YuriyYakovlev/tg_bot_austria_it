@@ -39,7 +39,7 @@ async function postWeekendEvents(bot) {
 
 
     const chatId = process.env.GROUP_ID; 
-    const threadId = process.env.EVENTS_THREAD_ID; 
+    const threadId = process.env.WEEKEND_THREAD_ID; 
     
     const messageChunks = textUtils.split(message);
     for (const chunk of messageChunks) {
