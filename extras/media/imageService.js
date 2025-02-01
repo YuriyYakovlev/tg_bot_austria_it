@@ -3,6 +3,7 @@
 const aiplatform = require('@google-cloud/aiplatform');
 const {PredictionServiceClient} = aiplatform.v1;
 const {helpers} = aiplatform;
+const sharp = require('sharp');
 
 const clientOptions = {
   apiEndpoint: `${process.env.LOCATION}-aiplatform.googleapis.com`,
@@ -45,7 +46,12 @@ async function generateImage(prompt) {
                     prediction.structValue.fields.bytesBase64Encoded.stringValue,
                     'base64'
                 );
-                return buff;
+                // **Resize Image to Max 512x512**
+                const resizedBuffer = await sharp(buff)
+                    .resize({ width: 512, height: 512, fit: 'inside' })
+                    .toBuffer();
+
+                return resizedBuffer;
             }
         }
     } catch (error) {

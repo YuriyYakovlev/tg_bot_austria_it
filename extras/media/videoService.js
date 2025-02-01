@@ -5,8 +5,7 @@ const fs = require('fs');
 
 
 //async function generateVideoAsBuffer(imageBuffer, audioFilePath, srt) {
-async function generateVideoAsBuffer(imageBuffer, audioFilePath, word) {
-    const text = word.replace(/ /g, "_");
+async function generateVideoAsBuffer(imageBuffer, audioFilePath, word = null) {
   return new Promise((resolve, reject) => {
     const imageTempFile = tmp.tmpNameSync({ postfix: '.jpg' });
     const audioTempFile = audioFilePath;
@@ -26,13 +25,17 @@ async function generateVideoAsBuffer(imageBuffer, audioFilePath, word) {
           "-tune stillimage",
           "-pix_fmt yuv420p",
           "-shortest",
-          `-vf drawtext='text='${text}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=(h-text_h-40)'`
           // `-vf subtitles='${srtTempFile}:force_style="Fontsize=18,Alignment=2,MarginV=20,PrimaryColour=&H00FFFFFF&,OutlineColour=&H00000000&,BackColour=&H80000000&,BorderStyle=3,Shadow=0"'`, 
-        ])
-        .output(outputTempFile)
-        .format("mp4");
-
+        ]);
+        if (word && word.trim() !== "") {
+            let text = word.replace(/ /g, "_");
+            ffmpegProcess.outputOptions([
+                `-vf drawtext='text=${text}:fontcolor=white:fontsize=30:x=(w-text_w)/2:y=(h-text_h-40)'`
+            ]);
+        }
         ffmpegProcess
+        .output(outputTempFile)
+        .format("mp4")  
         .on("end", () => {
           fs.readFile(outputTempFile, (err, data) => {
             if (err) {

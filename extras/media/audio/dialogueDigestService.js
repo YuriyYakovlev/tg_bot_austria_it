@@ -103,8 +103,16 @@ function prepareRequest(digest, date) {
             text: `
               Alex and Olena are DJs at the radio, called 'Austria IT Chat'.
               They have to talk through the weekly news digest for Ukrainian community about Austrian IT sector.
-              They should add to the conversation 1-2 topics of hot news about Ukraine, which you will find in Internet. Today is ${date}.
-              They should finish a conversation by wishing the sooon end of the war in Ukraine and the glory to Ukraine.
+              To enrich their discussion, they should also find and discuss the latest IT news from Austria and global IT trends, which you will find in Internet. Today is ${date}.
+              
+              After news section say hello to active Austria IT Chat participants, particularly to:
+                Egor Levchenko - for his optimism and mood, that motivates others.
+                Alex Grin - for his readiness to help with legal questions.
+                Max - for his active participation in all the ukrainian chats and helpful answers.
+
+              Mention a premium sponsor of podcasts: 'Videns'ka vodichka'.
+              
+              Finish a conversation by wishing the sooon end of the war in Ukraine and the glory to Ukraine.
               Output languange: English.
               Convert this weekly news digest to the script for them:
 

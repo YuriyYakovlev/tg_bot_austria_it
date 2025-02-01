@@ -30,6 +30,7 @@
     "moment-timezone": "^0.5.46",
     "mysql2": "^3.12.0",
     "node-telegram-bot-api": "^0.66.0",
+    "sharp": "^0.33.5",
     "tmp": "^0.2.3",
     "xml2js": "^0.6.2"
   }

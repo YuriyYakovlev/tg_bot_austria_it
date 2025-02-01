@@ -3,8 +3,11 @@ const { VertexAI }  = require("@google-cloud/vertexai");
 
 
 const moment = require('moment');
+moment.locale('uk');
 const textUtils = require("../utils/textUtils");
 const imageService = require("./media/imageService");
+const audioService = require("./media/audio/audioService");
+const videoService = require("./media/videoService");
 const dialogueDigestService = require("./media/audio/dialogueDigestService");
 
 
@@ -15,7 +18,6 @@ let vertexAI = new VertexAI({
 
 async function postNewsDigest(bot) {
   try {
-
     const news = await fetchNewsDigest();
     if (!news) {
       console.log("No upcoming news found.");
@@ -23,6 +25,7 @@ async function postNewsDigest(bot) {
     }
 
     let caption = `<b>Доброго ранку друзі, ось що відбувалось в австрійському ІТ минулого тижня</b>:\n\n`;
+
     let message = "";
     if(news.analytics && news.analytics.length > 0) {
       message += `<b>Аналітика</b>\n`;
@@ -48,39 +51,57 @@ async function postNewsDigest(bot) {
       }
     }
 
+    let ending = `<u>Джерела</u>: ${news.sources}\n\n`;
+    ending += `<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
+
     let dialogue = await dialogueDigestService.generateAudioDialogue(message);
-
-
-    message += `<u>Джерела</u>: ${news.sources}\n\n`;
-    message += `<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
 
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EVENTS_THREAD_ID; 
-    
+
     const image = await imageService.generateImage('Central part of Vienna, Austria. Reallistic photo.');
+    const fullText = `${caption}${message}${ending}`;
+      
     if (image) {
-      await bot.sendPhoto(chatId, image, {
+      const audioFilePath = await audioService.saveAudioStreamToFile(dialogue.audio);
+      const videoBuffer = await videoService.generateVideoAsBuffer(image, audioFilePath);
+      
+      const MAX_CAPTION_LENGTH = 1024;
+      const captionText = fullText.slice(0, MAX_CAPTION_LENGTH);
+      const remainingText = fullText.slice(MAX_CAPTION_LENGTH);
+
+      await bot.sendVideo(chatId, videoBuffer, {
+        caption: captionText,
         parse_mode: "HTML",
         message_thread_id: threadId,
       });
-    }
 
-    const messageChunks = textUtils.split(`${caption}${message}`);
-    for (const chunk of messageChunks) {
-      await bot.sendMessage(chatId, chunk, {
-        message_thread_id: threadId,
-        parse_mode: "HTML",
-      });
-    }
+      const messageChunks = textUtils.split(remainingText);
+      for (const chunk of messageChunks) {
+        await bot.sendMessage(chatId, chunk, {
+          message_thread_id: threadId,
+          parse_mode: "HTML",
+        });
+      }
+      
+    } else {
+      const messageChunks = textUtils.split(fullText);
+      for (const chunk of messageChunks) {
+        await bot.sendMessage(chatId, chunk, {
+          message_thread_id: threadId,
+          parse_mode: "HTML",
+        });
+      }
 
-    if(dialogue) {
-      moment.locale('uk');
-      const date = moment().format("DD MMMM YYYY");
-      await bot.sendVoice(chatId, dialogue.audio, {
-        message_thread_id: threadId,
-        caption: `Aвстрія IT 🇦🇹 🇺🇦: дайджест новин (${date})`,
-        arse_mode: "HTML"
-      });
+      if(dialogue) {
+        const date = moment().format("DD MMMM YYYY");
+        const title = `Aвстрія IT 🇦🇹 🇺🇦: дайджест новин (${date})`;
+        await bot.sendVoice(chatId, dialogue.audio, {
+          message_thread_id: threadId,
+          caption: title,
+          arse_mode: "HTML"
+        });
+      }
     }
 
     await bot.sendMessage(chatId, `<em>${news.question}</em>`, {
@@ -100,7 +121,7 @@ async function fetchNewsDigest() {
     const generativeModel = vertexAI.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
-        max_output_tokens: 1000,
+        max_output_tokens: 500,
         temperature: 0,
         top_p: 1,
       },
@@ -174,19 +195,8 @@ function prepareRequest(period) {
                   - Reports on salary trends (if reliable data becomes available, but still avoid focusing solely on salary).
 
               Output language: Ukrainian.
-              Output should be a JSON:
-              {
-                "topics": [
-                {
-                  "title": "Short headline summarizing the topic",
-                  "description": "
-                },
-                "sources" : "sources of information",
-                "question": "a very short question, based on the presented news, to initiate the discussion in the chat. Start with: 'Як ви вважаєте...'"
-              } 
-              ]    
 
-              
+              Output should be a JSON:
               {
                 "analytics" : [
                   {
