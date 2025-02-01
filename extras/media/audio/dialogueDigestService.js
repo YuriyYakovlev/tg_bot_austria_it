@@ -33,7 +33,7 @@ async function generateAudioDialogue(digest, langCode) {
 
     let audio = await audioService.generateDigestDialogueAudioConcatenated(manSentences, womanSentences, langCode);
 
-    console.log(dialogue);
+    //console.log(dialogue);
     //console.log(dialogue.image_prompt);
     
     return {
