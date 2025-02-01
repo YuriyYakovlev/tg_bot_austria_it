@@ -24,7 +24,7 @@ async function generateAudioDialogue(digest) {
     
     // Separate Max's and Anna's sentences
     dialogue.forEach((entry, index) => {
-      if (entry.speaker === "Alex") {
+      if (entry.speaker === "Yurii") {
         manSentences.push(entry.text);
       } else if (entry.speaker === "Olena") {
         womanSentences.push(entry.text);
@@ -101,7 +101,7 @@ function prepareRequest(digest, date) {
         parts: [
           {
             text: `
-              Alex and Olena are DJs at the radio, called 'Austria IT Chat'.
+              Yurii and Olena are DJs at the radio, called 'Austria IT Chat'.
               They have to talk through the weekly news digest for Ukrainian community about Austrian IT sector.
               To enrich their discussion, they should also find and discuss the latest IT news from Austria and global IT trends, which you will find in Internet. Today is ${date}.
               
@@ -119,9 +119,9 @@ function prepareRequest(digest, date) {
               Output should be in JSON: 
               {
                 "dialogue": [
-                  { "speaker": "Alex", "text": "Alex's first sentence" },
+                  { "speaker": "Yurii", "text": "Yurii's first sentence" },
                   { "speaker": "Olena", "text": "Olena's first sentence" },
-                  { "speaker": "Alex", "text": "Alex's second sentence" },
+                  { "speaker": "Yurii", "text": "Yurii's second sentence" },
                   { "speaker": "Olena", "text": "Olena's second sentence" }
                 ] 
               }
