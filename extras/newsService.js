@@ -16,44 +16,49 @@ let vertexAI = new VertexAI({
   location: process.env.LOCATION,
 });
 
-async function postNewsDigest(bot) {
+async function postNews(bot, digest = false) {
   try {
-    const news = await fetchNewsDigest();
-    if (!news) {
-      console.log("No upcoming news found.");
-      return;
-    }
-
-    let caption = `<b>Доброго ранку друзі, ось що відбувалось в австрійському ІТ минулого тижня</b>:\n\n`;
-
     let message = "";
-    if(news.analytics && news.analytics.length > 0) {
-      message += `<b>Аналітика</b>\n`;
-      for(let i = 0; i < news.analytics.length; i++) {
-        message += `${news.analytics[i].item}\n\n`;
-        break;
+    let caption = "";
+    let ending = "";
+    let news  = "";
+
+    if (digest) {
+      news = await fetchNewsDigest();
+      if (!news) {
+        console.log("No upcoming news found.");
+        return;
       }
-    }
 
-    if(news.news_digest && news.news_digest.length > 0) {
-      message += `<b>Дайджест новин</b>\n`;
-      for(let i = 0; i < news.news_digest.length; i++) {
-        message += `${news.news_digest[i].item}\n\n`;
-        break;
+      caption = `<b>Доброго ранку друзі, ось що відбувалось в австрійському ІТ минулого тижня</b>:\n\n`;
+
+      if(news.analytics && news.analytics.length > 0) {
+        message += `<b>Аналітика</b>\n`;
+        for(let i = 0; i < news.analytics.length; i++) {
+          message += `${news.analytics[i].item}\n\n`;
+          break;
+        }
       }
-    }
 
-    if(news.challenges_opportunities && news.challenges_opportunities.length > 0) {
-      message += `<b>Виклики та можливості</b>\n`;
-      for(let i = 0; i < news.challenges_opportunities.length; i++) {
-        message += `${news.challenges_opportunities[i].item}\n\n`;
-        break;
+      if(news.news_digest && news.news_digest.length > 0) {
+        message += `<b>Дайджест новин</b>\n`;
+        for(let i = 0; i < news.news_digest.length; i++) {
+          message += `${news.news_digest[i].item}\n\n`;
+          break;
+        }
       }
+
+      if(news.challenges_opportunities && news.challenges_opportunities.length > 0) {
+        message += `<b>Виклики та можливості</b>\n`;
+        for(let i = 0; i < news.challenges_opportunities.length; i++) {
+          message += `${news.challenges_opportunities[i].item}\n\n`;
+          break;
+        }
+      }
+
+      ending = `<u>Джерела</u>: ${news.sources}\n\n`;
+      ending += `<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
     }
-
-    let ending = `<u>Джерела</u>: ${news.sources}\n\n`;
-    ending += `<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
-
     let dialogue = await dialogueDigestService.generateAudioDialogue(message);
 
     const chatId = process.env.GROUP_ID; 
@@ -67,7 +72,10 @@ async function postNewsDigest(bot) {
       const videoBuffer = await videoService.generateVideoAsBuffer(image, audioFilePath);
       
       const MAX_CAPTION_LENGTH = 1024;
-      const captionText = fullText.slice(0, MAX_CAPTION_LENGTH);
+      const date = moment().format("DD MMMM YYYY");
+      const captionText = digest ? 
+      fullText.slice(0, MAX_CAPTION_LENGTH) : 
+      `Тижневий подкаст: ${date}\n<em>Sponsored by 'Videns'ka vodichka'</em>\n<code>Подкаст згенеровано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
       const remainingText = fullText.slice(MAX_CAPTION_LENGTH);
 
       await bot.sendVideo(chatId, videoBuffer, {
@@ -76,21 +84,24 @@ async function postNewsDigest(bot) {
         message_thread_id: threadId,
       });
 
-      const messageChunks = textUtils.split(remainingText);
-      for (const chunk of messageChunks) {
-        await bot.sendMessage(chatId, chunk, {
-          message_thread_id: threadId,
-          parse_mode: "HTML",
-        });
+      if(digest) {
+        const messageChunks = textUtils.split(remainingText);
+        for (const chunk of messageChunks) {
+          await bot.sendMessage(chatId, chunk, {
+            message_thread_id: threadId,
+            parse_mode: "HTML",
+          });
+        }
       }
-      
     } else {
-      const messageChunks = textUtils.split(fullText);
-      for (const chunk of messageChunks) {
-        await bot.sendMessage(chatId, chunk, {
-          message_thread_id: threadId,
-          parse_mode: "HTML",
-        });
+      if (digest) {
+        const messageChunks = textUtils.split(fullText);
+        for (const chunk of messageChunks) {
+          await bot.sendMessage(chatId, chunk, {
+            message_thread_id: threadId,
+            parse_mode: "HTML",
+          });
+        }
       }
 
       if(dialogue) {
@@ -104,10 +115,12 @@ async function postNewsDigest(bot) {
       }
     }
 
-    await bot.sendMessage(chatId, `<em>${news.question}</em>`, {
-      message_thread_id: threadId,
-      parse_mode: "HTML",
-    });
+    if (digest) {
+      await bot.sendMessage(chatId, `<em>${news.question}</em>`, {
+        message_thread_id: threadId,
+        parse_mode: "HTML",
+      });
+    }
     
   } catch (error) {
     console.error("Error posting  news:", error.message);
@@ -225,5 +238,5 @@ function prepareRequest(period) {
 }
 
 module.exports = {
-  postNewsDigest
+  postNews
 };

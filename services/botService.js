@@ -134,12 +134,20 @@ async function postUpcomingEvents() {
   await eventsService.postUpcomingEvents(bot);
 }
 
+async function postNews() {
+  if (!bot) {
+    console.error("Bot is not initialized yet.");
+    return;
+  }
+  await newsService.postNews(bot, false);
+}
+
 async function postNewsDigest() {
   if (!bot) {
     console.error("Bot is not initialized yet.");
     return;
   }
-  await newsService.postNewsDigest(bot);
+  await newsService.postNews(bot, true);
 }
 
 async function postNewVacancies() {
@@ -198,6 +206,7 @@ process.on("SIGTERM", () => {
 
 module.exports = { 
   postUpcomingEvents,
+  postNews,
   postNewsDigest,
   postNewVacancies,
   postWordOfTheDay,

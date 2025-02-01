@@ -93,7 +93,7 @@ async function generateDialogue(digest) {
 }
 
 function prepareRequest(digest, date) {
-
+  let digestPrompt = digest ? `Now, generate a dialogue using this digest: '${digest}'.` : 'Now, generate a dialogue.';
   return {
     contents: [
       {
@@ -126,7 +126,7 @@ function prepareRequest(digest, date) {
                 ] 
               }
 
-              Now, generate a dialogue using this digest: '${digest}'.
+              ${digestPrompt}
             `,
           },
         ],

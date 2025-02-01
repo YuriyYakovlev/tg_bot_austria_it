@@ -10,6 +10,7 @@ const port = process.env.PORT || 8080;
 
 let eventsExecutionDate = null;
 let newsExecutionDate = null;
+let newsDigestExecutionDate = null;
 let vacanciesExecutionDate = null;
 let wordExecutionDate = null;
 let slangExecutionDate = null;
@@ -32,8 +33,7 @@ app.post('/scheduled-events', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-
-app.post('/news-digest', async (req, res) => {
+app.post('/news', async (req, res) => {
     try {
         const today = new Date().toISOString().slice(0, 10);
         if (newsExecutionDate === today) {
@@ -41,10 +41,26 @@ app.post('/news-digest', async (req, res) => {
         }
         newsExecutionDate = today;
 
-        await botService.postNewsDigest();
+        await botService.postNews();
         res.status(200).send('News posted successfully');
     } catch (error) {
         console.error('Error posting news:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+app.post('/news-digest', async (req, res) => {
+    try {
+        const today = new Date().toISOString().slice(0, 10);
+        if (newsDigestExecutionDate === today) {
+            return res.status(429).send('Exceeded execution threshold');
+        }
+        newsDigestExecutionDate = today;
+
+        await botService.postNewsDigest();
+        res.status(200).send('News digest posted successfully');
+    } catch (error) {
+        console.error('Error posting news digest:', error);
         res.status(500).send('Internal Server Error');
     }
 });
