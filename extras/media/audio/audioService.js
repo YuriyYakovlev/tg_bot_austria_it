@@ -29,7 +29,7 @@ async function generateAudioForLanguage(text, languageCode, voiceName) {
             },
             audioConfig: {
                 audioEncoding: "MP3",
-                speakingRate: 0,
+                speakingRate: (voiceName==="de-DE--Journey-D" || voiceName==="de-DE--Journey-F")? 0.25 : 0,
                 pitch: 0
             },
         });
@@ -93,10 +93,10 @@ async function generateMultilingualAudioConcatenated(wordGerman, wordUkrainian, 
     return mergeAudioStreams(audioStreams);
 }
 
-async function generateGermanAudioConcatenated(wordGerman, germanText) {
+async function generateGermanAudioConcatenated(wordGerman, germanText, langCode) {
     const audioStreams = await Promise.all([
-        generateAudioForLanguage(wordGerman, "de-DE", "de-DE-Studio-B"),
-        generateAudioForLanguage(germanText, "de-DE", "de-DE-Studio-B"),
+        generateAudioForLanguage(wordGerman, langCode, `${langCode}-Studio-B`),
+        generateAudioForLanguage(germanText, langCode, `${langCode}-Studio-B`),
     ]);
     return mergeAudioStreams(audioStreams);
 }
@@ -104,25 +104,25 @@ async function generateGermanAudioConcatenated(wordGerman, germanText) {
 /**
  * Generates and merges dialogue audio.
  */
-async function generateDialogueAudioConcatenated(max_sentence1, max_sentence2, anna_sentence1, anna_sentence2) {
+async function generateDialogueAudioConcatenated(max_sentence1, max_sentence2, anna_sentence1, anna_sentence2, langCode) {
     const audioStreams = await Promise.all([
-        generateAudioForLanguage(max_sentence1, "en-US", "en-US-Journey-D"),
-        generateAudioForLanguage(anna_sentence1, "en-US", "en-US-Journey-F"),
-        generateAudioForLanguage(max_sentence2, "en-US", "en-US-Journey-D"),
-        generateAudioForLanguage(anna_sentence2, "en-US", "en-US-Journey-F"),
+        generateAudioForLanguage(max_sentence1, langCode, `${langCode}-Journey-D`),
+        generateAudioForLanguage(anna_sentence1, langCode, `${langCode}-Journey-F`),
+        generateAudioForLanguage(max_sentence2, langCode, `${langCode}-Journey-D`),
+        generateAudioForLanguage(anna_sentence2, langCode, `${langCode}-Journey-F`),
     ]);
 
     return mergeAudioStreams(audioStreams);
 }
 
-async function generateDigestDialogueAudioConcatenated(manSentences, womanSentences) {
+async function generateDigestDialogueAudioConcatenated(manSentences, womanSentences, langCode) {
     let audioStreams = [];
     for (let i = 0; i < Math.max(manSentences.length, womanSentences.length); i++) {
       if (manSentences[i]) {
-        audioStreams.push(await generateAudioForLanguage(manSentences[i], "en-US", "en-US-Journey-D"));
+        audioStreams.push(await generateAudioForLanguage(manSentences[i], langCode, `${langCode}-Journey-D`));
       }
       if (womanSentences[i]) {
-        audioStreams.push(await generateAudioForLanguage(womanSentences[i], "en-US", "en-US-Journey-F"));
+        audioStreams.push(await generateAudioForLanguage(womanSentences[i], langCode, `${langCode}-Journey-F`));
       }
     }
     return mergeAudioStreams(audioStreams);

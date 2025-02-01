@@ -7,7 +7,7 @@ let vertexAI = new VertexAI({
   location: process.env.LOCATION,
 });
 
-async function generateAudioDialogue(word, isSlang = false) {
+async function generateAudioDialogue(word, isSlang = false, langCode) {
   try {
     const dialogueData = await generateDialogue(word, isSlang);
     
@@ -24,7 +24,7 @@ async function generateAudioDialogue(word, isSlang = false) {
 
     
     let audio = await audioService.generateDialogueAudioConcatenated(
-      max_sentence1, max_sentence2, anna_sentence1, anna_sentence2
+      max_sentence1, max_sentence2, anna_sentence1, anna_sentence2, langCode
     );
 
     //console.log(dialogue);

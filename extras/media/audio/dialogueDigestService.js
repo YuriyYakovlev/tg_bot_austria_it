@@ -9,7 +9,7 @@ let vertexAI = new VertexAI({
   location: process.env.LOCATION,
 });
 
-async function generateAudioDialogue(digest) {
+async function generateAudioDialogue(digest, langCode) {
   try {
     const dialogueData = await generateDialogue(digest);
     
@@ -31,7 +31,7 @@ async function generateAudioDialogue(digest) {
       }
     });
 
-    let audio = await audioService.generateDigestDialogueAudioConcatenated(manSentences, womanSentences);
+    let audio = await audioService.generateDigestDialogueAudioConcatenated(manSentences, womanSentences, langCode);
 
     //console.log(dialogue);
     //console.log(dialogue.image_prompt);

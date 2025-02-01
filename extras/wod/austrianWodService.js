@@ -25,11 +25,11 @@ async function postWordOfTheDay(bot) {
     const threadId = process.env.EDU_THREAD_ID; 
     
     const message = `<u>Сленг дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.ukrainian})\n<i>${wordOfTheDay.description_ua}</i>`;
-    let dialogue = await dialogueService.generateAudioDialogue(wordOfTheDay.word, true);    
+    let dialogue = await dialogueService.generateAudioDialogue(wordOfTheDay.word, true, "de-DE");    
     const image = await imageService.generateImage(dialogue.image_prompt);
 
     if (image) {
-      let germanAudio = await audioService.generateGermanAudioConcatenated(wordOfTheDay.word,  wordOfTheDay.description_de);
+      let germanAudio = await audioService.generateGermanAudioConcatenated(wordOfTheDay.word,  wordOfTheDay.description_de, "de-DE");
       let germanVoice = await audioService.mergeAudioStreams([germanAudio, dialogue.audio]);
 
       const audioFilePath = await audioService.saveAudioStreamToFile(germanVoice);
@@ -43,8 +43,8 @@ async function postWordOfTheDay(bot) {
         message_thread_id: threadId,
       });
     } else {
-        let wodAudio = await audioService.generateMultilingualAudioConcatenated(
-          wordOfTheDay.word, wordOfTheDay.ukrainian, wordOfTheDay.description_ua, wordOfTheDay.description_de);
+        let wodAudio = await audioService.generateGermanAudioConcatenated(
+          wordOfTheDay.word, wordOfTheDay.description_de, "de-DE");
         let voice = await audioService.mergeAudioStreams([wodAudio, dialogue.audio]);
 
         await bot.sendVoice(chatId, voice, {
