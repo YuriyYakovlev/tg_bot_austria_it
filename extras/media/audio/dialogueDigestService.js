@@ -33,7 +33,7 @@ async function generateAudioDialogue(digest, langCode) {
 
     let audio = await audioService.generateDigestDialogueAudioConcatenated(manSentences, womanSentences, langCode);
 
-    //console.log(dialogue);
+    console.log(dialogue);
     //console.log(dialogue.image_prompt);
     
     return {
@@ -52,7 +52,7 @@ async function generateDialogue(digest) {
     const generativeModel = vertexAI.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
-        max_output_tokens: 500,
+        max_output_tokens: 1000,
         temperature: 0,
         top_p: 1,
       },
@@ -115,6 +115,10 @@ function prepareRequest(digest, date) {
                 - End with a wish for the war in Ukraine to end soon.
 
               Output languange: English.
+
+              To enhance the naturalness of the dialogue use auxiliary words such as:
+               "yeah", "hmm", "yeah absolutely", "right", "you know", "ok", "am", "think about it", "aah"
+              as a reaction to previous speaker phrase, while he is talking.
 
               Output should be in JSON: 
               {
