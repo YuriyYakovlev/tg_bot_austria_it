@@ -69,13 +69,13 @@ async function postNews(bot, digest = false) {
       
     if (image) {
       const audioFilePath = await audioService.saveAudioStreamToFile(dialogue.audio);
-      const videoBuffer = await videoService.generateVideoAsBuffer(image, audioFilePath);
+
+      const date = moment().format("DD MMMM YYYY");
+      const title = `Тижневий подкаст: ${date}\nSponsored by 'Віденська водичка'`;
+      const videoBuffer = await videoService.generateVideoAsBuffer(image, audioFilePath, title);
       
       const MAX_CAPTION_LENGTH = 1024;
-      const date = moment().format("DD MMMM YYYY");
-      const captionText = digest ? 
-      fullText.slice(0, MAX_CAPTION_LENGTH) : 
-      `Тижневий подкаст: ${date}\n<em>Sponsored by 'Videns'ka vodichka'</em>\n<code>Подкаст згенеровано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
+      const captionText = digest ? fullText.slice(0, MAX_CAPTION_LENGTH) : `<code>Згенеровано із використанням ШІ для Австрія IT</code> 🇦🇹 🇺🇦`;
       const remainingText = fullText.slice(MAX_CAPTION_LENGTH);
 
       await bot.sendVideo(chatId, videoBuffer, {

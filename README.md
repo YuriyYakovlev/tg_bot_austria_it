@@ -24,3 +24,9 @@ The project is open source, and we welcome any contributions to the code, docume
 
 ## License
 The project is distributed under a free license, which allows the code to be used, modified, and distributed freely for any purpose.
+
+## ffmpeg commands
+ffmpeg -i 4K_168.mp4 -vf scale=640:50 -c:v libx264 -crf 23 -preset fast -c:a copy 4K_168_50.mp4
+
+## Credits
+Videezy.com - news video animation
