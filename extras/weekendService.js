@@ -21,7 +21,7 @@ async function postWeekendEvents(bot) {
 
     const groupedEvents = groupEventsByDateAndCity(events);
     for (const date of Object.keys(groupedEvents)) {
-      message += `🔹 <b>${date}</b> 🔹\n`;
+      message += `🔹 <b>${date}</b> \n`;
       const cities = groupedEvents[date];
 
       for (const city of Object.keys(cities)) {

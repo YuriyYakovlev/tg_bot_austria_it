@@ -56,8 +56,8 @@ async function postNews(bot, digest = false) {
         }
       }
 
-      ending = `<u>Джерела</u>: ${news.sources}\n\n`;
-      ending += `<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
+      ending = `<u>Джерела</u>: ${news.sources}`;
+      //ending += `\n\n<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
     }
     let dialogue = await dialogueDigestService.generateAudioDialogue(message, "en-US");
 
@@ -75,7 +75,7 @@ async function postNews(bot, digest = false) {
       const videoBuffer = await videoService.generateVideoAsBuffer(image, audioFilePath, title);
       
       const MAX_CAPTION_LENGTH = 1024;
-      const captionText = digest ? fullText.slice(0, MAX_CAPTION_LENGTH) : `<code>Згенеровано із використанням ШІ для Австрія IT</code> 🇦🇹 🇺🇦`;
+      const captionText = digest ? fullText.slice(0, MAX_CAPTION_LENGTH) : `<code>Австрія IT: тижневий подкаст</code> 🇦🇹 🇺🇦`;
       const remainingText = fullText.slice(MAX_CAPTION_LENGTH);
 
       await bot.sendVideo(chatId, videoBuffer, {
@@ -115,12 +115,12 @@ async function postNews(bot, digest = false) {
       }
     }
 
-    if (digest) {
-      await bot.sendMessage(chatId, `<em>${news.question}</em>`, {
-        message_thread_id: threadId,
-        parse_mode: "HTML",
-      });
-    }
+    // if (digest) {
+    //   await bot.sendMessage(chatId, `<em>${news.question}</em>`, {
+    //     message_thread_id: threadId,
+    //     parse_mode: "HTML",
+    //   });
+    // }
     
   } catch (error) {
     console.error("Error posting  news:", error.message);
