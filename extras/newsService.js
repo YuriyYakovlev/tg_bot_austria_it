@@ -64,7 +64,7 @@ async function postNews(bot, digest = false) {
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EVENTS_THREAD_ID; 
 
-    const image = await imageService.generateImage('Central part of Vienna, Austria. Reallistic photo. The style should be cyberpunk-style');
+    const image = await imageService.generateImage('Central part of Vienna, Austria. Style: Cyber-punk');
     const fullText = `${caption}${message}${ending}`;
       
     if (image) {

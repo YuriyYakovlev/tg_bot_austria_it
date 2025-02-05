@@ -13,7 +13,38 @@ const client = new TextToSpeechClient({
 });
 
 
-// const bucketName = 'gs://tg_bot_austria_it';
+async function generatePause(pauseDuration = 2000) {
+    try {
+        const ssmlText = `
+            <speak>
+                <break time="${pauseDuration}ms"/>
+                bye.
+            </speak>`;
+
+        const [response] = await client.synthesizeSpeech({
+            input: { ssml: ssmlText },
+            voice: {
+                languageCode: "en-US",
+                name: "en-US-Standard-B",
+            },
+            audioConfig: {
+                audioEncoding: "MP3",
+            },
+        });
+
+        if (response.audioContent) {
+            const audioStream = new Readable();
+            audioStream._read = () => {};
+            audioStream.push(response.audioContent);
+            audioStream.push(null);
+            return audioStream;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error generating audio:", error.message);
+        return null;
+    }
+}
 
 
 /**
@@ -29,6 +60,8 @@ async function generateAudioForLanguage(text, languageCode, voiceName) {
             },
             audioConfig: {
                 audioEncoding: "MP3",
+                sampleRateHertz: 44100,
+                audioChannelCount: 2,
                 speakingRate: (voiceName==="de-DE--Journey-D" || voiceName==="de-DE--Journey-F")? 0.25 : 0,
                 pitch: 0
             },
@@ -125,6 +158,7 @@ async function generateDigestDialogueAudioConcatenated(manSentences, womanSenten
         audioStreams.push(await generateAudioForLanguage(womanSentences[i], langCode, `${langCode}-Journey-F`));
       }
     }
+    audioStreams.push(await generatePause(5000));
     return mergeAudioStreams(audioStreams);
 }
 

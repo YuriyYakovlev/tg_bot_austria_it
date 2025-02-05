@@ -24,9 +24,9 @@ async function generateAudioDialogue(digest, langCode) {
     
     // Separate Max's and Anna's sentences
     dialogue.forEach((entry, index) => {
-      if (entry.speaker === "Zero") {
+      if (entry.speaker === "Yuriy") {
         manSentences.push(entry.text);
-      } else if (entry.speaker === "Nano") {
+      } else if (entry.speaker === "Olena") {
         womanSentences.push(entry.text);
       }
     });
@@ -52,7 +52,7 @@ async function generateDialogue(digest) {
     const generativeModel = vertexAI.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
-        max_output_tokens: 1000,
+        max_output_tokens: 2000,
         temperature: 0,
         top_p: 1,
       },
@@ -101,33 +101,30 @@ function prepareRequest(digest, date) {
         parts: [
           {
             text: `
-              Zero and Nano are DJs at the radio station 'Austria IT Chat'.
+              Yuriy and Olena are DJs at the radio station 'Austria IT Chat'.
               They discuss the latest IT news from Austria and worldwide.
               Today is ${date}.
             
                Mandatory Sections:
-                - Start with a cyberpunk-style greeting—something gritty, futuristic, and hacker-esque, as if broadcasting from a dystopian underground network.
+                - Start with a short greeting — something futuristic, and hacker-esque, as if broadcasting from a dystopian underground network.
                 - Greet active Austria IT Chat participants:
                     Tamara Klimenko - for her readiness to help with tax and legal questions.
-                    Taras Tomysh - for boosting our chat with new vacancies.
-                    newcomers who recently joined and are looking for a job - be optimistic.
-                - Mention a premium sponsor of podcasts: 'Videns'ka vodichka'.
+                    Taras Tomish - for boosting our chat with new vacancies.
                 - Discuss the latest IT news from Austria and worldwide (use online sources).
-                - End with a wish for the war in Ukraine to end soon in a cyberpunk-style sign-off—mysterious, rebellious, and tech-infused, as if signing off from a pirate transmission.
+                - End with a wish for the war in Ukraine to end soon in a cyberpunk-style, tech-infused, as if signing off from a pirate transmission.
 
               Output languange: English.
 
-              To enhance the naturalness of the dialogue use auxiliary words such as:
-               "yeah", "hmm", "yeah absolutely", "right", "you know", "ok", "am", "think about it", "aah"
-              as a reaction to previous speaker phrase, while he is talking.
+              To enhance the naturalness of the dialogue use auxiliary words such as:  "yeah", "hmm", "right", "you know", "ok", "am", "think about it", "aah"
+              as a reaction to previous speaker phrase.
 
               Output should be in JSON: 
               {
                 "dialogue": [
-                  { "speaker": "Zero", "text": "Zero's first sentence" },
-                  { "speaker": "Nano", "text": "Nano's first sentence" },
-                  { "speaker": "Zero", "text": "Zero's second sentence" },
-                  { "speaker": "Nano", "text": "Nano's second sentence" }
+                  { "speaker": "Yuriy", "text": "Yuriy's first sentence" },
+                  { "speaker": "Olena", "text": "Olena's first sentence" },
+                  { "speaker": "Yuriy", "text": "Yuriy's second sentence" },
+                  { "speaker": "Olena", "text": "Olena's second sentence" }
                 ] 
               }
 

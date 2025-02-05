@@ -26,7 +26,12 @@ The project is open source, and we welcome any contributions to the code, docume
 The project is distributed under a free license, which allows the code to be used, modified, and distributed freely for any purpose.
 
 ## ffmpeg commands
+## convert video footer
 ffmpeg -i 4K_168.mp4 -vf scale=640:50 -c:v libx264 -crf 23 -preset fast -c:a copy 4K_168_50.mp4
+## convert audio to 24K mono
+ffmpeg -i cyberpank-2.m4a -ar 24000 -ac 1 -c:a libmp3lame -b:a 64k cyberpank-3.mp3
+## loop input file to 5min
+ffmpeg -stream_loop -1 -i input.mp3 -t 300 -c:a libmp3lame output.mp3
 
 ## Credits
 Videezy.com - news video animation
