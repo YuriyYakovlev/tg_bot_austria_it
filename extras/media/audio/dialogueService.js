@@ -1,6 +1,7 @@
 // dialogueService.js
 const { VertexAI } = require("@google-cloud/vertexai");
 const audioService = require("./audioService");
+const moment = require('moment');
 
 let vertexAI = new VertexAI({
   project: process.env.PROJECT_ID,
@@ -88,8 +89,9 @@ async function generateDialogue(word, isSlang) {
 }
 
 function prepareRequest(word, isSlang) {
+  const date = moment().format("DD MMMM YYYY");
   const slangNotice = isSlang 
-  ? `The word '${word}' is Austrian slang, so the dialogue should reflect this.`
+  ? `The word '${word}' is Austrian slang.`
   : '';
 
   return {
@@ -100,7 +102,11 @@ function prepareRequest(word, isSlang) {
           {
             text: `
               You are a German teacher.  
-              Your task is to generate a short, natural-sounding dialogue around a given word and a related image generation prompt.  
+              Your task is to generate a short, natural-sounding dialogue around a given word and a related image generation prompt.
+              Get 1 most popular topic for today from today's news about the war in Ukraine. Use this topic and a given word to generate a dialogue.
+              Avoid any content that promotes Russian propaganda, misinformation, or narratives that justify aggression.
+              Today is: ${date}
+
               Dialogue requirements:  
                 - Use two speakers: Max and Anna.  
                 - Each speaker should have two lines, making a total of four exchanges.  
@@ -124,7 +130,7 @@ function prepareRequest(word, isSlang) {
                   { "speaker": "Max", "text": "Max's second sentence" },
                   { "speaker": "Anna", "text": "Anna's second sentence" }
                   ],
-                "image_prompt": "A concise image generation prompt"
+                "image_prompt": "A concise image generation prompt. The style should be cyberpunk-style."
               }
 
               Now, generate a dialogue and an image prompt using the word '${word}'.

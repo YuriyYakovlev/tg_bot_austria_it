@@ -24,9 +24,9 @@ async function generateAudioDialogue(digest, langCode) {
     
     // Separate Max's and Anna's sentences
     dialogue.forEach((entry, index) => {
-      if (entry.speaker === "Yurii") {
+      if (entry.speaker === "Zero") {
         manSentences.push(entry.text);
-      } else if (entry.speaker === "Olena") {
+      } else if (entry.speaker === "Nano") {
         womanSentences.push(entry.text);
       }
     });
@@ -101,18 +101,19 @@ function prepareRequest(digest, date) {
         parts: [
           {
             text: `
-              Yurii and Olena are DJs at the radio station 'Austria IT Chat'.
+              Zero and Nano are DJs at the radio station 'Austria IT Chat'.
               They discuss the latest IT news from Austria and worldwide.
               Today is ${date}.
             
                Mandatory Sections:
+                - Start with a cyberpunk-style greeting—something gritty, futuristic, and hacker-esque, as if broadcasting from a dystopian underground network.
                 - Greet active Austria IT Chat participants:
-                    Egor Levchenko - for his optimism and mood, that motivates others.
-                    Alex Grin - for his readiness to help with legal questions.
-                    Max - for his active participation in all the ukrainian chats and helpful answers.
+                    Tamara Klimenko - for her readiness to help with tax and legal questions.
+                    Taras Tomysh - for boosting our chat with new vacancies.
+                    newcomers who recently joined and are looking for a job - be optimistic.
                 - Mention a premium sponsor of podcasts: 'Videns'ka vodichka'.
                 - Discuss the latest IT news from Austria and worldwide (use online sources).
-                - End with a wish for the war in Ukraine to end soon.
+                - End with a wish for the war in Ukraine to end soon in a cyberpunk-style sign-off—mysterious, rebellious, and tech-infused, as if signing off from a pirate transmission.
 
               Output languange: English.
 
@@ -123,10 +124,10 @@ function prepareRequest(digest, date) {
               Output should be in JSON: 
               {
                 "dialogue": [
-                  { "speaker": "Yurii", "text": "Yurii's first sentence" },
-                  { "speaker": "Olena", "text": "Olena's first sentence" },
-                  { "speaker": "Yurii", "text": "Yurii's second sentence" },
-                  { "speaker": "Olena", "text": "Olena's second sentence" }
+                  { "speaker": "Zero", "text": "Zero's first sentence" },
+                  { "speaker": "Nano", "text": "Nano's first sentence" },
+                  { "speaker": "Zero", "text": "Zero's second sentence" },
+                  { "speaker": "Nano", "text": "Nano's second sentence" }
                 ] 
               }
 

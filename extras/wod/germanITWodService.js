@@ -128,7 +128,7 @@ function prepareRequest(previousWords) {
             text: `
               You are an assistant specializing in information technology in Austria.
               You should suggest the "word of the day" for the IT community of Ukrainians, who learn German.
-
+              
               Output should be in JSON: 
               {
                 "word": “the word of the day on German”, 
