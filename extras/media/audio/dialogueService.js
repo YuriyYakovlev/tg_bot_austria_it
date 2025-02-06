@@ -101,9 +101,9 @@ function prepareRequest(word, isSlang) {
         parts: [
           {
             text: `
-              You are a German teacher.  
+              You are a German teacher in Austria.  
               Your task is to generate a short, natural-sounding dialogue around a given word and a related image generation prompt.
-              Get 1 most popular topic for today from today's news about the war in Ukraine. 
+              Get 1 most popular topic for today from today's news. 
               Use this topic and a given word to generate a dialogue. The dialogue should feel everyday and personal rather than a discussion of the news. 
               Don't start with question: did you read or did you hear.
               Avoid any content that promotes Russian propaganda, misinformation, or narratives that justify aggression.
@@ -120,20 +120,19 @@ function prepareRequest(word, isSlang) {
                 - It should be designed to generate a visually relevant and engaging image that complements the dialogue.
                 - Include elements from the dialogue in the prompt.
                 - Use descriptive and clear language.
+                - Don't show flags or names of countries.
                 - Be written in English.
 
               ${slangNotice} 
 
               Output should be in JSON: 
-              {
                 "dialogue": [
                   { "speaker": "Max", "text": "Max's first sentence" },
                   { "speaker": "Anna", "text": "Anna's first sentence" },
                   { "speaker": "Max", "text": "Max's second sentence" },
                   { "speaker": "Anna", "text": "Anna's second sentence" }
                   ],
-                "image_prompt": "A concise image generation prompt. The style should be cyberpunk."
-              }
+                "image_prompt": "A concise image generation prompt."
 
               Now, generate a dialogue and an image prompt using the word '${word}'.
             `,
