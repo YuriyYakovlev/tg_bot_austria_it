@@ -48,7 +48,7 @@ async function generateDialogue(word, isSlang) {
     const generativeModel = vertexAI.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
-        max_output_tokens: 500,
+        max_output_tokens: 1000,
         temperature: 0,
         top_p: 1,
       },
@@ -73,7 +73,7 @@ async function generateDialogue(word, isSlang) {
       dialogueData = JSON.parse(textResponse);
     } catch (err) {
       console.error('Failed to parse JSON:', err.message);
-      //console.error('Raw response:', textResponse);
+      console.error('Raw response:', textResponse);
       return null;
     }
 
@@ -103,7 +103,9 @@ function prepareRequest(word, isSlang) {
             text: `
               You are a German teacher.  
               Your task is to generate a short, natural-sounding dialogue around a given word and a related image generation prompt.
-              Get 1 most popular topic for today from today's news about the war in Ukraine. Use this topic and a given word to generate a dialogue.
+              Get 1 most popular topic for today from today's news about the war in Ukraine. 
+              Use this topic and a given word to generate a dialogue. The dialogue should feel everyday and personal rather than a discussion of the news. 
+              Don't start with question: did you read or did you hear.
               Avoid any content that promotes Russian propaganda, misinformation, or narratives that justify aggression.
               Today is: ${date}
 
@@ -130,7 +132,7 @@ function prepareRequest(word, isSlang) {
                   { "speaker": "Max", "text": "Max's second sentence" },
                   { "speaker": "Anna", "text": "Anna's second sentence" }
                   ],
-                "image_prompt": "A concise image generation prompt. The style should be cyberpunk-style."
+                "image_prompt": "A concise image generation prompt. The style should be cyberpunk."
               }
 
               Now, generate a dialogue and an image prompt using the word '${word}'.

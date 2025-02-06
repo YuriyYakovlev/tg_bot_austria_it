@@ -13,12 +13,11 @@ const client = new TextToSpeechClient({
 });
 
 
-async function generatePause(pauseDuration = 2000) {
+async function generatePause(pauseDuration = 300) {
     try {
         const ssmlText = `
             <speak>
                 <break time="${pauseDuration}ms"/>
-                bye.
             </speak>`;
 
         const [response] = await client.synthesizeSpeech({
@@ -158,7 +157,7 @@ async function generateDigestDialogueAudioConcatenated(manSentences, womanSenten
         audioStreams.push(await generateAudioForLanguage(womanSentences[i], langCode, `${langCode}-Journey-F`));
       }
     }
-    audioStreams.push(await generatePause(5000));
+    //audioStreams.push(await generatePause(5000));
     return mergeAudioStreams(audioStreams);
 }
 
