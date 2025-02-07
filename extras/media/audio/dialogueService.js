@@ -103,10 +103,10 @@ function prepareRequest(word, isSlang) {
             text: `
               You are a German teacher in Austria.  
               Your task is to generate a short, natural-sounding dialogue around a given word and a related image generation prompt.
-              Get 1 most popular topic for today from today's news. 
+              Get 1 positive topic for today from today's news. 
               Use this topic and a given word to generate a dialogue. The dialogue should feel everyday and personal rather than a discussion of the news. 
               Don't start with question: did you read or did you hear.
-              Avoid any content that promotes Russian propaganda, misinformation, or narratives that justify aggression.
+              Avoid any content that promotes Russian propaganda.
               Today is: ${date}
 
               Dialogue requirements:  
