@@ -34,7 +34,8 @@ async function postWordOfTheDay(bot) {
       const audioFilePath = await audioService.saveAudioStreamToFile(germanVoice);
       //let srt = await audioService.generateSRTCaptions(audioFilePath, 'de-DE');
       //console.log("srt: ", srt);
-      const videoBuffer = await videoService.generateVideoAsBuffer(image, audioFilePath, wordOfTheDay.word);
+      const clickToListen = "\n(натисніть, щоб прослухати)";
+      const videoBuffer = await videoService.generateVideoAsBuffer(image, audioFilePath, wordOfTheDay.word + clickToListen);
 
       await bot.sendVideo(chatId, videoBuffer, {
         caption: message,
