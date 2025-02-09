@@ -24,7 +24,7 @@ async function postWordOfTheDay(bot) {
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EDU_THREAD_ID; 
     
-    const message = `<u>Сленг дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.ukrainian})\n<i>${wordOfTheDay.description_ua}</i>`;
+    const message = `<u>Сленг дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.ukrainian})\n<i>${wordOfTheDay.description_ua}</i>\n\n${wordOfTheDay.sample_phrase}`;
     let dialogue = await dialogueService.generateAudioDialogue(wordOfTheDay.word, true, "de-DE");    
     const image = await imageService.generateImage(dialogue.image_prompt);
 
@@ -96,9 +96,11 @@ async function fetchWordOfTheDay(chatId = null) {
       return;
     }
 
-    if (wordData && wordData.word && wordData.description_ua) {
-      await utils.addWordToHistory(wordData.word, wordData.description_ua, chatId);
-      return { word: wordData.word, ukrainian: wordData.ukrainian, description_ua: wordData.description_ua, description_de: wordData.description_de };
+    if (wordData && wordData.word) {
+      await utils.addWordToHistory(wordData.word, chatId);
+      return { 
+        word: wordData.word, ukrainian: wordData.ukrainian, description_ua: wordData.description_ua, 
+        description_de: wordData.description_de, sample_phrase: wordData.sample_phrase };
     } else {
       console.error('Invalid data format:', textResponse);
       return;
@@ -125,7 +127,8 @@ function prepareRequest(previousWords) {
                 "word": “The slang of the day on Austrian or Austrian dialect.”, 
                 "ukrainian": "Translation to Ukrainian, one word, without explanation.",
                 "description_ua": “Short description on Ukrainian. One sentence.”, 
-                "description_de": "The same description on German"
+                "description_de": "The same description on German",
+                "sample_phrase": "Sample phrase with this word on German."
               }
        
               Let's try. Give me the slang of the day.

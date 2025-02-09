@@ -50,7 +50,7 @@ DO
 CREATE TABLE `word_of_the_day_history` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `word` VARCHAR(255) NOT NULL,
-  `description` TEXT NOT NULL,
+  `description` TEXT NULL,
   `used_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `chat_id` BIGINT NULL COMMENT 'Optional: for per-chat tracking'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

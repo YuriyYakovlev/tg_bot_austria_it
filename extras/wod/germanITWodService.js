@@ -23,7 +23,7 @@ async function postWordOfTheDay(bot) {
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EDU_THREAD_ID; 
     
-    const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.english} / ${wordOfTheDay.ukrainian})\n<i>${wordOfTheDay.description_ua}</i>`;
+    const message = `<u>Слово дня</u>: <b>${wordOfTheDay.word}</b>\n(${wordOfTheDay.english} / ${wordOfTheDay.ukrainian})\n<i>${wordOfTheDay.description_ua}</i>\n\n${wordOfTheDay.sample_phrase}`;
     let dialogue = await dialogueService.generateAudioDialogue(wordOfTheDay.word, false, "de-DE");    
     const image = await imageService.generateImage(dialogue.image_prompt);
     
@@ -106,9 +106,11 @@ async function fetchWordOfTheDay(chatId = null) {
       return;
     }
 
-    if (wordData && wordData.word && wordData.description_ua) {
-      await utils.addWordToHistory(wordData.word, wordData.description_ua, chatId);
-      return { word: wordData.word, english: wordData.english, ukrainian: wordData.ukrainian, description_ua: wordData.description_ua, description_de: wordData.description_de };
+    if (wordData && wordData.word) {
+      await utils.addWordToHistory(wordData.word, chatId);
+      return { 
+        word: wordData.word, english: wordData.english, ukrainian: wordData.ukrainian, description_ua: wordData.description_ua,
+        description_de: wordData.description_de, sample_phrase: wordData.sample_phrase };
     } else {
       console.error('Invalid data format:', textResponse);
       return;
@@ -136,7 +138,8 @@ function prepareRequest(previousWords) {
                 "english": "translation to English ", 
                 "ukrainian": "translation to Ukrainian",
                 "description_ua": “short description on Ukrainian. One sentence.”, 
-                "description_de": "the same description on German"
+                "description_de": "the same description on German",
+                "sample_phrase": "Sample phrase with this word on German."
               }
               
               Example of output: 
@@ -145,7 +148,8 @@ function prepareRequest(previousWords) {
                 "english": “Data Integrity”, 
                 "ukrainian": “Цілісність даних", 
                 "description_ua": "Забезпечення точності та повноти даних протягом усього їх життєвого циклу.”, 
-                "description_de": "Sicherstellung der Richtigkeit und Vollständigkeit der Daten während ihres gesamten Lebenszyklus."
+                "description_de": "Sicherstellung der Richtigkeit und Vollständigkeit der Daten während ihres gesamten Lebenszyklus.",
+                "sample_phrase": "Die Datenintegrität muss jederzeit gewährleistet sein, um die Sicherheit und Verlässlichkeit der Informationen zu garantieren."
               }
               
               Use tricky and difficult words. Do not use words, which sound similar in both languages or have English roots.

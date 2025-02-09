@@ -46,8 +46,8 @@ async function generateVideoAsBuffer(imageBuffer, audioFilePath, word = null) {
 
           const lines = word.split("\n");
           if (lines.length > 1) {
-            fs.writeFileSync(titleFilePath, lines[0]);
-            fs.writeFileSync(subtitleFilePath, lines[1]);
+            fs.writeFileSync(titleFilePath, cleanupText(lines[0]), { encoding: 'utf8' });
+            fs.writeFileSync(subtitleFilePath, cleanupText(lines[1]), { encoding: 'utf8' });
           } else {
             fs.writeFileSync(titleFilePath, word);
           }
@@ -59,7 +59,7 @@ async function generateVideoAsBuffer(imageBuffer, audioFilePath, word = null) {
               "-c:v libx264",
               "-pix_fmt yuv420p",
               lines.length > 1
-                ? `-vf drawtext='textfile=${titleFilePath}:fontfile=${titleFontPath}:fontcolor=black:fontsize=20:x=(w-text_w)/2:y=(h-text_h-25)',drawtext='textfile=${subtitleFilePath}:fontfile=${subtitleFontPath}:fontcolor=black:fontsize=16:x=(w-text_w)/2:y=(h-text_h-6)'`
+                ? `-vf drawtext='textfile=${titleFilePath}:fontfile=${titleFontPath}:fontcolor=black:fontsize=20:x=(w-text_w)/2:y=(h-text_h-25)',drawtext='textfile=${subtitleFilePath}:fontfile=${subtitleFontPath}:fontcolor=black:fontsize=14:x=(w-text_w)/2:y=(h-text_h-6)'`
                 : `-vf drawtext='textfile=${titleFilePath}:fontfile=${titleFontPath}:fontcolor=black:fontsize=20:x=(w-text_w)/2:y=(h-text_h-15)'`
             ])
             .on("end", () => {
@@ -106,6 +106,16 @@ async function generateVideoAsBuffer(imageBuffer, audioFilePath, word = null) {
       }
     }
   });
+}
+
+function cleanupText(text) {
+  let cleaned = text;//.replace(/[^\w\s.,;:!?'-]/g, '');
+  cleaned = text.replace(/([\u2700-\u27BF]|[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E6}-\u{1F1FF}])/gu, '');
+
+  // if (cleaned.length > 100) {
+  //   cleaned = cleaned.substring(0, 100).trim();
+  // }
+  return cleaned;
 }
 
 module.exports = {

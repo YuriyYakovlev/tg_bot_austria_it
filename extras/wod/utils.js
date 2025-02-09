@@ -12,10 +12,10 @@ async function fetchPreviousWords(chatId = null) {
   }
 }
 
-async function addWordToHistory(word, description, chatId = null) {
-  const query = `INSERT INTO word_of_the_day_history (word, description, chat_id) VALUES (?, ?, ?)`;
+async function addWordToHistory(word, chatId = null) {
+  const query = `INSERT INTO word_of_the_day_history (word, chat_id) VALUES (?, ?)`;
   try {
-    await db.query(query, [word, description, chatId]);
+    await db.query(query, [word, chatId]);
   } catch (error) {
     console.error('Error adding word to history:', error.message);
   }
