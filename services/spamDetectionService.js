@@ -143,6 +143,10 @@ function prepareClassificationRequest(messages) {
               20. Раді повідомити про нове велике надходження товарів у нашому магазині!
               21. На постоянную основу нужен человек на Бинанс со знанием Русского/Украинского языка
 
+              ### Examples of non-spam ###
+              1. Можливо хтось зможе з орієнтувати по вартості супровіду місцевих бухгалтерів
+              2. Шукаю роботу по напрямку Digital Marketing Specialist
+
               ### Task ###
               Analyse the messages below and return a response exactly in this format:
               [{ "message_id": "id", "spam": "true/false"}, { "message_id": "id", "spam": "true/false"}]
@@ -180,6 +184,10 @@ function prepareSingleClassificationRequest(message) {
                - Messages that mention offers for free services or courses.
                - Offers related to online education (especially language learning or trading).
                - Any promotional tactics, including those subtly disguised as personal recommendations or indirect promotions.
+
+              ### Examples of non-spam ###
+               - "Можливо хтось зможе з орієнтувати по вартості супровіду місцевих бухгалтерів" - because that is a question about cost of services
+               - "Шукаю роботу по напрямку Digital Marketing Specialist" - becase person is looking for a job
 
               Analyse the message below and return a response exactly in this format (return json only): {"issue": "true/false", "reason": "reason"}
               
