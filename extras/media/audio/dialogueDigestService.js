@@ -11,7 +11,7 @@ let vertexAI = new VertexAI({
 
 async function generateAudioDialogue(digest, langCode) {
   try {
-    const dialogueData = await generateDialogue(digest);
+    const dialogueData = await generateDialogue(digest, langCode);
     
     if (!dialogueData || !dialogueData.dialogue) {
       console.log("No dialogue found.");
@@ -41,14 +41,14 @@ async function generateAudioDialogue(digest, langCode) {
     };
  
   } catch (error) {
-    console.error("Error generating dialogue:", error.message);
+    console.error("Error generating dialogue:", error);
   }
 }
 
-async function generateDialogue(digest) {
+async function generateDialogue(digest, langCode) {
   try {
     const date = moment().format("DD MMMM YYYY");
-    const request = prepareRequest(digest, date);
+    const request = prepareRequest(digest, date, langCode);
     const generativeModel = vertexAI.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
@@ -92,8 +92,12 @@ async function generateDialogue(digest) {
   }
 }
 
-function prepareRequest(digest, date) {
+function prepareRequest(digest, date, langCode) {
   let digestPrompt = digest ? `They can also add this data: '${digest}'.` : '';
+  let language = langCode === 'uk-UA' ? 'Ukrainian' : 'English';
+  let auxWords = langCode === 'uk-UA' ? '"ага", "так", "угу", "хм", "гаразд", "окей", "добре"' 
+                                      : '"yeah", "hmm", "ok", "am", "aah"';
+
   return {
     contents: [
       {
@@ -107,16 +111,16 @@ function prepareRequest(digest, date) {
             
                Mandatory Sections:
                 - Start with a short greeting — something futuristic, and hacker-esque, as if broadcasting from a dystopian underground network.
+                - Greet everyone with Valentine's Day.
                 - Greet active Austria IT Chat participants:
-                    Tamara Klimenko - for her readiness to help with tax and legal questions.
-                    Taras Tomish - for boosting our chat with new vacancies.
+                    Yana and Tania Austrannik - for yours attention to details, which makes our bot better.
+
                 - Discuss the latest IT news from Austria and worldwide (use online sources).
                 - End with a wish for the war in Ukraine to end soon in a cyberpunk-style, tech-infused, as if signing off from a pirate transmission.
 
-              Output languange: English.
+              Output languange: ${language}.
 
-              To enhance the naturalness of the dialogue use auxiliary words such as:  "yeah", "hmm", "right", "you know", "ok", "am", "think about it", "aah"
-              as a reaction to previous speaker phrase.
+              To enhance the naturalness of the dialogue use auxiliary words such as: ${auxWords}.
 
               Output should be in JSON: 
               {

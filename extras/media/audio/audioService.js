@@ -1,7 +1,6 @@
 //audioService.js
 const { TextToSpeechClient } = require("@google-cloud/text-to-speech");
-// const {SpeechClient} = require('@google-cloud/speech').v1;
-// const {Storage} = require('@google-cloud/storage');
+const { ElevenLabsClient } = require("elevenlabs");
 const { Readable } = require("stream");
 const concat = require("concat-stream");
 const tmp = require('tmp'); 
@@ -45,6 +44,15 @@ async function generatePause(pauseDuration = 300) {
     }
 }
 
+async function generateAudioWithElevenLabs(text, voiceId) {
+    const elClient = new ElevenLabsClient();
+    const audio = await elClient.textToSpeech.convert(voiceId, {
+      text: text,
+      model_id: "eleven_multilingual_v2",
+      output_format: "mp3_44100_128",
+    });
+    return audio;
+}
 
 /**
  * Generates an audio stream for the given text and language.
@@ -149,14 +157,30 @@ async function generateDialogueAudioConcatenated(max_sentence1, max_sentence2, a
 
 async function generateDigestDialogueAudioConcatenated(manSentences, womanSentences, langCode) {
     let audioStreams = [];
-    for (let i = 0; i < Math.max(manSentences.length, womanSentences.length); i++) {
-      if (manSentences[i]) {
-        audioStreams.push(await generateAudioForLanguage(manSentences[i], langCode, `${langCode}-Journey-D`));
-      }
-      if (womanSentences[i]) {
-        audioStreams.push(await generateAudioForLanguage(womanSentences[i], langCode, `${langCode}-Journey-F`));
-      }
-    }
+    switch (langCode) {
+        case 'uk-UA':
+            for (let i = 0; i < Math.max(manSentences.length, womanSentences.length); i++) {
+                if (manSentences[i]) {
+                    audioStreams.push(await generateAudioWithElevenLabs(manSentences[i], "9Sj8ugvpK1DmcAXyvi3a")); // Alex
+                    // break; //debug
+                }
+                if (womanSentences[i]) {
+                    console.log(womanSentences[i])
+                    audioStreams.push(await generateAudioWithElevenLabs(womanSentences[i], "nCqaTnIbLdME87OuQaZY")); // Vira
+                    // break; //debug
+                }
+            }
+            break;
+        default:
+            for (let i = 0; i < Math.max(manSentences.length, womanSentences.length); i++) {
+                if (manSentences[i]) {
+                    audioStreams.push(await generateAudioForLanguage(manSentences[i], langCode, `${langCode}-Journey-D`));
+                }
+                if (womanSentences[i]) {
+                    audioStreams.push(await generateAudioForLanguage(womanSentences[i], langCode, `${langCode}-Journey-F`));
+                }
+            }   
+    } 
     //audioStreams.push(await generatePause(5000));
     return mergeAudioStreams(audioStreams);
 }
@@ -171,98 +195,6 @@ async function saveAudioStreamToFile(stream) {
   });
 }
 
-/**
- * Generates SRT captions for a given local audio file.
- */
-// async function generateSRTCaptions(audioFilePath, languageCode = 'uk-UA', alternativeLanguages = []) {
-//     let audioUrl = await saveAudioToGCS(audioFilePath, 'audio.mp3');
-//     const speechClient = new SpeechClient();
-
-//     const request = {
-//         audio: { uri: audioUrl },
-//         config: {
-//             encoding: 'MP3',
-//             languageCode: languageCode,
-//             alternativeLanguageCodes: alternativeLanguages,
-//             enableWordTimeOffsets: true,
-//         }
-//     };
-
-//     try {
-//         const [response] = await speechClient.recognize(request);
-
-//         let subtitleIndex = 1;
-//         let srtCaptions = '';
-
-//         response.results.forEach((result) => {
-//             const words = result.alternatives[0].words;
-//             if (!words || words.length === 0) return;
-
-//             let chunkText = '';
-//             let startTime = words[0].startTime.seconds + words[0].startTime.nanos / 1e9; // Convert to seconds
-//             let endTime = words[words.length - 1].endTime.seconds + words[words.length - 1].endTime.nanos / 1e9; // Convert to seconds
-
-//             // Apply multiplication factor to reduce timing
-//             const multiplicationFactor = 0.07; // 0.1
-//             startTime *= multiplicationFactor;
-//             endTime *= multiplicationFactor;
-
-//             words.forEach((word, index) => {
-//                 const wordStart = word.startTime.seconds + word.startTime.nanos / 1e9; // Convert to seconds
-//                 const wordEnd = word.endTime.seconds + word.endTime.nanos / 1e9; // Convert to seconds
-
-//                 // Apply the multiplication factor to individual word timings
-//                 const scaledStart = wordStart * multiplicationFactor;
-//                 const scaledEnd = wordEnd * multiplicationFactor;
-
-//                 chunkText += word.word + ' ';
-
-//                 // Create a subtitle entry if the word duration exceeds a threshold (e.g., 0.5 seconds)
-//                 if (scaledEnd - scaledStart > 0.5 || index === words.length - 1) {  // Adjust threshold as needed
-//                     srtCaptions += `${subtitleIndex++}\n${formatTime(scaledStart)} --> ${formatTime(scaledEnd)}\n${chunkText.trim()}\n\n`;
-//                     chunkText = '';
-//                 }
-//             });
-
-//             // For the last part of the sentence, add the final timing and text.
-//             if (chunkText.trim()) {
-//                 srtCaptions += `${subtitleIndex++}\n${formatTime(startTime)} --> ${formatTime(endTime)}\n${chunkText.trim()}\n\n`;
-//             }
-//         });
-
-//         return srtCaptions;
-//     } catch (error) {
-//         console.error('Error generating SRT captions:', error);
-//         return null;
-//     }
-// }
-
-/**
- * Helper function to format time for SRT (HH:MM:SS,MMM)
- */
-// function formatTime(seconds) {
-//     const hours = Math.floor(seconds / 3600).toString().padStart(2, '0');
-//     const minutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-//     const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-//     const milliseconds = Math.floor((seconds % 1) * 1000).toString().padStart(3, '0');
-    
-//     return `${hours}:${minutes}:${secs},${milliseconds}`;
-// }
-
-// async function saveAudioToGCS(audioFilePath, fileName) {
-//     const storage = new Storage();
-//     const bucket = storage.bucket(bucketName);
-
-//     const file = bucket.file(fileName);
-//     const audioBuffer = fs.readFileSync(audioFilePath); 
-//     await file.save(audioBuffer, {
-//         resumable: false,
-//         contentType: 'audio/mp3',
-//     });
-
-//     return `${bucketName}/${fileName}`;
-// }
-
 module.exports = {
     generateMultilingualAudioConcatenated,
     generateGermanAudioConcatenated,
@@ -270,5 +202,4 @@ module.exports = {
     mergeAudioStreams,
     generateDigestDialogueAudioConcatenated,
     saveAudioStreamToFile
-    // generateSRTCaptions
 };

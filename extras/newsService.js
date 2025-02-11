@@ -59,7 +59,7 @@ async function postNews(bot, digest = false) {
       ending = `<u>Джерела</u>: ${news.sources}`;
       //ending += `\n\n<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
     }
-    let dialogue = await dialogueDigestService.generateAudioDialogue(message, "en-US");
+    let dialogue = await dialogueDigestService.generateAudioDialogue(message, "uk-UA");
 
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EVENTS_THREAD_ID; 
