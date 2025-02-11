@@ -114,6 +114,7 @@ function prepareRequest(digest, date, langCode) {
                 - Greet everyone with Valentine's Day.
                 - Greet active Austria IT Chat participants:
                     Yana and Tania Austrannik - for yours attention to details, which makes our bot better.
+                    Chat members who successfully downshifted from Data Engineers to Bus Drivers in Tyrol.
 
                 - Discuss the latest IT news from Austria and worldwide (use online sources).
                 - End with a wish for the war in Ukraine to end soon in a cyberpunk-style, tech-infused, as if signing off from a pirate transmission.
