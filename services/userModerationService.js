@@ -59,9 +59,25 @@ async function kickUserIfNotAdmin(bot, chatId, userId) {
   }
 }
 
+// FORCE_KICK_SPAMMERS="user1:chat1,user2:chat2"
 async function kickSpammers(bot) {
   try {
     const spammers = await identifyAndMarkSpammers();
+
+    if (process.env.FORCE_KICK_SPAMMERS) {
+      const extraSpammers = process.env.FORCE_KICK_SPAMMERS.split(",").map(entry => {
+        const [userId, chatId] = entry.split(":");
+        return { userId, chatId };
+      });
+
+      // Combine and remove duplicates
+      for (const extra of extraSpammers) {
+        if (!spammers.some(s => s.userId === extra.userId && s.chatId === extra.chatId)) {
+          spammers.push(extra);
+        }
+      }
+    }
+
     for (const spammer of spammers) {
       try {
         // Attempt to kick the user
