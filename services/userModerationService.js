@@ -64,12 +64,14 @@ async function kickSpammers(bot) {
   try {
     const spammers = await identifyAndMarkSpammers();
 
+    console.log("preparing to kick users");
     if (process.env.FORCE_KICK_SPAMMERS) {
       const extraSpammers = process.env.FORCE_KICK_SPAMMERS.split(",").map(entry => {
         const [userId, chatId] = entry.split(":");
         return { userId, chatId };
       });
-
+      console.log("extra spammers to kick: ", extraSpammers);
+    
       // Combine and remove duplicates
       for (const extra of extraSpammers) {
         if (!spammers.some(s => s.userId === extra.userId && s.chatId === extra.chatId)) {
