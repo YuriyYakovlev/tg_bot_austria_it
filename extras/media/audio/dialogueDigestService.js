@@ -38,6 +38,7 @@ async function generateAudioDialogue(digest, langCode) {
     
     return {
       audio: audio,
+      title: dialogueData.title
     };
  
   } catch (error) {
@@ -86,14 +87,14 @@ async function generateDialogue(digest, langCode) {
       return null;
     }
 
-    return { dialogue: dialogueData.dialogue };
+    return { dialogue: dialogueData.dialogue, title: dialogueData.title };
   } catch (error) {
     console.error('Error in fetchWordOfTheDay:', error.message);
   }
 }
 
 function prepareRequest(digest, date, langCode) {
-  let digestPrompt = digest ? `They can also add this data: '${digest}'.` : '';
+  let digestPrompt = digest ? `They can also add to their talk these, when defined: '${digest}'.` : '';
   let language = langCode === 'uk-UA' ? 'Ukrainian' : 'English';
   let auxWords = langCode === 'uk-UA' ? '"ага", "так", "угу", "хм", "гаразд", "окей", "добре"' 
                                       : '"yeah", "hmm", "ok", "am", "aah"';
@@ -109,22 +110,22 @@ function prepareRequest(digest, date, langCode) {
               They discuss the latest IT news from Austria and worldwide.
               Today is ${date}.
             
-               Mandatory Sections:
-                - Start with a short greeting — something futuristic, and hacker-esque, as if broadcasting from a dystopian underground network.
-                - Greet everyone with Valentine's Day.
-                - Greet active Austria IT Chat participants:
+               **Mandatory Requirements:**
+                * Start with a short greeting — something futuristic, and hacker-esque, as if broadcasting from a dystopian underground network.
+                * Greet active Austria IT Chat participants:
                     Yana and Tania Austrannik - for yours attention to details, which makes our bot better.
                     Chat members who successfully downshifted from Data Engineers to Bus Drivers in Tyrol.
 
-                - Discuss the latest IT news from Austria and worldwide (use online sources).
-                - End with a wish for the war in Ukraine to end soon in a cyberpunk-style, tech-infused, as if signing off from a pirate transmission.
+                * Discuss the latest IT news from Austria and worldwide (use online sources).
+                * End with a wish for the war in Ukraine to end soon in a cyberpunk-style, tech-infused, as if signing off from a pirate transmission.
 
               Output languange: ${language}.
 
               To enhance the naturalness of the dialogue use auxiliary words such as: ${auxWords}.
 
-              Output should be in JSON: 
+              **Output should be in JSON:**
               {
+                "title": "<A short, catchy, and viral title relevant to the IT news discussed in the dialogue. Language: ${language}>",  
                 "dialogue": [
                   { "speaker": "Yuriy", "text": "Yuriy's first sentence" },
                   { "speaker": "Olena", "text": "Olena's first sentence" },

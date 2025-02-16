@@ -8,6 +8,7 @@ const textUtils = require("../utils/textUtils");
 const imageService = require("./media/imageService");
 const audioService = require("./media/audio/audioService");
 const videoService = require("./media/videoService");
+const videoWithMusicService = require("./media/videoWithMusicService");
 const dialogueDigestService = require("./media/audio/dialogueDigestService");
 
 
@@ -60,7 +61,7 @@ async function postNews(bot, digest = false) {
       //ending += `\n\n<code>Дайджест сформовано із використанням ШІ. Можливі неточності або неповнота інформації.</code>`;
     }
     let dialogue = await dialogueDigestService.generateAudioDialogue(message, "uk-UA");
-
+    //let dialogue = await dialogueDigestService.generateAudioDialogue(message, "en-US");
     const chatId = process.env.GROUP_ID; 
     const threadId = process.env.EVENTS_THREAD_ID; 
 
@@ -72,7 +73,8 @@ async function postNews(bot, digest = false) {
 
       const date = moment().format("DD MMMM YYYY");
       const title = `Тижневий подкаст: ${date}\nSponsored by 'Віденська водичка'`;
-      const videoBuffer = await videoService.generateVideoAsBuffer(image, audioFilePath, title);
+      //const videoBuffer = await videoService.generateVideoAsBuffer(image, audioFilePath, title);
+      const videoBuffer = await videoWithMusicService.generateVideoAsBuffer(image, audioFilePath, title, dialogue.title);
       
       const MAX_CAPTION_LENGTH = 1024;
       const captionText = digest ? fullText.slice(0, MAX_CAPTION_LENGTH) : `<code>Австрія IT: тижневий подкаст</code> 🇦🇹 🇺🇦`;

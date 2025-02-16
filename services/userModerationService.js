@@ -64,7 +64,7 @@ async function kickSpammers(bot) {
   try {
     const spammers = await identifyAndMarkSpammers();
 
-    console.log("preparing to kick users");
+    //console.log("preparing to kick users");
     if (process.env.FORCE_KICK_SPAMMERS) {
       const extraSpammers = process.env.FORCE_KICK_SPAMMERS.split(",").map(entry => {
         const [userId, chatId] = entry.split(":");
