@@ -152,7 +152,7 @@ function prepareRequest(previousWords) {
                 "sample_phrase": "Die Datenintegrität muss jederzeit gewährleistet sein, um die Sicherheit und Verlässlichkeit der Informationen zu garantieren."
               }
               
-              Use tricky and difficult words. Do not use words, which sound similar in both languages or have English roots.
+              Use tricky and commonly used words. Do not use words, which sound similar in both languages or have English roots.
               Do not use these words: “${excludedWords}”.
               Let's try. Give me the word of the day.
             `,
