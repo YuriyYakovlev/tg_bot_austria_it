@@ -125,7 +125,7 @@ function prepareRequest(digest, date, langCode) {
 
               **Output should be in JSON:**
               {
-                "title": "<A short, catchy, and viral title relevant to the IT news discussed in the dialogue. Language: ${language}>",  
+                "title": "<A short, catchy title relevant to the IT news. Language: ${language}>",  
                 "dialogue": [
                   { "speaker": "Yuriy", "text": "Yuriy's first sentence" },
                   { "speaker": "Olena", "text": "Olena's first sentence" },
