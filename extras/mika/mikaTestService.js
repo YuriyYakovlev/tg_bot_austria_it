@@ -25,10 +25,11 @@ async function postMikaTest(bot) {
     if (!mikaTest) {
       throw new Error("No Mika test found.");
     }
-    console.log(mikaTest.image_prompt);
+    //console.log(mikaTest.image_prompt);
 
     // Generate image
-    image = await imageService.generateImage(mikaTest.image_prompt);
+    image = await imageService.generateImage(mikaTest.image_prompt, 
+      "Style: basic, using only black outlines on a plain, light background. No shading or complex details.");
     attempts++;
 
     if (!image) {
@@ -119,6 +120,7 @@ async function fetchMikaTest(chatId) {
       testData = JSON.parse(textResponse);
     } catch (err) {
       console.error('Failed to parse the Mika test data:', err.message);
+      console.log(textResponse);
       return;
     }
 
@@ -144,18 +146,27 @@ function prepareRequest(previousTopics) {
         parts: [
           {
             text: `
-              You are an assistant specializing in language learning for children in Austria.
-              You should generate a daily interactive German learning activity for Ukrainian children based on the MIKA-D test format.
+              You are an assistant specializing in language learning in Austria.
+              You should generate a daily interactive German learning activity for Ukrainian students, based on the MIKA-D test format.
 
+              **Examples stories for images:**
+              "The man was playing football and hit a tree with the ball. A nest fell from the tree. There were eggs inside. The man took one egg home."
+              "The woman was walking her dog when the dog started chasing a hare. The woman searched for the dog. The dog was found."
+
+              **Questions and Answers requirements:**
+               * Some of questions and answers should contain modal verbs
+               * Some of questions and answers should use "nebensatz"
               Do not use these topics: ${excludedTopics}.
-              Some of questions and answers should be in past tense.
               
               **Output format should be in JSON:**
               {
-                "image_prompt": "A detailed description of an image that represents a real-world scene. No kids or children should be mentioned. Prompt should mention style: kid's book illustration.",
-                "image_topic": "a topic for the image, for ex. der Bahnhof, das Bauernhaus, die Stadt, die Bäckerei"
+                "image_prompt": "A prompt to generate an image that represents a real-world story. Can be divided into several panels.",
+                "image_topic": "A topic for the image, for ex. der Bahnhof, das Bauernhaus, die Stadt, die Bäckerei"
                 "vocabulary": [
-                  {"word": "German word with article. If it is verb, list all its forms, sepatated by /", "ukrainian": "Ukrainian translation without transcript"}
+                  {
+                    "word": "German word with article. If it is verb, list all its forms, sepatated by /", 
+                    "ukrainian": "Ukrainian translation without transcript"
+                  }
                 ],
                 "image_description": {
                   "german": "An image description in German, using key vocabulary in context.",
@@ -171,6 +182,7 @@ function prepareRequest(previousTopics) {
               }
               
               Let's try. Give me the MIKA Test for today.
+              No intro or summary. Just generate JSON.
             `,
           },
         ],

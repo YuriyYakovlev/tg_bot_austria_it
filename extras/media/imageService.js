@@ -12,12 +12,12 @@ const clientOptions = {
 const predictionServiceClient = new PredictionServiceClient(clientOptions);
 
 
-async function generateImage(prompt) {
+async function generateImage(prompt, style) {
     try {
         const endpoint = `projects/${process.env.PROJECT_ID}/locations/${process.env.LOCATION}/publishers/google/models/imagen-3.0-generate-002`;
-
+        const stylePart = style ? ' ' + style : '';
         const promptText = {
-            prompt: prompt,
+            prompt: prompt + stylePart,
         };
         const instanceValue = helpers.toValue(promptText);
         const instances = [instanceValue];
@@ -26,7 +26,8 @@ async function generateImage(prompt) {
             sampleCount: 1,
             aspectRatio: '1:1',
             safetyFilterLevel: 'block_some',
-            personGeneration: 'allow_adult'
+            personGeneration: 'allow_adult',
+            negativePrompt: "speech bubbles, texts"
         };
         const parameters = helpers.toValue(parameter);
 
