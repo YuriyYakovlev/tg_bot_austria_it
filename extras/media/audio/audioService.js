@@ -201,5 +201,6 @@ module.exports = {
     generateDialogueAudioConcatenated,
     mergeAudioStreams,
     generateDigestDialogueAudioConcatenated,
-    saveAudioStreamToFile
+    saveAudioStreamToFile,
+    generateAudioForLanguage
 };

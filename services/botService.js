@@ -16,6 +16,7 @@ const weekendService = require("../extras/weekendService");
 
 const germanITWodService = require("../extras/wod/germanITWodService");
 const austrianWodService = require("../extras/wod/austrianWodService");
+const mikaTestService = require("../extras/mika/mikaTestService");
 
 
 let bot;
@@ -182,6 +183,14 @@ async function postWeekendEvents() {
   await weekendService.postWeekendEvents(bot);
 }
 
+async function postMikaTest() {
+  if (!bot) {
+    console.error("Bot is not initialized yet.");
+    return;
+  }
+  await mikaTestService.postMikaTest(bot);
+}
+
 
 setInterval(() => {
   cleanup();
@@ -211,5 +220,6 @@ module.exports = {
   postNewVacancies,
   postWordOfTheDay,
   postSlangOfTheDay,
-  postWeekendEvents
+  postWeekendEvents,
+  postMikaTest
 };
