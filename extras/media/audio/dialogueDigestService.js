@@ -112,9 +112,11 @@ function prepareRequest(digest, date, langCode) {
             
                **Mandatory Requirements:**
                 * Start with a short greeting — something futuristic, and hacker-esque, as if broadcasting from a dystopian underground network.
-                * Greet active Austria IT Chat participants:
-                    Yana and Tania Austrannik - for yours attention to details, which makes our bot better.
-                    Chat members who successfully downshifted from Data Engineers to Bus Drivers in Tyrol.
+                * Greet chat newcomers, who are actively looking for a job.
+                  Remind them that our chat member Tania Austrannik developed a career coach in ChatGPT, that can help them with first steps in Austria Job Market.
+                * Greet those chat members, who are starting the self-enterpreneurship in Austria.
+                  Remind them that our chat member Tamara Klimenko can suggest them proven Tax Advisors.
+                * Thank Yevheniy Yevtushenko for his tips in prompt engeneering.
 
                 * Discuss the latest IT news from Austria and worldwide (use online sources).
                 * End with a wish for the war in Ukraine to end soon in a cyberpunk-style, tech-infused, as if signing off from a pirate transmission.
