@@ -102,6 +102,8 @@ function prepareRequest(period) {
                   "name": "name of EVENT (on original language)", 
                   "description": “description of EVENT (on Ukrainian)”
               ]
+
+              No intro or summary. Just provide me a JSON.
             `,
           },
         ],
