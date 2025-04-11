@@ -19,76 +19,74 @@ module.exports = {
     captchas: [
         {
             id: "1", 
-            q: "Який індекс має перший елемент у масиві?", 
+            q: "Якого кольору банан, коли він стиглий?", 
             a: "2", 
             inline_keyboard: (language) => [
-                [{ text: "1", callback_data: JSON.stringify({ t: "c", id: "1", a: "1", l: language }) }],
-                [{ text: "0", callback_data: JSON.stringify({ t: "c", id: "1", a: "2", l: language}) }],
-                [{ text: "-1", callback_data: JSON.stringify({ t: "c", id: "1", a: "3", l: language }) }]
+                [{ text: "Зелений", callback_data: JSON.stringify({ t: "c", id: "1", a: "1", l: language }) }],
+                [{ text: "Жовтий", callback_data: JSON.stringify({ t: "c", id: "1", a: "2", l: language}) }],
+                [{ text: "Синій", callback_data: JSON.stringify({ t: "c", id: "1", a: "3", l: language }) }]
             ]
         },
         {
             id: "2", 
-            q: "Яка швидкість світла у вакуумі?", 
+            q: "Скільки ніг у кішки?", 
             a: "2", 
             inline_keyboard: (language) => [
-                [{ text: "150,000 км/с", callback_data: JSON.stringify({ t: "c", id: "2", a: "1", l: language }) }],
-                [{ text: "299,792,458 м/с", callback_data: JSON.stringify({ t: "c", id: "2", a: "2", l: language}) }],
-                [{ text: "300,000 км/с", callback_data: JSON.stringify({ t: "c", id: "2", a: "3", l: language }) }]
+                [{ text: "2", callback_data: JSON.stringify({ t: "c", id: "2", a: "1", l: language }) }],
+                [{ text: "4", callback_data: JSON.stringify({ t: "c", id: "2", a: "2", l: language}) }],
+                [{ text: "6", callback_data: JSON.stringify({ t: "c", id: "2", a: "3", l: language }) }]
             ]
         },
         {
             id: "3", 
-            q: "Яка планета є найбільшою у Сонячній системі?",
+            q: "Що зазвичай одягають на ноги?",
             a: "4",
             inline_keyboard: (language) => [
-                [{ text: "Земля", callback_data: JSON.stringify({ t: "c", id: "3", a: "1", l: language }) }],
-                [{ text: "Венера", callback_data: JSON.stringify({ t: "c", id: "3", a: "2", l: language }) }],
-                [{ text: "Марс", callback_data: JSON.stringify({ t: "c", id: "3", a: "3", l: language }) }],
-                [{ text: "Юпітер", callback_data: JSON.stringify({ t: "c", id: "3", a: "4", l: language }) }],
-                [{ text: "Сатурн", callback_data: JSON.stringify({ t: "c", id: "3", a: "5", l: language }) }]
+                [{ text: "Паляницю", callback_data: JSON.stringify({ t: "c", id: "3", a: "1", l: language }) }],
+                [{ text: "Капелюх", callback_data: JSON.stringify({ t: "c", id: "3", a: "2", l: language }) }],
+                [{ text: "Рукавички", callback_data: JSON.stringify({ t: "c", id: "3", a: "3", l: language }) }],
+                [{ text: "Шкарпетки", callback_data: JSON.stringify({ t: "c", id: "3", a: "4", l: language }) }],
+                [{ text: "Краватку", callback_data: JSON.stringify({ t: "c", id: "3", a: "5", l: language }) }]
             ]
         },
         {
             id: "4", 
-            q: "Хто написав роман 'Війна і мир'?",
+            q: "Що з цього — частина українського народного одягу?",
             a: "2",
             inline_keyboard: (language) => [
-                [{ text: "Федір Достоєвський", callback_data: JSON.stringify({ t: "c", id: "4", a: "1", l: language }) }],
-                [{ text: "Лев Толстой", callback_data: JSON.stringify({ t: "c", id: "4", a: "2", l: language }) }],
-                [{ text: "Олександр Пушкін", callback_data: JSON.stringify({ t: "c", id: "4", a: "3", l: language }) }],
-                [{ text: "Антон Чехов", callback_data: JSON.stringify({ t: "c", id: "4", a: "4", l: language }) }],
-                [{ text: "Іван Тургенєв", callback_data: JSON.stringify({ t: "c", id: "4", a: "5", l: language }) }]
+                [{ text: "фуфайка", callback_data: JSON.stringify({ t: "c", id: "4", a: "1", l: language }) }],
+                [{ text: "вишиванка", callback_data: JSON.stringify({ t: "c", id: "4", a: "2", l: language }) }],
+                [{ text: "косоворотка", callback_data: JSON.stringify({ t: "c", id: "4", a: "3", l: language }) }]
             ]
         },
         {
             id: "5", 
-            q: "Скільки значень може мати boolean тип?", 
+            q: "Як українською буде 'подъезд'?", 
             a: "2", 
             inline_keyboard: (language) => [
-                [{ text: "0", callback_data: JSON.stringify({ t: "c", id: "5", a: "0", l: language }) }],
-                [{ text: "1", callback_data: JSON.stringify({ t: "c", id: "5", a: "1", l: language}) }],
-                [{ text: "2", callback_data: JSON.stringify({ t: "c", id: "5", a: "2", l: language }) }]
+                [{ text: "вход", callback_data: JSON.stringify({ t: "c", id: "5", a: "0", l: language }) }],
+                [{ text: "парадне", callback_data: JSON.stringify({ t: "c", id: "5", a: "1", l: language}) }],
+                [{ text: "під’їзд", callback_data: JSON.stringify({ t: "c", id: "5", a: "2", l: language }) }]
             ]
         },
         {
             id: "6", 
-            q: "До якого міста найближче розташований вулкан Ейяф'яльлайокудль?", 
+            q: "Що з цього — назва української страви?", 
             a: "0", 
             inline_keyboard: (language) => [
-                [{ text: "Рейк'явік", callback_data: JSON.stringify({ t: "c", id: "6", a: "0", l: language }) }],
-                [{ text: "Копавогур", callback_data: JSON.stringify({ t: "c", id: "6", a: "1", l: language}) }],
-                [{ text: "Фьярроабіго", callback_data: JSON.stringify({ t: "c", id: "6", a: "2", l: language }) }]
+                [{ text: "вареники", callback_data: JSON.stringify({ t: "c", id: "6", a: "0", l: language }) }],
+                [{ text: "манти", callback_data: JSON.stringify({ t: "c", id: "6", a: "1", l: language}) }],
+                [{ text: "хінкалі", callback_data: JSON.stringify({ t: "c", id: "6", a: "2", l: language }) }]
             ]
         },
         {
             id: "7", 
-            q: "Скільки градусів у сумі внутрішніх кутів трикутника?", 
+            q: "Як українці кажуть на «бутерброд»?", 
             a: "2", 
             inline_keyboard: (language) => [
-                [{ text: "90", callback_data: JSON.stringify({ t: "c", id: "7", a: "1", l: language }) }],
-                [{ text: "180", callback_data: JSON.stringify({ t: "c", id: "7", a: "2", l: language}) }],
-                [{ text: "360", callback_data: JSON.stringify({ t: "c", id: "7", a: "3", l: language }) }]
+                [{ text: "бутерброд", callback_data: JSON.stringify({ t: "c", id: "7", a: "1", l: language }) }],
+                [{ text: "канапка", callback_data: JSON.stringify({ t: "c", id: "7", a: "2", l: language}) }],
+                [{ text: "сэндвич", callback_data: JSON.stringify({ t: "c", id: "7", a: "3", l: language }) }]
             ]
         },
         {
@@ -103,24 +101,22 @@ module.exports = {
         },
         {
             id: "9", 
-            q: "Який хімічний елемент має символ 'O'?",
+            q: "Яке з цих слів українське, а не суржик чи російське?",
             a: "1",
             inline_keyboard: (language) => [
-                [{ text: "Кисень", callback_data: JSON.stringify({ t: "c", id: "9", a: "1", l: language }) }],
-                [{ text: "Водень", callback_data: JSON.stringify({ t: "c", id: "9", a: "2", l: language }) }],
-                [{ text: "Натрій", callback_data: JSON.stringify({ t: "c", id: "9", a: "3", l: language }) }],
-                [{ text: "Залізо", callback_data: JSON.stringify({ t: "c", id: "9", a: "4", l: language }) }],
-                [{ text: "Уран", callback_data: JSON.stringify({ t: "c", id: "9", a: "5", l: language }) }]
+                [{ text: "гарбуз", callback_data: JSON.stringify({ t: "c", id: "9", a: "1", l: language }) }],
+                [{ text: "тыква", callback_data: JSON.stringify({ t: "c", id: "9", a: "2", l: language }) }],
+                [{ text: "кабак", callback_data: JSON.stringify({ t: "c", id: "9", a: "3", l: language }) }]
             ]
         },
         {
             id: "10", 
-            q: "Яка одиниця, у рівні приблизно 746 ват, використовується для вимірювання швидкості виконання роботи?", 
+            q: "Яке з цих слів — українське означення для «сумка»?", 
             a: "2", 
             inline_keyboard: (language) => [
-                [{ text: "Віслюча сила", callback_data: JSON.stringify({ t: "c", id: "10", a: "1", l: language }) }],
-                [{ text: "Кінська сила", callback_data: JSON.stringify({ t: "c", id: "10", a: "2", l: language}) }],
-                [{ text: "Сила зебри", callback_data: JSON.stringify({ t: "c", id: "10", a: "3", l: language }) }]
+                [{ text: "сумка", callback_data: JSON.stringify({ t: "c", id: "10", a: "1", l: language }) }],
+                [{ text: "торба", callback_data: JSON.stringify({ t: "c", id: "10", a: "2", l: language}) }],
+                [{ text: "авоська", callback_data: JSON.stringify({ t: "c", id: "10", a: "3", l: language }) }]
             ]
         }
     ]
