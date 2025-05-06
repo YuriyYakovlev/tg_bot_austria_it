@@ -19,6 +19,28 @@ async function getLanguageForChat(chatId) {
     }
 }
 
+async function getChatSettings(chatId) {
+    try {
+        const [rows] = await db.query(
+            'SELECT chatId, title, language, requiresVerification FROM chat_settings WHERE chatId = ?',
+            [chatId]
+        );
+        return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+        console.error('Error fetching chat settings:', error);
+        return null;
+    }
+}
+
+async function isThematicChat(chatId) {
+    const settings = await getChatSettings(chatId);
+    // default to TRUE if not defined
+    return settings?.requiresVerification !== 0;
+}
+  
+
 module.exports = {
-    getLanguageForChat
+    getLanguageForChat,
+    isThematicChat,
+    getChatSettings
 };

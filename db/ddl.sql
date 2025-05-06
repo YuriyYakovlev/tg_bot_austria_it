@@ -62,3 +62,6 @@ CREATE TABLE `mika_history` (
   `used_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `chat_id` BIGINT NULL COMMENT 'Optional: for per-chat tracking'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+ALTER TABLE chat_settings
+ADD COLUMN requiresVerification BOOLEAN DEFAULT TRUE;

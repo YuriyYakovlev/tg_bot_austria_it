@@ -22,9 +22,100 @@ async function handleGroupMessage(bot, msg, userSessionData) {
   const userId = from.id;
   const username = from.username;
 
+  const isThematicChat = await chatSettingsService.isThematicChat(chatId);
   const userStatus = await userVerificationService.verifyUser(chatId, userId, username, from.first_name, from.last_name);
 
   let messageDeleted = false;
+  let messageContent = msg.text 
+    ? msg.text.replace(/\n/g, ' ').substring(0, 100) 
+    : msg.photo
+    ? '[Photo]'
+    : msg.video
+    ? '[Video]'
+    : msg.audio
+    ? '[Audio]'
+    : msg.document
+    ? '[Document]'
+    : msg.voice
+    ? '[Voice Message]'
+    : msg.video_note
+    ? '[Video Note]'
+    : msg.contact
+    ? '[Contact]'
+    : msg.location
+    ? '[Location]'
+    : msg.sticker
+    ? `[Sticker: ${msg.sticker.emoji || 'Unknown'}]`
+    : msg.poll
+    ? '[Poll]'
+    : msg.animation
+    ? '[Animation]'
+    : msg.new_chat_member
+    ? '[New Chat Member]'
+    : '[Unknown content type]';
+  
+  // Non-thematic behavior
+  if (!isThematicChat && !userStatus.verified) {
+    console.log(`message from ${userId} / ${username} / ${from.first_name} / ${from.last_name} to chat ${chatId} / ${chat.title}: ${messageContent}`);
+
+    if (text) {
+      const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(text);
+
+      if (messageAnalysis.isOffensive) {
+        console.log(`spam in non-thematic chat ${chatId} by ${userId}: ${messageAnalysis.reason}`);
+        if (messageAnalysis.reason === config.KICK_REASONS.ILLEGAL_GOODS || messageAnalysis.reason === config.KICK_REASONS.SCAM_OR_SPAM) {
+          await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
+          messageDeleted = true;
+          userVerificationService.resetUserVerification(userId, true);
+          userModerationService.kickUserIfNotAdmin(bot, chatId, userId);
+          return;
+        }
+        
+        await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
+        messageDeleted = true;
+
+        messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
+
+        const sessionData = userSessionData.get(userId) || {};
+        const currentTime = Date.now();
+
+        if (!sessionData.promptTime || (currentTime - sessionData.promptTime > config.VERIFY_PROMPT_DURATION_SEC * 1000)) {
+          const language = await chatSettingsService.getLanguageForChat(chatId);
+          const messages = languageService.getMessages(language).messages;
+          const buttons = languageService.getMessages(language).buttons;
+
+          const options = {
+            reply_markup: {
+              inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start` }]]
+            },
+            disable_notification: true,
+          };
+
+          if (message_thread_id) {
+            options.message_thread_id = message_thread_id;
+          }
+
+          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SEC * 1000, options);
+
+          userSessionData.set(userId, {
+            chatId,
+            promptTime: currentTime,
+            chat_username: chat.username,
+            thread_id: msg.message_thread_id,
+          });
+
+          console.log(`sent verify message to ${userId} in non-thematic chat`);
+        }
+
+        return;
+      }
+
+      // Otherwise: mark as verified automatically
+      await userVerificationService.setUserVerified(userId);
+      console.log(`auto-verified ${userId} in non-thematic chat`);
+    }
+    return;
+  }
 
   if (!userStatus.verified) {
     // const isAdmin = await isUserAdmin(bot, chatId, userId);
@@ -36,34 +127,6 @@ async function handleGroupMessage(bot, msg, userSessionData) {
     
     await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
     messageDeleted = true;
-
-    let messageContent = msg.text 
-        ? msg.text.replace(/\n/g, ' ').substring(0, 100) 
-        : msg.photo
-        ? '[Photo]'
-        : msg.video
-        ? '[Video]'
-        : msg.audio
-        ? '[Audio]'
-        : msg.document
-        ? '[Document]'
-        : msg.voice
-        ? '[Voice Message]'
-        : msg.video_note
-        ? '[Video Note]'
-        : msg.contact
-        ? '[Contact]'
-        : msg.location
-        ? '[Location]'
-        : msg.sticker
-        ? `[Sticker: ${msg.sticker.emoji || 'Unknown'}]`
-        : msg.poll
-        ? '[Poll]'
-        : msg.animation
-        ? '[Animation]'
-        : msg.new_chat_member
-        ? '[New Chat Member]'
-        : '[Unknown content type]';
 
     console.log(`message from ${userId} / ${username} / ${from.first_name} / ${from.last_name} to chat ${chatId} / ${chat.title}: ${messageContent}`);
 
