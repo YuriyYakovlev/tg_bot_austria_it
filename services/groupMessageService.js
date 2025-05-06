@@ -55,58 +55,59 @@ async function handleGroupMessage(bot, msg, userSessionData) {
     : '[Unknown content type]';
   
   // Non-thematic behavior
-  if (!isThematicChat && !userStatus.verified) {
-    console.log(`message from ${userId} / ${username} / ${from.first_name} / ${from.last_name} to chat ${chatId} / ${chat.title}: ${messageContent}`);
+  if (!isThematicChat) {
+    if(!userStatus.verified) { 
+      console.log(`message from ${userId} / ${username} / ${from.first_name} / ${from.last_name} to chat ${chatId} / ${chat.title}: ${messageContent}`);
 
-    if (text) {
-      const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(text);
+      if (text) {
+        const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(text);
 
-      if (messageAnalysis.isOffensive) {
-        console.log(`spam in non-thematic chat ${chatId} by ${userId}: ${messageAnalysis.reason}`);
-        if (messageAnalysis.reason === config.KICK_REASONS.ILLEGAL_GOODS || messageAnalysis.reason === config.KICK_REASONS.SCAM_OR_SPAM) {
+        if (messageAnalysis.isOffensive) {
+          console.log(`spam in non-thematic chat ${chatId} by ${userId}: ${messageAnalysis.reason}`);
+          if (messageAnalysis.reason === config.KICK_REASONS.ILLEGAL_GOODS || messageAnalysis.reason === config.KICK_REASONS.SCAM_OR_SPAM) {
+            await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
+            messageDeleted = true;
+            userVerificationService.resetUserVerification(userId, true);
+            userModerationService.kickUserIfNotAdmin(bot, chatId, userId);
+            return;
+          }
+          
           await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
           messageDeleted = true;
-          userVerificationService.resetUserVerification(userId, true);
-          userModerationService.kickUserIfNotAdmin(bot, chatId, userId);
-          return;
-        }
-        
-        await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
-        messageDeleted = true;
 
-        messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
+          messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
 
-        const sessionData = userSessionData.get(userId) || {};
-        const currentTime = Date.now();
+          const sessionData = userSessionData.get(userId) || {};
+          const currentTime = Date.now();
 
-        if (!sessionData.promptTime || (currentTime - sessionData.promptTime > config.VERIFY_PROMPT_DURATION_SEC * 1000)) {
-          const language = await chatSettingsService.getLanguageForChat(chatId);
-          const messages = languageService.getMessages(language).messages;
-          const buttons = languageService.getMessages(language).buttons;
+          if (!sessionData.promptTime || (currentTime - sessionData.promptTime > config.VERIFY_PROMPT_DURATION_SEC * 1000)) {
+            const language = await chatSettingsService.getLanguageForChat(chatId);
+            const messages = languageService.getMessages(language).messages;
+            const buttons = languageService.getMessages(language).buttons;
 
-          const options = {
-            reply_markup: {
-              inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start` }]]
-            },
-            disable_notification: true,
-          };
+            const options = {
+              reply_markup: {
+                inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start` }]]
+              },
+              disable_notification: true,
+            };
 
-          if (message_thread_id) {
-            options.message_thread_id = message_thread_id;
+            if (message_thread_id) {
+              options.message_thread_id = message_thread_id;
+            }
+
+            sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SEC * 1000, options);
+
+            userSessionData.set(userId, {
+              chatId,
+              promptTime: currentTime,
+              chat_username: chat.username,
+              thread_id: msg.message_thread_id,
+            });
+
+            console.log(`sent verify message to ${userId} in non-thematic chat`);
           }
-
-          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SEC * 1000, options);
-
-          userSessionData.set(userId, {
-            chatId,
-            promptTime: currentTime,
-            chat_username: chat.username,
-            thread_id: msg.message_thread_id,
-          });
-
-          console.log(`sent verify message to ${userId} in non-thematic chat`);
         }
-
         return;
       }
 
