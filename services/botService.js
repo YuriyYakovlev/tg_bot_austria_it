@@ -118,8 +118,8 @@ function handleLeftMember(msg) {
 
 async function cleanup() {
   try {
-    await spamDetectionService.classifyMessages();
-    await userModerationService.kickSpammers(bot);
+    //await spamDetectionService.classifyMessages();
+    //await userModerationService.kickSpammers(bot);
     userVerificationService.cleanupUserAttempts();
     userVerificationService.cleanupVerifiedUsersCache();
   } catch (error) {

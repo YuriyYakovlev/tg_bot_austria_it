@@ -64,16 +64,18 @@ async function handleGroupMessage(bot, msg, userSessionData) {
 
         if (messageAnalysis.isOffensive) {
           console.log(`spam in non-thematic chat ${chatId} by ${userId}: ${messageAnalysis.reason}`);
-          if (messageAnalysis.reason === config.KICK_REASONS.ILLEGAL_GOODS || messageAnalysis.reason === config.KICK_REASONS.SCAM_OR_SPAM) {
-            await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
-            messageDeleted = true;
+          await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
+          messageDeleted = true;
+
+          if (messageAnalysis.reason === config.KICK_REASONS.ILLEGAL_GOODS) {  
             userVerificationService.resetUserVerification(userId, true);
             userModerationService.kickUserIfNotAdmin(bot, chatId, userId);
             return;
           }
-          
-          await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
-          messageDeleted = true;
+          if (messageAnalysis.reason === config.KICK_REASONS.SCAM_OR_SPAM) {
+            userVerificationService.resetUserVerification(userId, true);
+            return;
+          }
 
           messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
 
