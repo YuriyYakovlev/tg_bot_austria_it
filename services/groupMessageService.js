@@ -115,6 +115,35 @@ async function handleGroupMessage(bot, msg, userSessionData) {
       } else {
         await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
         console.log(`delete non-text message from non-verified user ${userId}`);
+
+        if (msg.photo || msg.video || msg.audio || msg.document || msg.voice || msg.video_note || msg.contact || msg.location || msg.sticker || msg.poll || msg.animation) {
+          const language = await chatSettingsService.getLanguageForChat(chatId);
+          const messages = languageService.getMessages(language).messages;
+          const buttons = languageService.getMessages(language).buttons;
+      
+          const options = {
+            reply_markup: {
+              inline_keyboard: [[{ text: buttons.start, url: `tg://resolve?domain=${process.env.BOT_URL}&start` }]]
+            },
+            disable_notification: true,
+          };
+      
+          if (message_thread_id) {
+            options.message_thread_id = message_thread_id;
+          }
+      
+          sendTemporaryMessage(bot, chatId, messages.verifyPromptGroup(username), config.VERIFY_PROMPT_DURATION_SEC * 1000, options);
+      
+          const currentTime = Date.now();
+          userSessionData.set(userId, {
+            chatId,
+            promptTime: currentTime,
+            chat_username: chat.username,
+            thread_id: msg.message_thread_id,
+          });
+      
+          console.log(`sent verify prompt to ${userId} due to media message`);
+        }
       }
     }
     return;
