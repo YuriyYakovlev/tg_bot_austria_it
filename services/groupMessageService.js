@@ -107,13 +107,13 @@ async function handleGroupMessage(bot, msg, userSessionData) {
 
             console.log(`sent verify message to ${userId} in non-thematic chat`);
           }
+        } else {
+          // Otherwise: mark as verified automatically
+          await userVerificationService.setUserVerified(userId);
+          console.log(`auto-verified ${userId} in non-thematic chat`);
         }
         return;
       }
-
-      // Otherwise: mark as verified automatically
-      await userVerificationService.setUserVerified(userId);
-      console.log(`auto-verified ${userId} in non-thematic chat`);
     }
     return;
   }
