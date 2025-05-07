@@ -34,8 +34,7 @@ async function getChatSettings(chatId) {
 
 async function isThematicChat(chatId) {
     const settings = await getChatSettings(chatId);
-    // default to TRUE if not defined
-    return settings?.requiresVerification !== 0;
+    return settings ? settings.requiresVerification !== 0 : false;
 }
   
 
