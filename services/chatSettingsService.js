@@ -9,13 +9,13 @@ async function getLanguageForChat(chatId) {
 
     try {
         const [rows] = await db.query('SELECT language FROM chat_settings WHERE chatId = ?', [chatId]);
-        const language = rows.length > 0 ? rows[0].language : 'en';
+        const language = rows.length > 0 ? rows[0].language : 'uk';
         languageCache[chatId] = language;
         
         return language;
     } catch (error) {
         console.error('Error fetching language for chat:', error);
-        return 'en';
+        return 'uk';
     }
 }
 
