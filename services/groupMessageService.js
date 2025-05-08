@@ -67,7 +67,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
           messageDeleted = await bot.deleteMessage(chatId, message_id.toString())
           .then(() => true)
           .catch((error) => {
-            console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error);
+            console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error.message);
             return false;
           });
 
@@ -129,7 +129,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
         messageDeleted = await bot.deleteMessage(chatId, message_id.toString())
         .then(() => true)
         .catch((error) => {
-          console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error);
+          console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error.message);
           return false;
         });
         if (!messageDeleted) return;
@@ -184,7 +184,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
     messageDeleted = await bot.deleteMessage(chatId, message_id.toString())
     .then(() => true)
     .catch((error) => {
-      console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error);
+      console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error.message);
       return false;
     });
 
@@ -256,7 +256,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
                 messageDeleted = await bot.deleteMessage(chatId, message_id.toString())
                 .then(() => true)
                 .catch((error) => {
-                  console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error);
+                  console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error.message);
                   return false;
                 });
             }

@@ -23,7 +23,7 @@ async function handleMentionedMessage(bot, msg) {
       const deleted = await bot.deleteMessage(chatId, mentionedMessageId.toString())
       .then(() => true)
       .catch((error) => {
-        console.error(`Failed to delete message ${mentionedMessageId} from chat ${chatId}:`, error);
+        console.error(`Failed to delete message ${mentionedMessageId} from chat ${chatId}:`, error.message);
         return false;
       });
       if (!deleted) return;
