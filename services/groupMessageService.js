@@ -64,8 +64,12 @@ async function handleGroupMessage(bot, msg, userSessionData) {
 
         if (messageAnalysis.isOffensive) {
           console.log(`spam in non-thematic chat ${chatId} by ${userId}: ${messageAnalysis.reason}`);
-          await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
-          messageDeleted = true;
+          messageDeleted = await bot.deleteMessage(chatId, message_id.toString())
+          .then(() => true)
+          .catch((error) => {
+            console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error);
+            return false;
+          });
 
           if (messageAnalysis.reason === config.KICK_REASONS.ILLEGAL_GOODS) {  
             userVerificationService.resetUserVerification(userId, true);
@@ -76,6 +80,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
             userVerificationService.resetUserVerification(userId, true);
             return;
           }
+          if (!messageDeleted) return;
 
           messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
 
@@ -115,8 +120,14 @@ async function handleGroupMessage(bot, msg, userSessionData) {
           console.log(`auto-verified ${userId} in non-thematic chat`);
         }
       } else {
-        await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
         console.log(`delete non-text message from non-verified user ${userId}`);
+        messageDeleted = await bot.deleteMessage(chatId, message_id.toString())
+        .then(() => true)
+        .catch((error) => {
+          console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error);
+          return false;
+        });
+        if (!messageDeleted) return;
 
         const sessionData = userSessionData.get(userId) || {};
         const currentTime = Date.now();
@@ -163,11 +174,14 @@ async function handleGroupMessage(bot, msg, userSessionData) {
     //   console.log('superpower detected');
     //   return;
     // }
-    
-    await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
-    messageDeleted = true;
-
     console.log(`message from ${userId} / ${username} / ${from.first_name} / ${from.last_name} to chat ${chatId} / ${chat.title}: ${messageContent}`);
+
+    messageDeleted = await bot.deleteMessage(chatId, message_id.toString())
+    .then(() => true)
+    .catch((error) => {
+      console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error);
+      return false;
+    });
 
     if (text) {
       // CHECK FOR SPAM
@@ -185,6 +199,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
         }
         return;
       }
+      if (!messageDeleted) return;
       
       // SEND VERIFICATION MESSAGE TO NORMAL USERS
       messagesCacheService.cacheUserMessage(userId, chatId, message_id, text);
@@ -233,7 +248,12 @@ async function handleGroupMessage(bot, msg, userSessionData) {
         const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(text);
         if (messageAnalysis.isOffensive) {
             if (!messageDeleted) {
-                await bot.deleteMessage(chatId, message_id.toString()).catch(console.error);
+                messageDeleted = await bot.deleteMessage(chatId, message_id.toString())
+                .then(() => true)
+                .catch((error) => {
+                  console.error(`Failed to delete message ${message_id.toString()} from chat ${chatId}:`, error);
+                  return false;
+                });
             }
             userVerificationService.resetUserVerification(userId, true);
         } 

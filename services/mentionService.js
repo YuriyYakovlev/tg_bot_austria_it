@@ -20,9 +20,14 @@ async function handleMentionedMessage(bot, msg) {
     const messages = languageService.getMessages(language).messages;
       
     if (messageAnalysis.isOffensive) {
-      await bot.deleteMessage(chatId, mentionedMessageId.toString()).catch((error) => {
+      const deleted = await bot.deleteMessage(chatId, mentionedMessageId.toString())
+      .then(() => true)
+      .catch((error) => {
         console.error(`Failed to delete message ${mentionedMessageId} from chat ${chatId}:`, error);
+        return false;
       });
+      if (!deleted) return;
+  
       await bot.sendMessage(chatId, messages.spamRemoved, {
         message_thread_id: message_thread_id
       }).catch(console.error);
