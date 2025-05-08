@@ -42,7 +42,7 @@ async function classifyMessages() {
       console.log('classification jon: safety filter triggered, try one by one');
       // 2. safety filter triggered, try one by one
       for (const message of messages) {
-        let messageAnalysis = isOffensiveOrSpamMessage(message.msg_text);
+        let messageAnalysis = isRiskyMessage(message.msg_text, false);
         if (messageAnalysis.isOffensive) {
           console.log(`Message ${message.messageId} marked as spam: ${messageAnalysis.reason}`);
           await db.query('UPDATE cached_messages SET spam = ? WHERE messageId = ?', [true, message.messageId]);
@@ -68,9 +68,9 @@ async function classifyMessages() {
   }
 }
 
-async function isOffensiveOrSpamMessage(text) {
+async function isRiskyMessage(text, spamOnly) {
   try {
-    const request = prepareSingleClassificationRequest(text.substring(0, 300));
+    const request = spamOnly ? prepareSpamOnlyClassificationRequest(text.substring(0, 300)) : prepareRiskyClassificationRequest(text.substring(0, 300));
     const generativeModel = vertexAI.getGenerativeModel({
       model: process.env.AI_MODEL,
       generation_config: {
@@ -163,7 +163,7 @@ function prepareClassificationRequest(messages) {
 }
 
 const reasonsList = Object.values(config.KICK_REASONS).join(", ");
-function prepareSingleClassificationRequest(message) {
+function prepareRiskyClassificationRequest(message) {
   return {
     contents: [
       {
@@ -201,7 +201,43 @@ function prepareSingleClassificationRequest(message) {
   };
 }
 
+const spamReasonsList = Object.values(config.SPAM_REASONS).join(", ");
+function prepareSpamOnlyClassificationRequest(message) {
+  return {
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text: `
+              Instructions:
+              You are a chat guard. Your task is to filter messages and identify inappropriate messages. Specifically, identify the following types:
+               - Spam. 
+               - Scams.
+               - Rude behavior.
+               
+              Pay special attention to:
+               - Messages that mention fast way to earn money
+               - Messages that might assume illegal work with pesonal auto
+               - Messages that mention earn with crypto
+
+              ### Examples of non-spam ###
+               - "Можливо хтось зможе з орієнтувати по вартості супровіду місцевих бухгалтерів" - because that is a question about cost of services
+               - "Шукаю роботу по напрямку Digital Marketing Specialist" - becase person is looking for a job
+
+              Analyse the message below and return a response exactly in this format (return json only): {"issue": "true/false", "reason": "reason"}
+              
+              List of possible reasons: ${spamReasonsList}.
+
+              Message to analyse: "${message}" `
+          },
+        ],
+      },
+    ],
+  };
+}
+
 module.exports = {
   classifyMessages,
-  isOffensiveOrSpamMessage,
+  isRiskyMessage,
 };

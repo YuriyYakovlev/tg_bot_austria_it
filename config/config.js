@@ -26,5 +26,14 @@ module.exports = {
         DATING: "Dating proposal",
         OTHER: "Other" 
     },
+    SPAM_REASONS : {
+        VIOLENCE: "Violence",
+        ILLEGAL_GOODS: "Illegal goods",
+        ILLEGAL_CONTENT: "Illegal content",
+        ILLEGAL_WORK: "Illegal work",
+        SCAM_OR_SPAM: "Scam or spam",
+        FAST_MONEY: "Fast money",
+        CRYPTO: "Earn with Crypto"
+    },
     USERS_TABLE_NAME: process.env.NODE_ENV === 'production' ? 'users' : 'users_test'
 };

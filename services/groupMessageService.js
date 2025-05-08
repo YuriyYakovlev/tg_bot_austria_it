@@ -60,7 +60,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
       console.log(`message from ${userId} / ${username} / ${from.first_name} / ${from.last_name} to chat ${chatId} / ${chat.title}: ${messageContent}`);
 
       if (text) {
-        const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(text);
+        const messageAnalysis = await spamDetectionService.isRiskyMessage(text, true);
 
         if (messageAnalysis.isOffensive) {
           console.log(`spam in non-thematic chat ${chatId} by ${userId}: ${messageAnalysis.reason}`);
@@ -71,12 +71,17 @@ async function handleGroupMessage(bot, msg, userSessionData) {
             return false;
           });
 
-          if (messageAnalysis.reason === config.KICK_REASONS.ILLEGAL_GOODS) {  
+          if (messageAnalysis.reason === config.SPAM_REASONS.ILLEGAL_GOODS ||
+            messageAnalysis.reason === config.SPAM_REASONS.ILLEGAL_CONTENT
+          ) {  
             userVerificationService.resetUserVerification(userId, true);
             userModerationService.kickUserIfNotAdmin(bot, chatId, userId);
             return;
           }
-          if (messageAnalysis.reason === config.KICK_REASONS.SCAM_OR_SPAM) {
+          if (messageAnalysis.reason === config.SPAM_REASONS.SCAM_OR_SPAM ||
+            messageAnalysis.reason === config.SPAM_REASONS.ILLEGAL_WORK ||
+            messageAnalysis.reason === config.SPAM_REASONS.FAST_MONEY ||
+            messageAnalysis.reason === config.SPAM_REASONS.CRYPTO) {
             userVerificationService.resetUserVerification(userId, true);
             return;
           }
@@ -189,7 +194,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
         console.log(`user ${userId} was marked as spam, no additional verification needed`);
         return;
       }
-      const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(text);
+      const messageAnalysis = await spamDetectionService.isRiskyMessage(text, false);
 
       if (messageAnalysis.isOffensive) {
         console.log(`problem detected from ${userId} to chat ${chatId}: ${messageAnalysis.reason}`);
@@ -245,7 +250,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
     const joinTimeUTC = joinTime.getTime() + (60 * 60 * 1000);
     if ((Date.now() - joinTimeUTC) < 15 * 60 * 1000) {
         console.log(`check newly added user ${userId} for spam`);
-        const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(text);
+        const messageAnalysis = await spamDetectionService.isRiskyMessage(text, false);
         if (messageAnalysis.isOffensive) {
             if (!messageDeleted) {
                 messageDeleted = await bot.deleteMessage(chatId, message_id.toString())

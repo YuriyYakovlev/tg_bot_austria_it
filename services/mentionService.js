@@ -14,7 +14,7 @@ async function handleMentionedMessage(bot, msg) {
   
   if (mentionedMessageText) {
     console.log(`mentioned message to check: ${mentionedMessageText}`);
-    const messageAnalysis = await spamDetectionService.isOffensiveOrSpamMessage(mentionedMessageText);
+    const messageAnalysis = await spamDetectionService.isRiskyMessage(mentionedMessageText, false);
     
     const language = await chatSettingsService.getLanguageForChat(chatId);
     const messages = languageService.getMessages(language).messages;
