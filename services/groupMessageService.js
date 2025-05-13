@@ -124,7 +124,8 @@ async function handleGroupMessage(bot, msg, userSessionData) {
           await userVerificationService.setUserVerified(userId);
           console.log(`auto-verified ${userId} in non-thematic chat`);
         }
-      } else {
+      }
+      /* else {
         console.log(`delete non-text message from non-verified user ${userId}`);
         messageDeleted = await bot.deleteMessage(chatId, message_id.toString())
         .then(() => true)
@@ -167,7 +168,7 @@ async function handleGroupMessage(bot, msg, userSessionData) {
       
           console.log(`sent verify prompt to ${userId} due to media message`);
         }
-      }
+      } */
     }
     return;
   }
