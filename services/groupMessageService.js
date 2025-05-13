@@ -72,7 +72,8 @@ async function handleGroupMessage(bot, msg, userSessionData) {
           });
 
           if (messageAnalysis.reason === config.SPAM_REASONS.ILLEGAL_GOODS ||
-            messageAnalysis.reason === config.SPAM_REASONS.ILLEGAL_CONTENT
+            messageAnalysis.reason === config.SPAM_REASONS.ILLEGAL_CONTENT ||
+            messageAnalysis.reason === config.SPAM_REASONS.FAST_MONEY
           ) {  
             userVerificationService.resetUserVerification(userId, true);
             userModerationService.kickUserIfNotAdmin(bot, chatId, userId);
@@ -80,7 +81,6 @@ async function handleGroupMessage(bot, msg, userSessionData) {
           }
           if (messageAnalysis.reason === config.SPAM_REASONS.SCAM_OR_SPAM ||
             messageAnalysis.reason === config.SPAM_REASONS.ILLEGAL_WORK ||
-            messageAnalysis.reason === config.SPAM_REASONS.FAST_MONEY ||
             messageAnalysis.reason === config.SPAM_REASONS.CRYPTO) {
             userVerificationService.resetUserVerification(userId, true);
             return;
