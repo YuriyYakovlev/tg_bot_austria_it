@@ -216,10 +216,11 @@ function prepareSpamOnlyClassificationRequest(message) {
                - Scams.
                - Rude behavior.
                
-              Pay special attention to:
-               - Messages that mention fast way to earn money
-               - Messages that might assume illegal work with pesonal auto
-               - Messages that mention earn with crypto
+              Pay special attention to messages that include:
+                - Vague job offers without clear responsibilities or company details
+                - Promises of fast or easy money, especially involving crypto or "percent bonuses"
+                - Job offers targeting wide geographic areas (e.g., "all of Europe") without legal clarity
+                - Offers involving the use of a personal vehicle in ways that may suggest illegal or unregulated work
 
               ### Examples of non-spam ###
                - "Можливо хтось зможе з орієнтувати по вартості супровіду місцевих бухгалтерів" - because that is a question about cost of services
