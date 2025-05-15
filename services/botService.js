@@ -22,7 +22,34 @@ const mikaTestService = require("../extras/mika/mikaTestService");
 let bot;
 const userSessionData = new Map(); // Stores { userId: { chatId, promptTime, chat_username, thread_id } }
 
-function startBotPolling(retryCount = 0) {
+async function leaveUnprivilegedGroups() {
+  if (!process.env.GROUPS_TO_LEAVE) return;
+
+  const groupIds = process.env.GROUPS_TO_LEAVE.split(',').map(id => id.trim()).filter(Boolean);
+  const botId = (await bot.getMe()).id;
+
+  for (const groupId of groupIds) {
+    try {
+      const member = await bot.getChatMember(groupId, botId);
+      const status = member.status;
+
+      if (status === 'left' || status === 'kicked') {
+        continue;
+      }
+      console.log(`Leaving group ${groupId} because bot is not admin (status: ${status})`);
+      await bot.leaveChat(groupId);
+    } catch (err) {
+      if (err.response && err.response.statusCode === 400) {
+        console.warn(`Skipping group ${groupId}: ${err.response.body.description}`);
+      } else {
+        console.error(`Unexpected error checking group ${groupId}:`, err.message);
+      }
+    }
+  }
+}
+
+
+async function startBotPolling(retryCount = 0) {
   const MAX_RETRIES = 5;
 
   bot = new TelegramBot(process.env.TG_TOKEN, {
@@ -34,6 +61,12 @@ function startBotPolling(retryCount = 0) {
       },
     },
   });
+
+  try {
+    await leaveUnprivilegedGroups();
+  } catch (error) {
+    console.error("Failed to leave unprivileged groups:", error.message);
+  }
 
   bot.on("message", async (msg) => {
     try {
