@@ -1,6 +1,6 @@
 //audioService.js
 const { TextToSpeechClient } = require("@google-cloud/text-to-speech");
-const { ElevenLabsClient } = require("elevenlabs");
+const { ElevenLabsClient } = require("@elevenlabs/elevenlabs-js");
 const { Readable } = require("stream");
 const concat = require("concat-stream");
 const tmp = require('tmp'); 
@@ -46,9 +46,10 @@ async function generatePause(pauseDuration = 300) {
 
 async function generateAudioWithElevenLabs(text, voiceId) {
     const elClient = new ElevenLabsClient();
-    const audio = await elClient.textToSpeech.convert(voiceId, {
-      text: text,
-      model_id: "eleven_multilingual_v2",
+    const audio = await elClient.textToSpeech.stream({
+      textInput: text,
+      voiceId: voiceId,
+      modelId: "eleven_multilingual_v2",
       output_format: "mp3_44100_128",
     });
     return audio;

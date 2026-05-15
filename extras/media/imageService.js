@@ -14,7 +14,7 @@ const predictionServiceClient = new PredictionServiceClient(clientOptions);
 
 async function generateImage(prompt, style) {
     try {
-        const endpoint = `projects/${process.env.PROJECT_ID}/locations/${process.env.LOCATION}/publishers/google/models/imagen-3.0-generate-002`;
+        const endpoint = `projects/${process.env.PROJECT_ID}/locations/${process.env.LOCATION}/publishers/google/models/imagen-4.0-ultra-generate-preview-06-06`;
         const stylePart = style ? ' ' + style : '';
         const promptText = {
             prompt: prompt + stylePart,
@@ -43,16 +43,20 @@ async function generateImage(prompt, style) {
             console.log('No image was generated. Check the request parameters and prompt.');
         } else {
             for (const prediction of predictions) {
-                const buff = Buffer.from(
-                    prediction.structValue.fields.bytesBase64Encoded.stringValue,
-                    'base64'
-                );
-                // **Resize Image to Max 512x512**
-                const resizedBuffer = await sharp(buff)
-                    .resize({ width: 512, height: 512, fit: 'inside' })
-                    .toBuffer();
+                if (prediction.structValue.fields.bytesBase64Encoded) {
+                    const buff = Buffer.from(
+                        prediction.structValue.fields.bytesBase64Encoded.stringValue,
+                        'base64'
+                    );
+                    // **Resize Image to Max 512x512**
+                    const resizedBuffer = await sharp(buff)
+                        .resize({ width: 512, height: 512, fit: 'inside' })
+                        .toBuffer();
 
-                return resizedBuffer;
+                    return resizedBuffer;
+                } else {
+                    console.error("No image data found in the prediction response.");
+                }
             }
         }
     } catch (error) {
